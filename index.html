@@ -138,7 +138,7 @@
     // =====================================================================
     // 💡 아래 WEB_APP_URL 의 따옴표 사이에 1단계에서 복사한 주소를 꼭 붙여넣으세요!
     // =====================================================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw1zq5X8uPnTpr-0Wuz1bYBOWZAfODBrMxPnKATMK11L6rbfoQnkNU5woJIgNUt_o8RxA/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7y4g3X-UxdwBR97fdS0N667G4Y4Mia4p0IBIJlBvU8ZkG7NaVD_HITsxANGt_aue-LA/exec";
 
     const SHEET_ID = '10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg';
     const FIXED_DEPTS =["교목부", "교무부", "연구부", "상담부", "정보부", "1학년부", "2학년부", "3학년부", "기획위원", "행정실", "국어과", "영어과", "수학과", "사회과", "과학과", "예체능과", "정보과", "외국어과", "기타"];
@@ -364,7 +364,7 @@
         c.innerHTML = html + `</div>`;
     }
 
-    // --- 📌 새로운 기능: 요청사항 폼 렌더링 ---
+// --- 📌 수정된 기능: 요청사항 폼 렌더링 ---
     function renderRequestForm(c) {
         c.innerHTML = `
             <div class="limit-wrapper">
@@ -375,18 +375,20 @@
                     </p>
 
                     <div class="form-group">
-                        <label class="form-label">해당 부서</label>
-                        <select id="reqDept" class="form-input">
-                            ${FIXED_DEPTS.map(d => `<option value="${d}">${d}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">작성자 성함</label>
                         <input type="text" id="reqName" class="form-input" placeholder="성함을 입력해 주세요">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">요청 내용 (날짜 및 행사명 등)</label>
-                        <textarea id="reqContent" class="form-textarea" placeholder="예: 4월 15일 3교시, 학부모 연수 추가 요청드립니다."></textarea>
+                        <label class="form-label">요청 유형</label>
+                        <select id="reqType" class="form-input">
+                            <option value="프로그램 개선">프로그램 개선</option>
+                            <option value="일정변경">일정변경</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">요청 내용</label>
+                        <textarea id="reqContent" class="form-textarea" placeholder="상세 내용을 적어주세요."></textarea>
                     </div>
                     <button class="submit-btn" id="submitBtn" onclick="submitRequest()">보내기</button>
                 </div>
@@ -394,10 +396,10 @@
         `;
     }
 
-    // --- 📌 새로운 기능: 데이터 전송 로직 ---
     async function submitRequest() {
-        const dept = document.getElementById('reqDept').value;
+        // dept 대신 type을 가져오도록 수정
         const name = document.getElementById('reqName').value;
+        const type = document.getElementById('reqType').value;
         const content = document.getElementById('reqContent').value;
         const btn = document.getElementById('submitBtn');
 
@@ -407,7 +409,7 @@
         }
 
         if(WEB_APP_URL.includes("여기에_복사한")) { 
-            alert("관리자가 아직 WEB_APP_URL을 설정하지 않았습니다.\n(소스 코드 내에 주소를 복사해 넣어야 합니다)"); 
+            alert("관리자가 아직 WEB_APP_URL을 설정하지 않았습니다."); 
             return; 
         }
 
@@ -415,21 +417,20 @@
         btn.innerText = "데이터 전송 중...";
 
         try {
-            // 구글 시트(Apps Script)로 데이터를 전송합니다.
-            // mode: "no-cors" 는 브라우저 보안 경고를 우회하기 위해 필수입니다.
             await fetch(WEB_APP_URL, {
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ dept, name, content })
+                // data payload에 name, type, content를 담아 보냄
+                body: JSON.stringify({ name, type, content })
             });
 
             alert("요청이 성공적으로 전송되었습니다!");
-            switchTab('calendar'); // 달력 탭으로 돌아가기
+            switchTab('calendar');
             
         } catch (error) {
             console.error(error);
-            alert("전송 중 인터넷 문제 등으로 오류가 발생했습니다. 다시 시도해 주세요.");
+            alert("전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
         } finally {
             btn.disabled = false;
             btn.innerText = "보내기";
