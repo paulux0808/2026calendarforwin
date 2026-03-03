@@ -203,17 +203,28 @@
         checkReady();
     };
 
-    // 4. 공지사항 파싱 (C열 연동)
-// 4. 공지사항 파싱 (C열 연동)
+// 4. 공지사항 파싱 (모든 행의 C열을 합쳐서 표시)
     window.cb_notice = function(data) {
         if (data.table.rows && data.table.rows.length > 0) {
-            const r = data.table.rows[0];
-            const content = r.c[2] ? String(r.c[2].v) : ""; // C열 본문
+            let combinedContent = "";
+            
+            // 모든 행을 돌면서 C열(index 2) 내용을 합칩니다.
+            data.table.rows.forEach((r, index) => {
+                const content = r.c[2] ? String(r.c[2].v).trim() : "";
+                
+                if (content && content !== "null" && content !== "") {
+                    // 공지사항이 여러 개일 경우 구분선 추가
+                    if (combinedContent !== "") {
+                        combinedContent += "\n\n----------------------------------\n\n";
+                    }
+                    combinedContent += content;
+                }
+            });
 
-            // localStorage 체크 없이 내용만 있으면 무조건 표시
-            if (content && content !== "null" && content.trim() !== "") {
+            // 합쳐진 내용이 있을 때만 팝업 표시
+            if (combinedContent.trim() !== "") {
                 document.getElementById('modalTitle').innerText = "📢 공지사항";
-                document.getElementById('modalContent').innerText = content;
+                document.getElementById('modalContent').innerText = combinedContent;
                 document.getElementById('noticeModal').style.display = 'flex';
             }
         }
