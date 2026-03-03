@@ -149,7 +149,7 @@
         .prayer-box { line-height: 1.2; font-size: calc(var(--base-font) - 1px); }
         .prayer-name { font-weight: 900; display: block; margin-bottom: 2px; font-size: var(--base-font); }
         
-        /* ★ 모바일 모드용 계획표 카드 스타일 ★ */
+        /* 모바일 모드용 계획표 카드 스타일 */
         .m-plan-card { background: var(--surface); border: 2px solid var(--border-heavy); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
         .m-plan-date { font-weight: 900; font-size: calc(var(--base-font) + 1px); margin-bottom: 8px; border-bottom: 1px solid #dee2e6; padding-bottom: 6px; }
         body.dark-mode .m-plan-date { border-bottom-color: #495057; }
@@ -190,15 +190,39 @@
             .search-box { width: 100%; max-width: 100%; }
         }
         
+        /* 🖨️ A4 가변 인쇄 스타일 - 오직 하나의 A4 세로에 맞게 맞춤 조정! */
         @media print {
             body { overflow: visible; height: auto; background: #fff !important; color: #000 !important; }
-            .header-wrapper, .month-selector, .no-print, .mobile-nav-container { display: none !important; }
+            .header-wrapper, .month-selector, .no-print, .mobile-nav-container, .m-plan-wrapper { display: none !important; }
             .container { overflow: visible; padding: 0; }
             .limit-wrapper { max-width: 100%; width: 100%; margin: 0; }
-            .plan-table td, .plan-table th { border: 1px solid #000 !important; color: #000 !important; }
-            .plan-table th { background: #eee !important; position: static; }
-            .print-title { display: block !important; text-align: center; font-size: 22px; font-weight: 900; margin-bottom: 15px; color: #000; }
-            @page { size: A4 landscape; margin: 10mm; }
+            .print-title { display: block !important; text-align: center; font-size: 20px; font-weight: 900; margin-bottom: 8px; color: #000; }
+            
+            /* 핵심: A4 세로(Portrait) 규격 지정 */
+            @page { size: A4 portrait; margin: 8mm; }
+            
+            /* 모바일 모드에서도 인쇄할 때는 항상 PC용 테이블을 강제 표시 */
+            .pc-plan-wrapper { display: block !important; }
+            .table-container { border: none !important; overflow: visible !important; }
+            
+            /* 한 페이지 꽉 채우기 위한 높이 지정 (행 높이 균등 배분 유도) */
+            .plan-table { width: 100% !important; height: 265mm !important; border-collapse: collapse; table-layout: fixed; }
+            .plan-table th { background: #eee !important; position: static; -webkit-print-color-adjust: exact; print-color-adjust: exact; height: 18px; font-size: 11px !important; }
+            .plan-table td, .plan-table th { border: 1px solid #000 !important; color: #000 !important; padding: 1px 2px !important; text-align: center; word-break: keep-all; }
+            
+            /* 컬럼 가로 사이즈 세밀 조정 */
+            .plan-table th:nth-child(1) { width: 30px !important; } /* 날짜 */
+            .plan-table th:nth-child(2) { width: 35px !important; } /* 요일 */
+            .plan-table th:nth-child(3) { width: auto !important; } /* 내용 */
+            .plan-table th:nth-child(4) { width: 55px !important; } /* 경건회 */
+            .plan-table th:nth-child(5) { width: 55px !important; } /* 자습감독 */
+            
+            /* 글자 크기 조정 및 여백 축소 */
+            .plan-table td { font-size: 10px !important; overflow: hidden; }
+            .event-container { gap: 2px; }
+            .event-row { font-size: 9px !important; line-height: 1.1; margin: 0; }
+            .screen-dept { font-size: 8px !important; padding: 1px 2px !important; border: 1px solid #999 !important; border-radius: 2px !important; background: transparent !important; }
+            .prayer-box { font-size: 10px !important; }
         }
         .print-title { display: none; }
     </style>
@@ -624,7 +648,7 @@
         c.innerHTML = html + `</div></div></div>`; 
     }
 
-    // --- 계획표 렌더링 (★ 모바일 뷰 분기 및 경건회 반영 완료) ---
+    // --- 계획표 렌더링 (경건회만 표기, 모바일 및 A4 세로 인쇄 최적화) ---
     function renderPlan(c) {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         const lastDay = new Date(y, m + 1, 0).getDate();
@@ -638,78 +662,79 @@
             </div>
             <div class="print-title">${y}학년도 ${m + 1}월중 학사운영 계획</div>`;
 
-        // ★ 모바일 모드용 계획표 리스트 (카드 형태) ★
-        if (isMobileMode) {
-            html += `<div class="mobile-plan-list">`;
-            for (let d=1; d<=lastDay; d++) {
-                const date = new Date(y, m, d);
-                const dateKey = date.toISOString().split('T')[0];
-                const day = daysByKey[dateKey];
-                const prayer = prayerMap[dateKey] || {name:""};
-                const rowClass = date.getDay()===0 ? 'sun-text' : date.getDay()===6 ? 'sat-text' : '';
-                const dow = ['일','월','화','수','목','금','토'][date.getDay()];
+        // 📱 모바일 뷰 전용 리스트 래퍼 (인쇄 시 CSS에서 강제로 안 보이게 처리됨)
+        html += `<div class="m-plan-wrapper" ${!isMobileMode ? 'style="display:none;"' : ''}>`;
+        for (let d=1; d<=lastDay; d++) {
+            const date = new Date(y, m, d);
+            const dateKey = date.toISOString().split('T')[0];
+            const day = daysByKey[dateKey];
+            const prayer = prayerMap[dateKey] || {name:""};
+            const rowClass = date.getDay()===0 ? 'sun-text' : date.getDay()===6 ? 'sat-text' : '';
+            const dow = ['일','월','화','수','목','금','토'][date.getDay()];
 
-                let eventsHtml = "";
-                if (day && day.eventIds.length) {
-                    const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
-                    eventsHtml = ids.map(id => {
-                        const ev = eventsById[id];
-                        return `
-                            <div class="event-row" data-eid="${id}" style="margin-bottom:5px;">
-                                <div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
-                                <div>${highlightHTML(ev.text)}</div>
-                            </div>`;
-                    }).join("");
-                }
-
-                html += `<div class="m-plan-card">
-                    <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
-                    <div style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
-                    <div class="m-plan-meta">
-                        <div>🙏 경건회: <span style="color:var(--text-main);">${escapeHTML(prayer.name)}</span></div>
-                        <div>👀 감독: <span style="color:var(--text-main);">${escapeHTML(supervisorMap[dateKey] || "")}</span></div>
-                    </div>
-                </div>`;
+            let eventsHtml = "";
+            if (day && day.eventIds.length) {
+                const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
+                eventsHtml = ids.map(id => {
+                    const ev = eventsById[id];
+                    return `
+                        <div class="event-row" data-eid="${id}" style="margin-bottom:5px;">
+                            <div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
+                            <div>${highlightHTML(ev.text)}</div>
+                        </div>`;
+                }).join("");
             }
-            html += `</div></div>`;
-        } 
-        // 기존 PC용 표 형태 계획표
-        else {
-            html += `<div class="table-container"><table class="plan-table"><thead><tr>
-                <th style="width:50px">날짜</th><th style="width:60px">요일</th><th>주요 행사 내용</th>
-                <th style="width:100px">경건회</th><th style="width:100px">자습감독</th>
-            </tr></thead><tbody>`;
 
-            for (let d=1; d<=lastDay; d++) {
-                const date = new Date(y, m, d);
-                const dateKey = date.toISOString().split('T')[0];
-                const day = daysByKey[dateKey];
-                const prayer = prayerMap[dateKey] || {name:""}; 
-                const rowClass = date.getDay()===0 ? 'row-sun' : date.getDay()===6 ? 'row-sat' : '';
-
-                let eventsHtml = "";
-                if (day && day.eventIds.length) {
-                    const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
-                    eventsHtml = ids.map(id => {
-                        const ev = eventsById[id];
-                        return `
-                            <div class="event-row" data-eid="${id}">
-                                <div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
-                                <div>${highlightHTML(ev.text)}</div>
-                            </div>`;
-                    }).join("");
-                }
-
-                html += `<tr class="${rowClass}">
-                    <td style="font-weight:900;">${d}</td>
-                    <td>${['일','월','화','수','목','금','토'][date.getDay()]}</td>
-                    <td><div class="event-container">${eventsHtml}</div></td>
-                    <td><div class="prayer-box"><span class="prayer-name">${escapeHTML(prayer.name)}</span></div></td>
-                    <td style="font-weight:800;">${escapeHTML(supervisorMap[dateKey] || "")}</td>
-                </tr>`;
-            }
-            html += `</tbody></table></div></div>`;
+            html += `<div class="m-plan-card">
+                <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
+                <div style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
+                <div class="m-plan-meta">
+                    <div>🙏 경건회: <span style="color:var(--text-main);">${escapeHTML(prayer.name)}</span></div>
+                    <div>👀 감독: <span style="color:var(--text-main);">${escapeHTML(supervisorMap[dateKey] || "")}</span></div>
+                </div>
+            </div>`;
         }
+        html += `</div>`;
+
+        // 💻 PC 테이블 & 인쇄용 표 래퍼 (모바일 화면에선 숨겨지고 인쇄할 때는 항상 나타나게 설계)
+        html += `<div class="pc-plan-wrapper" ${isMobileMode ? 'style="display:none;"' : ''}>
+            <div class="table-container"><table class="plan-table"><thead><tr>
+            <th style="width:40px">날짜</th><th style="width:40px">요일</th><th>주요 행사 내용</th>
+            <th style="width:80px">경건회</th><th style="width:80px">자습감독</th>
+        </tr></thead><tbody>`;
+
+        for (let d=1; d<=lastDay; d++) {
+            const date = new Date(y, m, d);
+            const dateKey = date.toISOString().split('T')[0];
+            const day = daysByKey[dateKey];
+            
+            // 말씀/찬송 무시하고 이름만 담아오게 처리됨
+            const prayer = prayerMap[dateKey] || {name:""}; 
+            const rowClass = date.getDay()===0 ? 'row-sun' : date.getDay()===6 ? 'row-sat' : '';
+
+            let eventsHtml = "";
+            if (day && day.eventIds.length) {
+                const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
+                eventsHtml = ids.map(id => {
+                    const ev = eventsById[id];
+                    return `
+                        <div class="event-row" data-eid="${id}">
+                            <div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
+                            <div>${highlightHTML(ev.text)}</div>
+                        </div>`;
+                }).join("");
+            }
+
+            html += `<tr class="${rowClass}">
+                <td style="font-weight:900;">${d}</td>
+                <td style="font-weight:900;">${['일','월','화','수','목','금','토'][date.getDay()]}</td>
+                <td style="text-align:left;"><div class="event-container">${eventsHtml}</div></td>
+                <td><div class="prayer-box"><span class="prayer-name">${escapeHTML(prayer.name)}</span></div></td>
+                <td style="font-weight:800;">${escapeHTML(supervisorMap[dateKey] || "")}</td>
+            </tr>`;
+        }
+        html += `</tbody></table></div></div></div>`;
+        
         c.innerHTML = html;
     }
 
