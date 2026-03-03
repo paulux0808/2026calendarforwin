@@ -113,11 +113,12 @@
 
 <!-- 공지사항 팝업 -->
 <div id="noticeModal" class="no-print" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center; backdrop-filter: blur(2px);">
-    <div style="background:#fff; width:90%; max-width:500px; border-radius:16px; border:3px solid var(--border-heavy); overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.3); animation: modalFadeIn 0.3s ease-out;">
-        <div style="background:#f8f9fa; padding:18px; border-bottom:2px solid var(--border-heavy); font-weight:900; font-size:20px;" id="modalTitle">📢 공지사항</div>
-        <div style="padding:25px; font-size:16px; line-height:1.7; white-space:pre-wrap; max-height:60vh; overflow-y:auto; color:#333;" id="modalContent"></div>
+    <div style="background:#fff; width:95%; max-width:600px; border-radius:16px; border:3px solid var(--border-heavy); overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.3); animation: modalFadeIn 0.3s ease-out;">
+        <div style="background:#f8f9fa; padding:18px; border-bottom:2px solid var(--border-heavy); font-weight:900; font-size:22px; color:#000;" id="modalTitle">📢 공지사항</div>
+        <!-- 글자 크기를 19px로 키우고 굵게 설정 -->
+        <div style="padding:25px; font-size:19px; line-height:1.8; white-space:pre-wrap; max-height:65vh; overflow-y:auto; color:#000; font-weight:700;" id="modalContent"></div>
         <div style="padding:15px; background:#f1f3f5; display:flex; justify-content:center;">
-            <button class="btn" onclick="closeNotice()" style="background:var(--border-heavy); color:#fff; padding:10px 60px; border-radius:8px; font-weight:800; font-size:15px;">확인 후 닫기</button>
+            <button class="btn" onclick="closeNotice()" style="background:var(--border-heavy); color:#fff; padding:12px 70px; border-radius:8px; font-weight:900; font-size:17px; cursor:pointer;">확인</button>
         </div>
     </div>
 </div>
@@ -203,37 +204,54 @@
         checkReady();
     };
 
-// 4. 공지사항 파싱 (모든 행의 C열을 합쳐서 표시)
+// 4. 공지사항 파싱 (날짜 필터링 및 실선 추가)
     window.cb_notice = function(data) {
         if (data.table.rows && data.table.rows.length > 0) {
-            let combinedContent = "";
-            
-            // 모든 행을 돌면서 C열(index 2) 내용을 합칩니다.
-            data.table.rows.forEach((r, index) => {
+            let combinedHTML = "";
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // 시간을 0으로 맞춰서 날짜 비교를 정확하게 함
+
+            data.table.rows.forEach((r) => {
+                if (!r || !r.c || r.c.length < 3) return;
+
+                // A열(시작일), B열(종료일), C열(내용) 가져오기
+                const startDate = parseGDate(r.c[0] ? r.c[0].v : null);
+                const endDate = parseGDate(r.c[1] ? r.c[1].v : null);
                 const content = r.c[2] ? String(r.c[2].v).trim() : "";
-                
+
                 if (content && content !== "null" && content !== "") {
-                    // 공지사항이 여러 개일 경우 구분선 추가
-                    if (combinedContent !== "") {
-                        combinedContent += "\n\n----------------------------------\n\n";
+                    // 날짜 비교 로직: 오늘이 시작일 이후이고 종료일 이전일 때만!
+                    let isVisible = false;
+                    
+                    if (startDate && endDate) {
+                        startDate.setHours(0,0,0,0);
+                        endDate.setHours(0,0,0,0);
+                        if (today >= startDate && today <= endDate) {
+                            isVisible = true;
+                        }
+                    } else {
+                        // 날짜가 하나라도 비어있으면 항상 노출 (안전장치)
+                        isVisible = true; 
                     }
-                    combinedContent += content;
+
+                    if (isVisible) {
+                        if (combinedHTML !== "") {
+                            // 구분선(실선) 추가
+                            combinedHTML += '<hr style="border:0; height:1px; background:#dee2e6; margin:20px 0;">';
+                        }
+                        combinedHTML += content;
+                    }
                 }
             });
 
-            // 합쳐진 내용이 있을 때만 팝업 표시
-            if (combinedContent.trim() !== "") {
+            if (combinedHTML.trim() !== "") {
                 document.getElementById('modalTitle').innerText = "📢 공지사항";
-                document.getElementById('modalContent').innerText = combinedContent;
+                // 중요: innerText 대신 innerHTML을 써야 <hr> 태그가 작동함
+                document.getElementById('modalContent').innerHTML = combinedHTML;
                 document.getElementById('noticeModal').style.display = 'flex';
             }
         }
         checkReady();
-    };
-
-    // 팝업 닫기 함수 (기존 closeNoticeToday는 삭제해도 됨)
-    window.closeNotice = () => { 
-        document.getElementById('noticeModal').style.display = 'none'; 
     };
 
     function fetchAll() {
