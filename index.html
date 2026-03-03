@@ -340,6 +340,12 @@
         const parts = v.match(/\d+/g);
         return new Date(parts[0], parts[1], parts[2]);
     }
+    function getLocalDateKey(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
     function normalizeQuery(q) { return (q || "").trim().toLowerCase().replace(/\s+/g, " "); }
     function escapeHTML(s) {
         return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -361,7 +367,7 @@
         deptIndex = Object.create(null);
 
         scheduleData.forEach(day => {
-            const dateKey = day.date.toISOString().split('T')[0];
+            const dateKey = getLocalDateKey(day.date);
             if (!daysByKey[dateKey]) daysByKey[dateKey] = { dateKey, date: day.date, eventIds: [] };
             day.events.forEach(ev => {
                 const id = eventSeq++;
@@ -416,7 +422,7 @@
             if (!r.c || !r.c[0]) return;
             const date = parseGDate(r.c[0].v);
             const name = r.c[2] ? String(r.c[2].v).trim() : "";
-            if (date && name && name !== "null") supervisorMap[date.toISOString().split('T')[0]] = name;
+            if (date && name && name !== "null") supervisorMap[getLocalDateKey(date)] = name;
         });
         checkReady();
     };
@@ -426,7 +432,7 @@
             if (i < 1 || !r.c || !r.c[0]) return;
             const dateObj = parseGDate(r.c[0].v);
             if (!dateObj) return;
-            const dateKey = dateObj.toISOString().split('T')[0];
+            const dateKey = getLocalDateKey(dateObj);
             const name = r.c[2] ? String(r.c[2].v).trim() : ""; 
             const bible = r.c[3] ? String(r.c[3].v).trim() : ""; 
             const hymn = r.c[4] ? String(r.c[4].v).trim() : ""; 
@@ -585,7 +591,7 @@
     // --- 달력 렌더링 ---
     function renderCalendar(c) {
         const y = viewDate.getFullYear(), m = viewDate.getMonth(), now = new Date();
-        const todayKey = now.toISOString().split('T')[0];
+        const todayKey = getLocalDateKey(now);
         
         let html = `<div class="limit-wrapper">
             <div class="month-selector no-print">
@@ -604,7 +610,7 @@
         curr.setDate(curr.getDate() - diff);
 
         for (let i=0; i<35; i++) {
-            const dKey = curr.toISOString().split('T')[0];
+            const dKey = getLocalDateKey(curr);
             const isToday = dKey === todayKey;
             const isWeekend = (curr.getDay() === 0 || curr.getDay() === 6);
 
@@ -678,7 +684,7 @@
         html += `<div class="m-plan-wrapper" ${!isMobileMode ? 'style="display:none;"' : ''}>`;
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
-            const dateKey = date.toISOString().split('T')[0];
+            const dateKey = getLocalDateKey(date);
             const day = daysByKey[dateKey];
             const prayer = prayerMap[dateKey] || {name:""};
             const rowClass = date.getDay()===0 ? 'sun-text' : date.getDay()===6 ? 'sat-text' : '';
@@ -728,7 +734,7 @@
 
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
-            const dateKey = date.toISOString().split('T')[0];
+            const dateKey = getLocalDateKey(date);
             const day = daysByKey[dateKey];
             const prayer = prayerMap[dateKey] || {name:""}; 
             const rowClass = date.getDay()===0 ? 'row-sun' : date.getDay()===6 ? 'row-sat' : '';
