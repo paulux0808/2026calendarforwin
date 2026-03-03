@@ -144,7 +144,33 @@
     const FIXED_DEPTS =["교목부", "교무부", "연구부", "상담부", "정보부", "1학년부", "2학년부", "3학년부", "기획위원", "행정실", "국어과", "영어과", "수학과", "사회과", "과학과", "예체능과", "정보과", "외국어과", "기타"];
     
     let scheduleData =[], supervisorMap = {}, prayerMap = {}, deptColors = {}, dataLoaded = 0;
-    const PASTELS =['#ffec99', '#b2f2bb', '#a5d8ff', '#d0bfff', '#ffc9c9', '#c5f6fa', '#ffdeeb', '#e9ecef', '#d3f9d8', '#fff3bf', '#f1f3f5'];
+    // 19개 부서 (기타 포함)에 맞춘 무지개 파스텔 색상 배열
+    const PASTELS = [
+        '#ffe3e3', // 교목부 (빨강)
+        '#ffede3', // 교무부 (주황색조)
+        '#fff6e3', // 연구부 (연주황)
+        '#fffde3', // 상담부 (노랑색조)
+        '#f6ffe3', // 정보부 (연두색조)
+        '#ecffe3', // 1학년부 (연두)
+        '#e3ffe3', // 2학년부 (초록)
+        '#e3ffec', // 3학년부 (청록색조)
+        '#e3fff6', // 기획위원 (민트)
+        '#e3f9ff', // 행정실 (하늘색조)
+        '#e3eeff', // 국어과 (하늘)
+        '#e3e3ff', // 영어과 (파랑색조)
+        '#ece3ff', // 수학과 (연보라)
+        '#f6e3ff', // 사회과 (보라색조)
+        '#ffe3fc', // 과학과 (진분홍/보라사이)
+        '#ffe3f0', // 예체능과 (연핑크)
+        '#ffe3e8', // 정보과 (장미색)
+        '#f5e3ff', // 외국어과 (연보라/보라 - 기타 전 마지막)
+        '#f1f3f5'  // 기타 (회색)
+    ];
+
+    // 부서별 색상 매핑 (FIXED_DEPTS 순서와 PASTELS 순서를 1:1 매칭)
+    FIXED_DEPTS.forEach((d, i) => { 
+        deptColors[d] = PASTELS[i] || '#f1f3f5'; 
+    });
     FIXED_DEPTS.forEach((d, i) => { deptColors[d] = PASTELS[i % PASTELS.length]; });
 
     function parseGDate(v) {
