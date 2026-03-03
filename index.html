@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>📅 스마트 학사관리 시스템</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
@@ -127,8 +127,9 @@
         .cal-text { padding-top: 1px; }
 
         /* 계획표 */
-        .table-container { border: 2px solid var(--border-heavy); border-radius: 8px; overflow: hidden; }
-        .plan-table { width: 100%; border-collapse: collapse; background: var(--surface); table-layout: fixed; }
+        /* ★ 화면이 좁을 때 계획표가 찌그러지지 않고 좌우 스크롤 되도록 변경 (min-width 설정) */
+        .table-container { border: 2px solid var(--border-heavy); border-radius: 8px; overflow-x: auto; }
+        .plan-table { width: 100%; border-collapse: collapse; background: var(--surface); table-layout: fixed; min-width: 650px; }
         .plan-table th { position: sticky; top: 0; background: #e9ecef; border-bottom: 2px solid var(--border-heavy); padding: 10px; font-weight: 900; z-index: 10; color: #000; font-size: var(--base-font); }
         body.dark-mode .plan-table th { background: #343a40; color: #fff; }
         .plan-table td { border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 8px; text-align: center; font-size: var(--base-font); }
@@ -169,6 +170,15 @@
         .spinner { width: 40px; height: 40px; border: 5px solid #e9ecef; border-top-color: var(--border-heavy); border-radius: 50%; animation: spin 1s linear infinite; }
         body.dark-mode .spinner { border-color: #343a40; border-top-color: #adb5bd; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ★ 반응형 모바일 처리를 위한 미디어 쿼리 추가 (폭이 좁아질 때 화면 바깥으로 버튼이 나가는 현상 방지) ★ */
+        @media (max-width: 850px) {
+            .header { flex-direction: column; gap: 10px; padding: 4px 0; }
+            .header-left, .header-right { width: 100%; justify-content: center; min-width: auto; }
+            .header-mid { width: 100%; flex-direction: column; min-width: auto; gap: 10px; }
+            .header-mid .controls { display: flex; flex-wrap: wrap; justify-content: center; }
+            .search-box { width: 100%; max-width: 100%; }
+        }
         
         @media print {
             body { overflow: visible; height: auto; background: #fff !important; color: #000 !important; }
@@ -329,15 +339,14 @@
         });
     }
 
-// --- 여기서부터 교체 ---
+    // 데이터 로딩 파트 (무한로딩 방지 적용 완료본)
     function checkReady() {
         dataLoaded++;
-        // 4개의 시트를 모두 불러왔다면 로딩 끝
         if (dataLoaded >= 4) {
             document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('errorBanner').style.display = 'none';
-            rebuildIndexes(); // 검색 및 상세 모달용 인덱스 생성 (개선판 기능)
-            applyScale();     // 글자 크기 스케일 적용 (개선판 기능)
+            rebuildIndexes(); 
+            applyScale();     
             switchTab('calendar');
         }
     }
@@ -408,7 +417,6 @@
                 }
             });
             if (combinedHTML.trim() !== "") {
-                document.getElementById('modalTitle').innerText = "📢 공지사항";
                 document.getElementById('modalContent').innerHTML = combinedHTML;
                 document.getElementById('noticeModal').style.display = 'flex';
             }
@@ -430,7 +438,8 @@
 
     function retryFetchAll() { fetchAll(); }
     fetchAll();
-    // --- 여기까지 교체 ---    // 탭 및 UI 상호작용
+
+    // 탭 및 UI 상호작용
     let currentTab = 'calendar', viewDate = new Date();
     
     function switchTab(id) {
