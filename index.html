@@ -204,7 +204,7 @@
         if (data.table.rows && data.table.rows.length > 0) {
             const r = data.table.rows[0];
             const title = r.c[0] ? String(r.c[0].v) : "공지사항";
-            const content = r.c[1] ? String(r.c[1].v) : "";
+            const content = r.c[2] ? String(r.c[2].v) : "";
             const hideDate = localStorage.getItem('hideNoticeDate');
             if (content && content !== "null" && hideDate !== new Date().toDateString()) {
                 document.getElementById('modalTitle').innerText = "📢 " + title;
