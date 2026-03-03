@@ -210,12 +210,12 @@
             .plan-table th { background: #eee !important; position: static; -webkit-print-color-adjust: exact; print-color-adjust: exact; height: 18px; font-size: 11px !important; }
             .plan-table td, .plan-table th { border: 1px solid #000 !important; color: #000 !important; padding: 1px 2px !important; text-align: center; word-break: keep-all; }
             
-            /* 컬럼 가로 사이즈 세밀 조정 */
-            .plan-table th:nth-child(1) { width: 30px !important; } /* 날짜 */
-            .plan-table th:nth-child(2) { width: 35px !important; } /* 요일 */
-            .plan-table th:nth-child(3) { width: auto !important; } /* 내용 */
-            .plan-table th:nth-child(4) { width: 55px !important; } /* 경건회 */
-            .plan-table th:nth-child(5) { width: 55px !important; } /* 자습감독 */
+            /* 컬럼 가로 사이즈 세밀 조정 (클래스 선택자로 변경하여 유동성 확보) */
+            .plan-table th.col-date { width: 30px !important; }
+            .plan-table th.col-day { width: 35px !important; }
+            .plan-table th.col-content { width: auto !important; }
+            .plan-table th.col-prayer { width: 55px !important; }
+            .plan-table th.col-super { width: 55px !important; }
             
             /* 글자 크기 조정 및 여백 축소 */
             .plan-table td { font-size: 10px !important; overflow: hidden; }
@@ -315,6 +315,11 @@
     let scaleLevel = 0;
     let searchQuery = "";
     let searchTokens = [];
+    
+    // 계획표 표시 옵션 변수
+    let optShowDept = true;
+    let optShowPrayer = true;
+    let optShowSuper = true;
     
     // 고속 검색 및 모달용 인덱스
     let eventSeq = 0;
@@ -648,21 +653,28 @@
         c.innerHTML = html + `</div></div></div>`; 
     }
 
-    // --- 계획표 렌더링 (경건회만 표기, 모바일 및 A4 세로 인쇄 최적화) ---
+    // --- 계획표 렌더링 (옵션 체크박스 및 가변 열 처리 반영) ---
     function renderPlan(c) {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         const lastDay = new Date(y, m + 1, 0).getDate();
 
         let html = `<div class="limit-wrapper">
-            <div class="month-selector no-print">
+            <div class="month-selector no-print" style="margin-bottom: 5px;">
                 <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
                 <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
                 <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
             </div>
+            
+            <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted);">
+                <label style="cursor:pointer;"><input type="checkbox" ${optShowDept ? 'checked' : ''} onchange="optShowDept=this.checked; render()"> 부서명 포함</label>
+                <label style="cursor:pointer;"><input type="checkbox" ${optShowPrayer ? 'checked' : ''} onchange="optShowPrayer=this.checked; render()"> 경건회 포함</label>
+                <label style="cursor:pointer;"><input type="checkbox" ${optShowSuper ? 'checked' : ''} onchange="optShowSuper=this.checked; render()"> 자습감독 포함</label>
+            </div>
+            
             <div class="print-title">${y}학년도 ${m + 1}월중 학사운영 계획</div>`;
 
-        // 📱 모바일 뷰 전용 리스트 래퍼 (인쇄 시 CSS에서 강제로 안 보이게 처리됨)
+        // 📱 모바일 뷰 전용 리스트 래퍼
         html += `<div class="m-plan-wrapper" ${!isMobileMode ? 'style="display:none;"' : ''}>`;
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
@@ -677,38 +689,47 @@
                 const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
                 eventsHtml = ids.map(id => {
                     const ev = eventsById[id];
+                    const deptTag = optShowDept ? `<div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>` : '';
                     return `
                         <div class="event-row" data-eid="${id}" style="margin-bottom:5px;">
-                            <div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
+                            ${deptTag}
                             <div>${highlightHTML(ev.text)}</div>
                         </div>`;
                 }).join("");
             }
 
+            let metaHtml = "";
+            if (optShowPrayer || optShowSuper) {
+                metaHtml = `<div class="m-plan-meta">`;
+                if (optShowPrayer) metaHtml += `<div>🙏 경건회: <span style="color:var(--text-main);">${escapeHTML(prayer.name)}</span></div>`;
+                if (optShowSuper) metaHtml += `<div>👀 감독: <span style="color:var(--text-main);">${escapeHTML(supervisorMap[dateKey] || "")}</span></div>`;
+                metaHtml += `</div>`;
+            }
+
             html += `<div class="m-plan-card">
                 <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
                 <div style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
-                <div class="m-plan-meta">
-                    <div>🙏 경건회: <span style="color:var(--text-main);">${escapeHTML(prayer.name)}</span></div>
-                    <div>👀 감독: <span style="color:var(--text-main);">${escapeHTML(supervisorMap[dateKey] || "")}</span></div>
-                </div>
+                ${metaHtml}
             </div>`;
         }
         html += `</div>`;
 
-        // 💻 PC 테이블 & 인쇄용 표 래퍼 (모바일 화면에선 숨겨지고 인쇄할 때는 항상 나타나게 설계)
+        // 💻 PC 테이블 & 인쇄용 표 래퍼
+        let thHtml = `<th class="col-date" style="width:40px">날짜</th>
+                      <th class="col-day" style="width:40px">요일</th>
+                      <th class="col-content">주요 행사 내용</th>`;
+        if (optShowPrayer) thHtml += `<th class="col-prayer" style="width:80px">경건회</th>`;
+        if (optShowSuper) thHtml += `<th class="col-super" style="width:80px">자습감독</th>`;
+
         html += `<div class="pc-plan-wrapper" ${isMobileMode ? 'style="display:none;"' : ''}>
             <div class="table-container"><table class="plan-table"><thead><tr>
-            <th style="width:40px">날짜</th><th style="width:40px">요일</th><th>주요 행사 내용</th>
-            <th style="width:80px">경건회</th><th style="width:80px">자습감독</th>
+            ${thHtml}
         </tr></thead><tbody>`;
 
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
             const dateKey = date.toISOString().split('T')[0];
             const day = daysByKey[dateKey];
-            
-            // 말씀/찬송 무시하고 이름만 담아오게 처리됨
             const prayer = prayerMap[dateKey] || {name:""}; 
             const rowClass = date.getDay()===0 ? 'row-sun' : date.getDay()===6 ? 'row-sat' : '';
 
@@ -717,9 +738,10 @@
                 const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
                 eventsHtml = ids.map(id => {
                     const ev = eventsById[id];
+                    const deptTag = optShowDept ? `<div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>` : '';
                     return `
                         <div class="event-row" data-eid="${id}">
-                            <div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
+                            ${deptTag}
                             <div>${highlightHTML(ev.text)}</div>
                         </div>`;
                 }).join("");
@@ -728,10 +750,12 @@
             html += `<tr class="${rowClass}">
                 <td style="font-weight:900;">${d}</td>
                 <td style="font-weight:900;">${['일','월','화','수','목','금','토'][date.getDay()]}</td>
-                <td style="text-align:left;"><div class="event-container">${eventsHtml}</div></td>
-                <td><div class="prayer-box"><span class="prayer-name">${escapeHTML(prayer.name)}</span></div></td>
-                <td style="font-weight:800;">${escapeHTML(supervisorMap[dateKey] || "")}</td>
-            </tr>`;
+                <td style="text-align:left;"><div class="event-container">${eventsHtml}</div></td>`;
+                
+            if (optShowPrayer) html += `<td><div class="prayer-box"><span class="prayer-name">${escapeHTML(prayer.name)}</span></div></td>`;
+            if (optShowSuper) html += `<td style="font-weight:800;">${escapeHTML(supervisorMap[dateKey] || "")}</td>`;
+            
+            html += `</tr>`;
         }
         html += `</tbody></table></div></div></div>`;
         
