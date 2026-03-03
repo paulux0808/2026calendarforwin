@@ -12,13 +12,11 @@
             --border-heavy: #868e96;
             --text-main: #1a1d23;
             --text-muted: #495057;
-            --accent: #339af0;
             --sat-bg: #e7f5ff;
             --sun-bg: #fff5f5;
-            --header-bg: #ffffff;
         }
 
-        /* 다크모드 변수 */
+        /* 다크모드 설정 */
         body.dark-mode {
             --bg: #1a1d23;
             --surface: #2c2e33;
@@ -27,60 +25,78 @@
             --text-muted: #adb5bd;
             --sat-bg: #1864ab22;
             --sun-bg: #c92a2a22;
-            --header-bg: #25262b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.2s; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        .header-wrapper { background: var(--header-bg); z-index: 1000; border-bottom: 2px solid var(--border-heavy); padding: 8px 20px; flex-shrink: 0; }
+        .header-wrapper { background: var(--surface); z-index: 1000; border-bottom: 2px solid var(--border-heavy); padding: 8px 20px; flex-shrink: 0; }
         .header { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
 
-        .search-box { flex-grow: 1; max-width: 300px; position: relative; }
-        .search-input { width: 100%; padding: 7px 12px; border-radius: 8px; border: 2px solid var(--border-heavy); background: var(--bg); color: var(--text-main); font-size: 13px; }
+        .search-box { flex-grow: 1; max-width: 250px; }
+        .search-input { width: 100%; padding: 6px 12px; border-radius: 8px; border: 2px solid var(--border-heavy); background: var(--bg); color: var(--text-main); font-size: 13px; }
 
         .container { flex-grow: 1; overflow-y: auto; width: 100%; padding: 15px 0; }
         .limit-wrapper { max-width: 1400px; margin: 0 auto; width: 95%; }
 
-        .controls { display: flex; gap: 4px; background: #e9ecef; padding: 3px; border-radius: 10px; border: 2px solid var(--border-heavy); }
+        .controls { display: flex; gap: 3px; background: #e9ecef; padding: 3px; border-radius: 10px; border: 2px solid var(--border-heavy); }
         body.dark-mode .controls { background: #343a40; }
-        .btn { background: transparent; color: var(--text-muted); border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.15s; font-family: inherit; white-space: nowrap; }
-        .btn:hover { background: #dee2e6; color: var(--text-main); }
+        .btn { background: transparent; color: var(--text-muted); border: none; padding: 5px 10px; border-radius: 6px; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.15s; font-family: inherit; }
         .btn.active { background: var(--border-heavy); color: #fff; }
 
         /* 월 선택기 */
-        .month-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-        .month-title { font-size: 20px; font-weight: 900; color: var(--text-main); min-width: 130px; text-align: center; }
+        .month-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
+        .month-title { font-size: 20px; font-weight: 900; min-width: 130px; text-align: center; }
 
-        /* 달력 그리드 */
+        /* 달력 그리드 - 들여쓰기 구조 포함 */
         .calendar-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; grid-auto-rows: minmax(140px, auto); }
-        
-        /* 모바일 모드 전환 시 스타일 */
-        .calendar-grid.mobile-view { grid-template-columns: 1fr; }
-        .calendar-grid.mobile-view .cal-head { display: none; }
-        .calendar-grid.mobile-view .cal-cell { min-height: auto; margin-bottom: 5px; padding: 12px; }
+        .calendar-grid.mobile-mode { grid-template-columns: 1fr; }
+        .calendar-grid.mobile-mode .cal-head { display: none; }
 
-        .cal-head { padding: 8px; text-align: center; font-weight: 900; background: #f1f3f5; border: 2px solid var(--border-heavy); border-radius: 5px; color: #495057; }
-        body.dark-mode .cal-head { background: #343a40; color: #dee2e6; }
+        .cal-head { padding: 8px; text-align: center; font-weight: 900; background: #f1f3f5; border: 2px solid var(--border-heavy); border-radius: 5px; }
+        body.dark-mode .cal-head { background: #343a40; }
         
         .cal-cell { background: var(--surface); border: 2px solid var(--border-heavy); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; min-width: 0; }
-        .cal-cell.today { border-color: #fcc419; border-width: 3px; box-shadow: 0 0 10px rgba(252, 196, 25, 0.2); }
+        .cal-cell.today { border-color: #fcc419; border-width: 3px; }
         .cal-cell.other-month { opacity: 0.3; }
         .cal-date { font-size: 14px; font-weight: 900; margin-bottom: 6px; display: flex; justify-content: space-between; }
         .cal-date.sunday { color: #ff6b6b; }
         
-        /* 들여쓰기 일정 스타일 */
-        .cal-ev { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 4px; font-size: 11.5px; margin-bottom: 4px; font-weight: 600; cursor: pointer; line-height: 1.4; color: var(--text-main); }
+        /* [핵심] 들여쓰기 일정 스타일 */
+        .cal-ev { 
+            display: grid;
+            grid-template-columns: auto 1fr; /* 태그 고정, 텍스트 가변 */
+            align-items: start;
+            gap: 5px;
+            font-size: 11.5px; 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            line-height: 1.4; 
+            color: var(--text-main);
+            word-break: keep-all; 
+            overflow-wrap: break-word;
+        }
         .cal-ev.hidden { display: none; }
         .cal-ev:hover .cal-text { text-decoration: underline; }
 
-        .cal-dept-tag { display: inline-block; padding: 1px 4px; border-radius: 3px; font-weight: 900; font-size: 9.5px; color: #000; line-height: 1.2; border: 1px solid rgba(0,0,0,0.1); white-space: nowrap; }
-        
-        /* 계획표 가변형 */
+        .cal-dept-tag { 
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 900;
+            font-size: 9.5px;
+            color: #000; /* 태그 글자는 항상 검정색 유지 */
+            line-height: 1.2;
+            border: 1px solid rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+
+        /* 계획표(표) 가변 레이아웃 */
         .table-container { border: 2px solid var(--border-heavy); border-radius: 8px; overflow-x: auto; background: var(--surface); }
         .plan-table { width: 100%; border-collapse: collapse; table-layout: auto; min-width: 800px; }
-        .plan-table th { position: sticky; top: 0; background: #e9ecef; border-bottom: 2px solid var(--border-heavy); padding: 10px; font-weight: 900; z-index: 10; color: #495057; }
-        body.dark-mode .plan-table th { background: #343a40; color: #dee2e6; }
+        .plan-table th { position: sticky; top: 0; background: #e9ecef; border-bottom: 2px solid var(--border-heavy); padding: 10px; font-weight: 900; z-index: 10; }
+        body.dark-mode .plan-table th { background: #343a40; }
         .plan-table td { border-bottom: 1px solid var(--border-heavy); border-right: 1px solid var(--border-heavy); padding: 8px; text-align: center; }
         .plan-table tr.row-sun { background: var(--sun-bg); }
         .plan-table tr.row-sat { background: var(--sat-bg); }
@@ -89,41 +105,40 @@
         .event-row { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 6px; font-size: 13.5px; font-weight: 700; line-height: 1.4; cursor: pointer; }
         .screen-dept { display: inline-block; padding: 1.5px 6px; border-radius: 4px; font-size: 10.5px; border: 1px solid rgba(0,0,0,0.1); font-weight: 900; white-space: nowrap; color: #000; }
 
+        /* 기타 UI */
+        .prayer-box { line-height: 1.2; font-size: 13px; }
+        .prayer-name { font-weight: 900; display: block; margin-bottom: 2px; font-size: 14px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 5px solid #e9ecef; border-top-color: var(--border-heavy); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
         @media print {
             .no-print { display: none !important; }
-            body { overflow: visible; height: auto; background: #fff !important; color: #000 !important; }
+            body { overflow: visible; height: auto; }
             .container { overflow: visible; padding: 0; }
             .plan-table td, .plan-table th { border: 1px solid #000 !important; }
             @page { size: A4 landscape; margin: 10mm; }
         }
-
-        /* 공지사항 팝업 등 */
-        #noticeModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center; backdrop-filter: blur(2px); }
-        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        .spinner { width: 40px; height: 40px; border: 5px solid #e9ecef; border-top-color: var(--border-heavy); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="">
+<body>
 
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <div style="font-weight:900; margin-top:15px;">스마트 학사 시스템 로딩 중...</div>
+    <div style="font-weight:900; margin-top:15px;">스마트 학사 시스템 동기화 중...</div>
 </div>
 
-<div id="noticeModal" class="no-print">
+<div id="noticeModal" class="no-print" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center; backdrop-filter: blur(2px);">
     <div style="background:var(--surface); width:95%; max-width:600px; border-radius:16px; border:3px solid var(--border-heavy); overflow:hidden;">
         <div style="background:rgba(0,0,0,0.05); padding:18px; border-bottom:2px solid var(--border-heavy); font-weight:900; font-size:22px;">📢 공지사항</div>
         <div style="padding:25px; font-size:18px; line-height:1.7; white-space:pre-wrap; max-height:60vh; overflow-y:auto;" id="modalContent"></div>
-        <div style="padding:15px; display:flex; justify-content:center;">
-            <button class="btn active" onclick="closeNotice()" style="padding:10px 60px;">확인</button>
-        </div>
+        <div style="padding:15px; display:flex; justify-content:center;"><button class="btn active" onclick="closeNotice()" style="padding:10px 60px;">확인</button></div>
     </div>
 </div>
 
 <div class="header-wrapper no-print">
     <div class="header">
-        <h1 onclick="location.reload()" style="font-size:18px; font-weight:900; cursor:pointer; white-space:nowrap;">📅 스마트 학사</h1>
+        <h1 onclick="location.reload()" style="font-size:17px; font-weight:900; cursor:pointer; white-space:nowrap;">📅 스마트 학사</h1>
         
         <div class="search-box">
             <input type="text" id="searchInput" class="search-input" placeholder="행사 내용 검색..." oninput="handleSearch()">
@@ -137,8 +152,8 @@
         </div>
 
         <div style="display:flex; gap:5px;">
-            <button class="btn" onclick="toggleDarkMode()" title="다크모드">🌙</button>
-            <button class="btn" id="btn_mobile" onclick="toggleMobileView()">📱 모바일모드</button>
+            <button class="btn" onclick="toggleDarkMode()">🌙</button>
+            <button class="btn" id="btn_mobile" onclick="toggleMobileMode()">📱 모바일모드</button>
         </div>
     </div>
 </div>
@@ -149,17 +164,15 @@
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7y4g3X-UxdwBR97fdS0N667G4Y4Mia4p0IBIJlBvU8ZkG7NaVD_HITsxANGt_aue-LA/exec";
     const SHEET_ID = '10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg';
     const FIXED_DEPTS = ["교목부", "교무부", "연구부", "상담부", "정보부", "1학년부", "2학년부", "3학년부", "기획위원", "행정실", "국어과", "영어과", "수학과", "사회과", "과학과", "예체능과", "정보과", "외국어과", "기타"];
-    
-    // 한국 공휴일 (예시: 2026년 기준 일부)
     const HOLIDAYS = ["2026-01-01", "2026-03-01", "2026-05-05", "2026-05-24", "2026-06-06", "2026-08-15", "2026-10-03", "2026-10-09", "2026-12-25"];
 
     let scheduleData = [], supervisorMap = {}, prayerMap = {}, deptColors = {}, dataLoaded = 0;
-    let isMobileView = false, searchQuery = "";
+    let isMobileMode = false, searchQuery = "";
 
     const PASTELS = ['#ffadad', '#ffdada', '#ffd6a5', '#ffecd2', '#fdffb6', '#fdfdf0', '#caffbf', '#e9ffeb', '#9bf6ff', '#e0ffff', '#a0c4ff', '#e2edff', '#bdb2ff', '#ece8ff', '#ffc6ff', '#ffebff', '#ffb7e5', '#ffe4f3', '#e9ecef'];
     FIXED_DEPTS.forEach((d, i) => { deptColors[d] = PASTELS[i] || '#f1f3f5'; });
 
-    // --- 데이터 로드 ---
+    // --- 데이터 수신 로직 ---
     function parseGDate(v) {
         if (!v || typeof v !== 'string' || !v.includes('Date')) return null;
         const parts = v.match(/\d+/g);
@@ -229,7 +242,7 @@
                 if (content && content !== "null" && content !== "") {
                     let isVisible = (startDate && endDate) ? (today >= startDate && today <= endDate) : true;
                     if (isVisible) {
-                        if (combinedHTML !== "") combinedHTML += '<hr style="margin:15px 0; opacity:0.2;">';
+                        if (combinedHTML !== "") combinedHTML += '<hr style="margin:15px 0; opacity:0.1;">';
                         combinedHTML += content;
                     }
                 }
@@ -252,11 +265,11 @@
     }
     fetchAll();
 
-    // --- 유틸리티 기능 ---
+    // --- 기능 함수 ---
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function toggleMobileView() { 
-        isMobileView = !isMobileView; 
-        document.getElementById('btn_mobile').innerText = isMobileView ? "🖥️ 일반모드" : "📱 모바일모드";
+    function toggleMobileMode() { 
+        isMobileMode = !isMobileMode; 
+        document.getElementById('btn_mobile').innerText = isMobileMode ? "🖥️ 일반모드" : "📱 모바일모드";
         render(); 
     }
     function handleSearch() {
@@ -270,17 +283,12 @@
         for(let d=1; d<=lastDay; d++) {
             const date = new Date(y, m-1, d), dISO = date.toISOString().split('T')[0];
             const dayData = scheduleData.find(x => x.date.toISOString().split('T')[0] === dISO);
-            if(dayData) {
-                dayData.events.forEach(e => {
-                    csv += `${d},${['일','월','화','수','목','금','토'][date.getDay()]},${e.dept},"${e.text}"\n`;
-                });
-            }
+            if(dayData) dayData.events.forEach(e => { csv += `${d},${['일','월','화','수','목','금','토'][date.getDay()]},${e.dept},"${e.text}"\n`; });
         }
         const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `학사일정_${y}년_${m}월.csv`;
-        link.click();
+        link.download = `학사일정_${y}년_${m}월.csv`; link.click();
     }
 
     let currentTab = 'calendar', viewDate = new Date();
@@ -303,17 +311,17 @@
     window.goDept = (deptName) => { window._selDept = deptName; switchTab('dept'); };
     window.closeNotice = () => { document.getElementById('noticeModal').style.display = 'none'; };
 
-    // --- 렌더링 함수들 ---
+    // --- 달력 렌더링 ---
     function renderCalendar(c) {
         const y = viewDate.getFullYear(), m = viewDate.getMonth(), now = new Date();
         let html = `<div class="limit-wrapper">
             <div class="month-selector no-print">
-                <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
+                <button class="btn" onclick="changeMonth(-1)">◀</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
-                <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
-                <button class="btn" style="background:#40c057; color:#fff;" onclick="exportToCSV()">📥 CSV저장</button>
+                <button class="btn" onclick="changeMonth(1)">▶</button>
+                <button class="btn" style="background:#40c057; color:#fff;" onclick="exportToCSV()">📥 CSV</button>
             </div>
-            <div class="calendar-grid ${isMobileView ? 'mobile-view' : ''}">${['월','화','수','목','금'].map(d => `<div class="cal-head">${d}</div>`).join('')}`;
+            <div class="calendar-grid ${isMobileMode ? 'mobile-mode' : ''}">${['월','화','수','목','금'].map(d => `<div class="cal-head">${d}</div>`).join('')}`;
         
         const firstDay = new Date(y, m, 1), lastDay = new Date(y, m + 1, 0);
         let curr = new Date(firstDay);
@@ -324,17 +332,16 @@
             const dStr = curr.toISOString().split('T')[0];
             const isToday = curr.toDateString() === now.toDateString();
             const isSunday = curr.getDay() === 0 || HOLIDAYS.includes(dStr);
-            
-            if(isMobileView || (curr.getDay() !== 0 && curr.getDay() !== 6)) {
+            const isWeekend = curr.getDay() === 0 || curr.getDay() === 6;
+
+            if(isMobileMode || !isWeekend) {
                 const dayData = scheduleData.find(x => x.date.toISOString().split('T')[0] === dStr);
                 const hasMatch = dayData && dayData.events.some(e => e.text.toLowerCase().includes(searchQuery) || e.dept.toLowerCase().includes(searchQuery));
                 
-                // 모바일 뷰일 때 검색어가 있으면 일정이 있는 날만 표시
-                if (!isMobileView || (isMobileView && (!searchQuery || hasMatch))) {
+                if(!isMobileMode || (isMobileMode && (!searchQuery || hasMatch))) {
                     html += `<div class="cal-cell ${curr.getMonth()!==m?'other-month':''} ${isToday?'today':''}">
                         <div class="cal-date ${isSunday?'sunday':''}">
-                            <span>${curr.getDate()} ${isMobileView ? '('+['일','월','화','수','목','금','토'][curr.getDay()]+')' : ''}</span>
-                            ${isToday ? '<span style="font-size:10px; color:#fcc419;">TODAY</span>' : ''}
+                            <span>${curr.getDate()} ${isMobileMode?'('+['일','월','화','수','목','금','토'][curr.getDay()]+')':''}</span>
                         </div>
                         ${dayData ? dayData.events.map(e => {
                             const match = e.text.toLowerCase().includes(searchQuery) || e.dept.toLowerCase().includes(searchQuery);
@@ -347,21 +354,22 @@
                 }
             }
             curr.setDate(curr.getDate() + 1);
-            if(!isMobileView && curr > lastDay && curr.getDay() === 1) break;
-            if(isMobileView && curr > lastDay) break;
+            if(!isMobileMode && curr > lastDay && curr.getDay() === 1) break;
+            if(isMobileMode && curr > lastDay) break;
         }
         c.innerHTML = html + `</div></div>`;
     }
 
+    // --- 계획표 렌더링 ---
     function renderPlan(c) {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         const lastDay = new Date(y, m + 1, 0).getDate();
         let html = `<div class="limit-wrapper">
             <div class="month-selector no-print">
-                <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
+                <button class="btn" onclick="changeMonth(-1)">◀</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
-                <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
-                <button class="btn active" style="margin-left:20px; background:var(--border-heavy);" onclick="window.print()">🖨️ 인쇄</button>
+                <button class="btn" onclick="changeMonth(1)">▶</button>
+                <button class="btn active" style="margin-left:10px; background:var(--border-heavy);" onclick="window.print()">🖨️ 인쇄</button>
             </div>
             <div class="table-container"><table class="plan-table"><thead><tr><th style="width:50px">날짜</th><th style="width:40px">요일</th><th>주요 행사 내용</th><th style="width:130px">기도/말씀</th><th style="width:100px">자습감독</th></tr></thead><tbody>`;
         
@@ -387,6 +395,7 @@
         c.innerHTML = html + `</tbody></table></div></div>`;
     }
 
+    // --- 부서별 조회 ---
     function renderDept(c) {
         if(!window._selDept) window._selDept = FIXED_DEPTS[0];
         const filtered = scheduleData.filter(day => day.events.some(e => e.dept === window._selDept)).sort((a,b) => a.date - b.date);
@@ -397,18 +406,18 @@
             monthGroups[mKey].push(item);
         });
 
-        let html = `<div class="limit-wrapper"><div class="month-selector no-print" style="justify-content:flex-start;"><label style="font-weight:900; margin-right:15px;">🏢 부서 선택:</label>
+        let html = `<div class="limit-wrapper"><div class="month-selector no-print" style="justify-content:flex-start;"><label style="font-weight:900; margin-right:15px;">🏢 부서:</label>
             <select class="btn" style="border:2px solid var(--border-heavy); background:var(--surface); color:var(--text-main);" onchange="window._selDept=this.value; render();">${FIXED_DEPTS.map(d => `<option value="${d}" ${window._selDept===d?'selected':''}>${d}</option>`).join('')}</select></div>`;
         
-        if(Object.keys(monthGroups).length === 0) html += `<div style="text-align:center; padding:80px; color:#868e96; font-weight:800; border:2px dashed var(--border-heavy); border-radius:15px; margin-top:20px;">일정이 없습니다.</div>`;
+        if(Object.keys(monthGroups).length === 0) html += `<div style="text-align:center; padding:60px; color:#868e96; font-weight:800; border:2px dashed var(--border-heavy); border-radius:15px;">일정이 없습니다.</div>`;
         else {
             Object.keys(monthGroups).forEach(mKey => {
-                html += `<div class="dept-month-title">${mKey}</div><div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:12px;">`;
+                html += `<div style="font-size:18px; font-weight:900; border-bottom:4px solid var(--border-heavy); margin:20px 0 10px; padding-bottom:5px;">${mKey}</div><div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:12px;">`;
                 monthGroups[mKey].forEach(item => {
                     const events = item.events.filter(e => e.dept === window._selDept);
-                    html += `<div class="dept-card" style="border-left: 8px solid ${deptColors[window._selDept]}; background:var(--surface);">
+                    html += `<div style="background:var(--surface); border:2px solid var(--border-heavy); border-radius:12px; padding:15px; border-left:8px solid ${deptColors[window._selDept]}">
                         <div style="font-weight:900; margin-bottom:8px;">${item.date.getMonth()+1}월 ${item.date.getDate()}일 (${['일','월','화','수','목','금','토'][item.date.getDay()]})</div>
-                        ${events.map(e => `<div style="font-weight:800; color:var(--text-main);">• ${e.text}</div>`).join('')}
+                        ${events.map(e => `<div style="font-weight:800;">• ${e.text}</div>`).join('')}
                     </div>`;
                 });
                 html += `</div>`;
@@ -417,38 +426,27 @@
         c.innerHTML = html + `</div>`;
     }
 
+    // --- 요청 폼 ---
     function renderRequestForm(c) {
-        c.innerHTML = `
-            <div class="limit-wrapper">
-                <div class="request-form">
-                    <h2 style="margin-bottom:10px; text-align:center;">✍️ 학사일정 수정/추가 요청</h2>
-                    <p style="margin-bottom:30px; color:var(--text-muted); font-size:14px; text-align:center; line-height:1.5;">내용을 작성하시면 관리자에게 즉시 전송됩니다.</p>
-                    <div class="form-group"><label class="form-label">작성자 성함</label><input type="text" id="reqName" class="form-input" placeholder="성함을 입력해 주세요"></div>
-                    <div class="form-group"><label class="form-label">요청 유형</label><select id="reqType" class="form-input"><option value="일정수정">일정수정/추가</option><option value="프로그램 개선">시스템 개선</option><option value="기타">기타</option></select></div>
-                    <div class="form-group"><label class="form-label">요청 내용</label><textarea id="reqContent" class="form-textarea" placeholder="상세 내용을 적어주세요."></textarea></div>
-                    <button class="submit-btn" id="submitBtn" onclick="submitRequest()">보내기</button>
-                </div>
-            </div>
-        `;
+        c.innerHTML = `<div class="limit-wrapper"><div style="background:var(--surface); border:3px solid var(--border-heavy); border-radius:16px; padding:30px; max-width:600px; margin:20px auto;">
+            <h2 style="text-align:center; margin-bottom:20px;">✍️ 수정/추가 요청</h2>
+            <div style="margin-bottom:15px;"><label style="display:block; font-weight:900; margin-bottom:5px;">성함</label><input type="text" id="reqName" style="width:100%; padding:12px; border:2px solid #dee2e6; border-radius:8px; background:var(--bg); color:var(--text-main);"></div>
+            <div style="margin-bottom:15px;"><label style="display:block; font-weight:900; margin-bottom:5px;">유형</label><select id="reqType" style="width:100%; padding:12px; border:2px solid #dee2e6; border-radius:8px; background:var(--bg); color:var(--text-main);"><option value="일정수정">일정수정</option><option value="시스템개선">시스템개선</option></select></div>
+            <div style="margin-bottom:20px;"><label style="display:block; font-weight:900; margin-bottom:5px;">내용</label><textarea id="reqContent" style="width:100%; height:120px; padding:12px; border:2px solid #dee2e6; border-radius:8px; background:var(--bg); color:var(--text-main); resize:none;"></textarea></div>
+            <button class="btn active" id="submitBtn" onclick="submitRequest()" style="width:100%; padding:15px; font-size:16px;">보내기</button>
+        </div></div>`;
     }
 
     async function submitRequest() {
         const name = document.getElementById('reqName').value;
         const type = document.getElementById('reqType').value;
         const content = document.getElementById('reqContent').value;
-        if(!name || !content) { alert("성함과 요청 내용을 모두 입력해 주세요."); return; }
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true; btn.innerText = "전송 중...";
+        if(!name || !content) { alert("모두 입력해주세요."); return; }
+        const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.innerText = "전송 중...";
         try {
-            await fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, type, content })
-            });
-            alert("요청이 성공적으로 전송되었습니다!");
-            switchTab('calendar');
-        } catch (error) { alert("전송 중 오류가 발생했습니다."); }
+            await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, type, content }) });
+            alert("전송 완료!"); switchTab('calendar');
+        } catch (e) { alert("오류 발생"); }
         finally { btn.disabled = false; btn.innerText = "보내기"; }
     }
 </script>
