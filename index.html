@@ -325,6 +325,7 @@
     let optShowSuper = true;
     let optExcludeWeekends = false; // 주말 제외 추가
     let optHorizontalEvents = false; // 일정 가로 배열 추가
+    let optYearlyView = false; // 📌 연별(1년 전체) 보기 옵션 추가
     
     // 고속 검색 및 모달용 인덱스
     let eventSeq = 0;
@@ -593,75 +594,96 @@
         else if(currentTab === 'request') renderRequestForm(mc);
     }
 
-    // --- 달력 렌더링 ---
+    // --- 달력 렌더링 (연별/월별 보기 옵션 지원) ---
     function renderCalendar(c) {
-        const y = viewDate.getFullYear(), m = viewDate.getMonth(), now = new Date();
+        const y = viewDate.getFullYear(), currentM = viewDate.getMonth(), now = new Date();
         const todayKey = getLocalDateKey(now);
         
         let html = `<div class="limit-wrapper">
-            <div class="month-selector no-print">
-                <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
-                <div class="month-title">${y}년 ${m + 1}월</div>
-                <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
+            <div class="month-selector no-print" style="margin-bottom: 5px;">
+                <button class="btn" onclick="changeMonth(optYearlyView ? -12 : -1)">◀ 이전</button>
+                <div class="month-title">${y}년 ${optYearlyView ? '전체' : (currentM + 1) + '월'}</div>
+                <button class="btn" onclick="changeMonth(optYearlyView ? 12 : 1)">다음 ▶</button>
             </div>
+            
+            <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
+                <label style="cursor:pointer; color: #1864ab;"><input type="checkbox" ${optYearlyView ? 'checked' : ''} onchange="optYearlyView=this.checked; render()"> 1년 전체 보기 (스크롤)</label>
+            </div>
+        `;
+
+        // 연별 보기면 1월(0)부터 12월(11)까지, 아니면 현재 선택된 월만
+        const startM = optYearlyView ? 0 : currentM;
+        const endM = optYearlyView ? 11 : currentM;
+
+        for (let m = startM; m <= endM; m++) {
+            if (optYearlyView) {
+                html += `<div class="dept-month-title" style="margin-top: 30px;">${y}년 ${m + 1}월</div>`;
+            }
+
+            html += `
             <div class="calendar-grid-wrapper">
                 <div class="calendar-grid ${isMobileMode ? 'mobile-grid-view' : ''}">
                     ${isMobileMode ? '' : ['월','화','수','목','금'].map(d => `<div class="cal-head">${d}</div>`).join('')}
-        `;
+            `;
 
-        const firstDay = new Date(y, m, 1), lastDay = new Date(y, m + 1, 0);
-        let curr = new Date(firstDay);
-        let diff = curr.getDay() - 1; if(diff === -1) diff = 6;
-        curr.setDate(curr.getDate() - diff);
+            const firstDay = new Date(y, m, 1), lastDay = new Date(y, m + 1, 0);
+            let curr = new Date(firstDay);
+            let diff = curr.getDay() - 1; if(diff === -1) diff = 6;
+            curr.setDate(curr.getDate() - diff);
 
-        for (let i=0; i<35; i++) {
-            const dKey = getLocalDateKey(curr);
-            const isToday = dKey === todayKey;
-            const isWeekend = (curr.getDay() === 0 || curr.getDay() === 6);
+            // 주 단위로 잘림 방지 (최대 6주 = 42일 렌더링)
+            for (let i=0; i<42; i++) { 
+                const dKey = getLocalDateKey(curr);
+                const isToday = dKey === todayKey;
+                const isWeekend = (curr.getDay() === 0 || curr.getDay() === 6);
 
-            if (!isMobileMode && isWeekend) {
-                curr.setDate(curr.getDate() + 1);
-                continue;
-            }
-
-            const day = daysByKey[dKey];
-            
-            if (isMobileMode && searchTokens.length) {
-                const hasMatch = day && day.eventIds.some(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
-                if (!hasMatch) {
+                if (!isMobileMode && isWeekend) {
                     curr.setDate(curr.getDate() + 1);
-                    if (curr > lastDay && curr.getDay() === 1 && !isMobileMode) break;
-                    if (isMobileMode && curr > lastDay) break;
                     continue;
                 }
+
+                const day = daysByKey[dKey];
+                
+                if (isMobileMode && searchTokens.length) {
+                    const hasMatch = day && day.eventIds.some(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
+                    if (!hasMatch) {
+                        curr.setDate(curr.getDate() + 1);
+                        if (curr > lastDay && curr.getDay() === 1 && !isMobileMode) break;
+                        if (isMobileMode && curr > lastDay) break;
+                        continue;
+                    }
+                }
+
+                let eventsHtml = "";
+                if (day && day.eventIds.length) {
+                    const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
+                    eventsHtml = ids.map(id => {
+                        const ev = eventsById[id];
+                        return `
+                            <div class="cal-ev" data-eid="${id}">
+                                <div class="cal-dept-tag" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
+                                <div class="cal-text">${highlightHTML(ev.text)}</div>
+                            </div>`;
+                    }).join("");
+                }
+
+                const dow = ['일','월','화','수','목','금','토'][curr.getDay()];
+                const dateLabel = isMobileMode ? `${curr.getDate()} (${dow})` : `${curr.getDate()}`;
+
+                html += `<div class="cal-cell ${curr.getMonth() !== m ? 'other-month' : ''} ${isToday ? 'today' : ''}">
+                    <div class="cal-date">${dateLabel}</div>
+                    ${eventsHtml}
+                </div>`;
+
+                curr.setDate(curr.getDate() + 1);
+                if (!isMobileMode && curr > lastDay && curr.getDay() === 1) break;
+                if (isMobileMode && curr > lastDay) break;
             }
-
-            let eventsHtml = "";
-            if (day && day.eventIds.length) {
-                const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
-                eventsHtml = ids.map(id => {
-                    const ev = eventsById[id];
-                    return `
-                        <div class="cal-ev" data-eid="${id}">
-                            <div class="cal-dept-tag" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>
-                            <div class="cal-text">${highlightHTML(ev.text)}</div>
-                        </div>`;
-                }).join("");
-            }
-
-            const dow = ['일','월','화','수','목','금','토'][curr.getDay()];
-            const dateLabel = isMobileMode ? `${curr.getDate()} (${dow})` : `${curr.getDate()}`;
-
-            html += `<div class="cal-cell ${curr.getMonth() !== m ? 'other-month' : ''} ${isToday ? 'today' : ''}">
-                <div class="cal-date">${dateLabel}</div>
-                ${eventsHtml}
-            </div>`;
-
-            curr.setDate(curr.getDate() + 1);
-            if (!isMobileMode && curr > lastDay && curr.getDay() === 1) break;
-            if (isMobileMode && curr > lastDay) break;
+            html += `</div></div>`;
         }
-        c.innerHTML = html + `</div></div></div>`; 
+        
+        html += `</div>`;
+        c.innerHTML = html; 
     }
 
     // --- 계획표 렌더링 (옵션 체크박스 및 가변 열 처리 반영) ---
