@@ -130,9 +130,9 @@
         /* PC용 표 형태 계획표 */
         .table-container { border: 2px solid var(--border-heavy); border-radius: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .plan-table { width: 100%; border-collapse: collapse; background: var(--surface); table-layout: fixed; min-width: 650px; }
-        .plan-table th { position: sticky; top: 0; background: #e9ecef; border-bottom: 2px solid var(--border-heavy); padding: 10px; font-weight: 900; z-index: 10; color: #000; font-size: var(--base-font); }
+        .plan-table th { position: sticky; top: 0; background: #e9ecef; border-bottom: 2px solid var(--border-heavy); padding: 5px; font-weight: 900; z-index: 10; color: #000; font-size: var(--base-font); }
         body.dark-mode .plan-table th { background: #343a40; color: #fff; }
-        .plan-table td { border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 8px; text-align: center; font-size: var(--base-font); }
+        .plan-table td { border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 4px; text-align: center; font-size: var(--base-font); }
         body.dark-mode .plan-table td { border-color: #495057; }
         
         .plan-table tr.row-sun { background: var(--sun-bg); color: #c92a2a; }
@@ -140,7 +140,9 @@
         .plan-table tr.row-sat { background: var(--sat-bg); color: #1864ab; }
         body.dark-mode .plan-table tr.row-sat { color: #74c0fc; }
         
-        .event-container { display: flex; flex-direction: column; gap: 5px; text-align: left; }
+        .event-container { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+        /* 새로 추가: 수평 배열 컨테이너 */
+        .horizontal-container { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 4px; }
         .event-row { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 6px; font-size: calc(var(--base-font) - 0.5px); font-weight: 700; line-height: 1.4; cursor: pointer; color: var(--text-main); }
         .event-row:hover { text-decoration: underline; }
         
@@ -205,24 +207,25 @@
             .pc-plan-wrapper { display: block !important; }
             .table-container { border: none !important; overflow: visible !important; }
             
-            /* 한 페이지 꽉 채우기 위한 높이 지정 (행 높이 균등 배분 유도) */
-            .plan-table { width: 100% !important; height: 265mm !important; border-collapse: collapse; table-layout: fixed; }
-            .plan-table th { background: #eee !important; position: static; -webkit-print-color-adjust: exact; print-color-adjust: exact; height: 18px; font-size: 11px !important; }
+            /* 주말 제외 및 폰트 확장으로 인해 min-height로 유연성 확보 */
+            .plan-table { width: 100% !important; min-height: 265mm !important; height: auto !important; border-collapse: collapse; table-layout: fixed; }
+            .plan-table th { background: #eee !important; position: static; -webkit-print-color-adjust: exact; print-color-adjust: exact; height: 22px; font-size: 15px !important; }
             .plan-table td, .plan-table th { border: 1px solid #000 !important; color: #000 !important; padding: 1px 2px !important; text-align: center; word-break: keep-all; }
             
-            /* 컬럼 가로 사이즈 세밀 조정 (클래스 선택자로 변경하여 유동성 확보) */
+            /* 컬럼 가로 사이즈 세밀 조정 */
             .plan-table th.col-date { width: 30px !important; }
             .plan-table th.col-day { width: 35px !important; }
             .plan-table th.col-content { width: auto !important; }
             .plan-table th.col-prayer { width: 55px !important; }
             .plan-table th.col-super { width: 55px !important; }
             
-            /* 글자 크기 조정 및 여백 축소 */
-            .plan-table td { font-size: 10px !important; overflow: hidden; }
-            .event-container { gap: 2px; }
-            .event-row { font-size: 9px !important; line-height: 1.1; margin: 0; }
-            .screen-dept { font-size: 8px !important; padding: 1px 2px !important; border: 1px solid #999 !important; border-radius: 2px !important; background: transparent !important; }
-            .prayer-box { font-size: 10px !important; }
+            /* 글자 크기 조정 및 여백 축소 (폰트 대폭 확대) */
+            .plan-table td { font-size: 12px !important; overflow: hidden; }
+            .event-container { gap: 1px; }
+            .event-container.horizontal-container { gap: 2px; }
+            .event-row { font-size: 14px !important; line-height: 1.3; margin: 0; }
+            .screen-dept { font-size: 12px !important; padding: 2px 3px !important; border: 1px solid #999 !important; border-radius: 2px !important; background: transparent !important; }
+            .prayer-box { font-size: 14px !important; }
         }
         .print-title { display: none; }
     </style>
@@ -316,10 +319,12 @@
     let searchQuery = "";
     let searchTokens = [];
     
-    // 계획표 표시 옵션 변수
+    // 계획표 표시 옵션 변수 (수정됨)
     let optShowDept = true;
     let optShowPrayer = true;
     let optShowSuper = true;
+    let optExcludeWeekends = false; // 주말 제외 추가
+    let optHorizontalEvents = false; // 일정 가로 배열 추가
     
     // 고속 검색 및 모달용 인덱스
     let eventSeq = 0;
@@ -672,35 +677,54 @@
                 <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
             </div>
             
-            <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted);">
+            <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
                 <label style="cursor:pointer;"><input type="checkbox" ${optShowDept ? 'checked' : ''} onchange="optShowDept=this.checked; render()"> 부서명 포함</label>
                 <label style="cursor:pointer;"><input type="checkbox" ${optShowPrayer ? 'checked' : ''} onchange="optShowPrayer=this.checked; render()"> 경건회 포함</label>
                 <label style="cursor:pointer;"><input type="checkbox" ${optShowSuper ? 'checked' : ''} onchange="optShowSuper=this.checked; render()"> 자습감독 포함</label>
+                <span style="border-left:2px solid var(--border-heavy); margin: 0 5px; height: 16px;"></span>
+                <label style="cursor:pointer; color: #c92a2a;"><input type="checkbox" ${optExcludeWeekends ? 'checked' : ''} onchange="optExcludeWeekends=this.checked; render()"> 주말 제외</label>
+                <label style="cursor:pointer; color: #1864ab;"><input type="checkbox" ${optHorizontalEvents ? 'checked' : ''} onchange="optHorizontalEvents=this.checked; render()"> 일정 가로 배열</label>
             </div>
             
             <div class="print-title">${y}학년도 ${m + 1}월중 학사운영 계획</div>`;
+
+        // 가로 배열 모드 클래스 설정
+        const containerClass = optHorizontalEvents ? 'event-container horizontal-container' : 'event-container';
 
         // 📱 모바일 뷰 전용 리스트 래퍼
         html += `<div class="m-plan-wrapper" ${!isMobileMode ? 'style="display:none;"' : ''}>`;
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
+            const dowNum = date.getDay();
+            if (optExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue; // 주말 제외 옵션 적용
+
             const dateKey = getLocalDateKey(date);
             const day = daysByKey[dateKey];
             const prayer = prayerMap[dateKey] || {name:""};
-            const rowClass = date.getDay()===0 ? 'sun-text' : date.getDay()===6 ? 'sat-text' : '';
-            const dow = ['일','월','화','수','목','금','토'][date.getDay()];
+            const rowClass = dowNum===0 ? 'sun-text' : dowNum===6 ? 'sat-text' : '';
+            const dow = ['일','월','화','수','목','금','토'][dowNum];
 
             let eventsHtml = "";
             if (day && day.eventIds.length) {
                 const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
-                eventsHtml = ids.map(id => {
+                eventsHtml = ids.map((id, index) => {
                     const ev = eventsById[id];
                     const deptTag = optShowDept ? `<div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>` : '';
-                    return `
-                        <div class="event-row" data-eid="${id}" style="margin-bottom:5px;">
-                            ${deptTag}
-                            <div>${highlightHTML(ev.text)}</div>
-                        </div>`;
+                    
+                    if (optHorizontalEvents) {
+                        let sep = index < ids.length - 1 ? `<span style="margin: 0 4px; color: #adb5bd; font-weight: 300;">|</span>` : '';
+                        return `
+                            <div class="event-row" data-eid="${id}" style="display:inline-flex; align-items:center; gap:4px; width:auto; page-break-inside:avoid; break-inside:avoid;">
+                                ${deptTag}
+                                <div style="word-break:keep-all;">${highlightHTML(ev.text)}</div>
+                            </div>${sep}`;
+                    } else {
+                        return `
+                            <div class="event-row" data-eid="${id}" style="margin-bottom:5px;">
+                                ${deptTag}
+                                <div>${highlightHTML(ev.text)}</div>
+                            </div>`;
+                    }
                 }).join("");
             }
 
@@ -714,7 +738,7 @@
 
             html += `<div class="m-plan-card">
                 <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
-                <div style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
+                <div class="${containerClass}" style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
                 ${metaHtml}
             </div>`;
         }
@@ -734,29 +758,42 @@
 
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
+            const dowNum = date.getDay();
+            if (optExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue; // 주말 제외 옵션 적용
+
             const dateKey = getLocalDateKey(date);
             const day = daysByKey[dateKey];
             const prayer = prayerMap[dateKey] || {name:""}; 
-            const rowClass = date.getDay()===0 ? 'row-sun' : date.getDay()===6 ? 'row-sat' : '';
+            const rowClass = dowNum===0 ? 'row-sun' : dowNum===6 ? 'row-sat' : '';
 
             let eventsHtml = "";
             if (day && day.eventIds.length) {
                 const ids = day.eventIds.filter(id => matchesSearch(eventsById[id].dept, eventsById[id].text));
-                eventsHtml = ids.map(id => {
+                eventsHtml = ids.map((id, index) => {
                     const ev = eventsById[id];
                     const deptTag = optShowDept ? `<div class="screen-dept" style="background:${deptColors[ev.dept]}">${highlightHTML(ev.dept)}</div>` : '';
-                    return `
-                        <div class="event-row" data-eid="${id}">
-                            ${deptTag}
-                            <div>${highlightHTML(ev.text)}</div>
-                        </div>`;
+                    
+                    if (optHorizontalEvents) {
+                        let sep = index < ids.length - 1 ? `<span style="margin: 0 4px; color: #adb5bd; font-weight: 300;">|</span>` : '';
+                        return `
+                            <div class="event-row" data-eid="${id}" style="display:inline-flex; align-items:center; gap:4px; width:auto; page-break-inside:avoid; break-inside:avoid;">
+                                ${deptTag}
+                                <div style="word-break:keep-all;">${highlightHTML(ev.text)}</div>
+                            </div>${sep}`;
+                    } else {
+                        return `
+                            <div class="event-row" data-eid="${id}">
+                                ${deptTag}
+                                <div>${highlightHTML(ev.text)}</div>
+                            </div>`;
+                    }
                 }).join("");
             }
 
             html += `<tr class="${rowClass}">
                 <td style="font-weight:900;">${d}</td>
-                <td style="font-weight:900;">${['일','월','화','수','목','금','토'][date.getDay()]}</td>
-                <td style="text-align:left;"><div class="event-container">${eventsHtml}</div></td>`;
+                <td style="font-weight:900;">${['일','월','화','수','목','금','토'][dowNum]}</td>
+                <td style="text-align:left;"><div class="${containerClass}">${eventsHtml}</div></td>`;
                 
             if (optShowPrayer) html += `<td><div class="prayer-box"><span class="prayer-name">${escapeHTML(prayer.name)}</span></div></td>`;
             if (optShowSuper) html += `<td style="font-weight:800;">${escapeHTML(supervisorMap[dateKey] || "")}</td>`;
