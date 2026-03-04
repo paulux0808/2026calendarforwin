@@ -99,7 +99,7 @@
 
         /* 달력 그리드 */
         .calendar-grid-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 5px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--grid-gap); grid-auto-rows: minmax(var(--cell-min-h), auto); min-width: 700px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: auto; gap: var(--grid-gap); grid-auto-rows: minmax(var(--cell-min-h), auto); min-width: 700px; }
         .calendar-grid.mobile-grid-view { grid-template-columns: 1fr; min-width: 100%; }
         
         .cal-head { padding: 8px; text-align: center; font-weight: 900; background: #f1f3f5; border: 2px solid var(--border-heavy); border-radius: 5px; color: #000; min-width: 120px; }
