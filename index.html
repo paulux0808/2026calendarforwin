@@ -510,7 +510,10 @@
     // 시트 헤더: 순번(0)|영역(1)|일자(2)|교시(3)|1학년(4)|2학년(5)|3학년(6)|활동내용(7)|비고(8)
     // 요일·이수시간은 프론트에서 자동 계산
 function getCellText(cell) {
-    if (!cell) return "";
+    if (cell == null) return "";
+    if (typeof cell === "string" || typeof cell === "number") {
+        return String(cell).trim();
+    }
     const value = cell.f ?? cell.v ?? "";
     return String(value).trim();
 }
