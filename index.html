@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -514,68 +515,146 @@ function getCellText(cell) {
     return String(value).trim();
 }
 
+function buildColIndexMap(data) {
+    const cols = (data && data.table && Array.isArray(data.table.cols)) ? data.table.cols : [];
+    const map = Object.create(null);
+
+    cols.forEach((col, idx) => {
+        [col?.label, col?.id, col?.pattern].forEach((key) => {
+            const norm = String(key ?? "").replace(/\s+/g, '').trim();
+            if (norm) map[norm] = idx;
+        });
+    });
+
+    return map;
+}
+
+function pickColIndex(map, names, fallbackIndex) {
+    for (const name of names) {
+        const norm = String(name).replace(/\s+/g, '').trim();
+        if (Object.prototype.hasOwnProperty.call(map, norm)) return map[norm];
+    }
+    return fallbackIndex;
+}
+
+function normalizeCategory(raw) {
+    return String(raw ?? "").replace(/\(.*$/, '').trim();
+}
+
 function parsePeriods(cell) {
     const raw = getCellText(cell);
-
     if (!raw || raw === "null") {
         return { periods: "", hours: 0 };
     }
 
-    // "6교시, 7교시", "6-7", "6~7", "6 / 7", "6·7" 등 전부 대응
-    const normalized = raw
+    // 화면에 보여줄 값: 원문 최대한 유지
+    const display = raw
         .replace(/\s+/g, "")
-        .replace(/교시/g, "")
-        .replace(/[~～\-–—\/|·ㆍ、，]+/g, ",");
+        .replace(/교시/g, "");
 
-    // 숫자만 추출
-    const nums = normalized.match(/\d+/g) || [];
-
-    if (!nums.length) {
-        return {
-            periods: raw.trim(),
-            hours: 0
-        };
-    }
+    // 시간 계산용: 구분자만 통일해서 숫자 개수 세기
+    const normalized = display.replace(/[，、\/|~\-–—]+/g, ",");
+    const parts = normalized
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
 
     return {
-        periods: nums.join(","),
-        hours: nums.length
+        periods: display,   // "6,7"이면 그대로 "6,7" 표시
+        hours: parts.length // "6,7"이면 2
     };
 }
+
+function isCheckedGrade(raw) {
+    const v = String(raw ?? "").trim().toLowerCase();
+    return ["1", "o", "○", "◯", "v", "✓", "✔", "true", "y"].includes(v);
+}
+
+function findDateCell(row) {
+    const cells = (row && row.c) ? row.c : [];
+    for (const cell of cells) {
+        const dateObj = parseGDate(cell && (cell.v ?? cell.f));
+        if (dateObj) return dateObj;
+    }
+    return null;
+}
+
+function findCategoryText(texts) {
+    const allowed = new Set(["자율", "봉사", "동아리", "진로", "자율자치"]);
+    for (const txt of texts) {
+        const norm = normalizeCategory(txt);
+        if (allowed.has(norm)) return norm;
+    }
+    return "";
+}
+
+function findPeriodFallback(texts, preferredStart) {
+    for (let i = Math.max(0, preferredStart); i < texts.length; i++) {
+        const txt = texts[i];
+        if (!txt || txt === "null") continue;
+
+        const hasPeriodHint = /교시|,|~|～|\-|–|—|\/|\d+\s*,\s*\d+/.test(txt);
+        if (!hasPeriodHint) continue;
+
+        const parsed = parsePeriods(txt);
+        if (parsed.hours > 0) return parsed;
+    }
+
+    return { periods: "", hours: 0 };
+}
+
 // 누가기록 콜백
 // 시트 헤더: 순번(0)|영역(1)|일자(2)|교시(3)|1학년(4)|2학년(5)|3학년(6)|활동내용(7)|비고(8)
 // 요일·이수시간은 프론트에서 자동 계산
     window.cb_nuga = function(data) {
         nugaData = [];
         const DOW_NAMES = ['일','월','화','수','목','금','토'];
-    
-        data.table.rows.forEach((r) => {
-            if (!r.c) return;
-    
-            let rawCategory = getCellText(r.c[1]);
-            rawCategory = rawCategory.replace(/\(.*$/, '').trim();
-    
-            const dateObj = parseGDate(r.c[2] ? r.c[2].v : null);
-            const { periods, hours } = parsePeriods(r.c[3]);
-    
-            const g1 = getCellText(r.c[4]);
-            const g2 = getCellText(r.c[5]);
-            const g3 = getCellText(r.c[6]);
-            const content = getCellText(r.c[7]);
-            const remark = getCellText(r.c[8]);
-    
+        const colMap = buildColIndexMap(data);
+
+        const idxCategory = pickColIndex(colMap, ['영역'], 1);
+        const idxDate = pickColIndex(colMap, ['일자', '날짜'], 2);
+        const idxPeriods = pickColIndex(colMap, ['교시'], 3);
+        const idxG1 = pickColIndex(colMap, ['1학년'], 4);
+        const idxG2 = pickColIndex(colMap, ['2학년'], 5);
+        const idxG3 = pickColIndex(colMap, ['3학년'], 6);
+        const idxContent = pickColIndex(colMap, ['활동내용', '내용'], 7);
+        const idxRemark = pickColIndex(colMap, ['비고'], 8);
+
+        (data.table.rows || []).forEach((r) => {
+            if (!r || !r.c) return;
+
+            const texts = r.c.map(getCellText);
+
+            let rawCategory = normalizeCategory(getCellText(r.c[idxCategory]));
+            if (!rawCategory) rawCategory = findCategoryText(texts);
+
+            let dateObj = parseGDate(r.c[idxDate] ? (r.c[idxDate].v ?? r.c[idxDate].f) : null);
+            if (!dateObj) dateObj = findDateCell(r);
+
+            let { periods, hours } = parsePeriods(r.c[idxPeriods]);
+            if (!periods) {
+                const fallback = findPeriodFallback(texts, idxDate + 1);
+                periods = fallback.periods;
+                hours = fallback.hours;
+            }
+
+            const g1 = getCellText(r.c[idxG1]);
+            const g2 = getCellText(r.c[idxG2]);
+            const g3 = getCellText(r.c[idxG3]);
+            const content = getCellText(r.c[idxContent]);
+            const remark = getCellText(r.c[idxRemark]);
+
             if (!rawCategory || rawCategory === "null") return;
             if (!dateObj) return;
-    
+
             const dayOfWeek = DOW_NAMES[dateObj.getDay()];
-    
             const isAutoVol = (rawCategory === '자율' || rawCategory === '봉사');
             const dispCat = {
                 1: isAutoVol ? '자율자치' : rawCategory,
                 2: isAutoVol ? '자율자치' : rawCategory,
                 3: rawCategory
             };
-    
+
             nugaData.push({
                 displayCategory: dispCat,
                 date: dateObj,
@@ -583,15 +662,16 @@ function parsePeriods(cell) {
                 dayOfWeek,
                 periods,
                 hours,
-                grades: [g1 === '1', g2 === '1', g3 === '1'],
+                grades: [isCheckedGrade(g1), isCheckedGrade(g2), isCheckedGrade(g3)],
                 content,
                 remark
             });
         });
-    
+
         nugaData.sort((a, b) => a.date - b.date);
         checkReady();
     };
+
 
     function fetchAll() {
         scheduleData = []; supervisorMap = {}; prayerMap = {}; nugaData = []; dataLoaded = 0;
