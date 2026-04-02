@@ -228,6 +228,22 @@
             .prayer-box { font-size: 14px !important; }
         }
         .print-title { display: none; }
+
+        /* 누가기록 서브탭 스타일 */
+        .nuga-subtabs { display: flex; gap: 4px; background: #e9ecef; padding: 3px; border-radius: 10px; border: 2px solid var(--border-heavy); }
+        body.dark-mode .nuga-subtabs { background: #343a40; }
+        .nuga-subtab { background: transparent; color: var(--text-muted); border: none; padding: 5px 14px; border-radius: 6px; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.15s; font-family: inherit; white-space: nowrap; }
+        .nuga-subtab:hover { background: #dee2e6; color: var(--text-main); }
+        body.dark-mode .nuga-subtab:hover { background: #495057; color: #fff; }
+        .nuga-subtab.active { background: var(--accent); color: #fff; }
+
+        .nuga-summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 15px 0; }
+        .nuga-summary-card { background: var(--surface); border: 2px solid var(--border-heavy); border-radius: 10px; padding: 12px 18px; min-width: 120px; text-align: center; }
+        .nuga-summary-card.active-card { border-color: var(--accent); background: #e7f5ff; }
+        body.dark-mode .nuga-summary-card.active-card { background: #1864ab33; }
+        .nuga-summary-label { font-size: 12px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px; }
+        .nuga-summary-value { font-size: 22px; font-weight: 900; color: var(--text-main); }
+        .nuga-summary-unit { font-size: 12px; font-weight: 700; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -280,6 +296,7 @@
                 <button class="btn active" id="btn_calendar" onclick="switchTab('calendar')">🗓️ 달력 일정</button>
                 <button class="btn" id="btn_plan" onclick="switchTab('plan')">📋 월중 계획표</button>
                 <button class="btn" id="btn_dept" onclick="switchTab('dept')">🏢 부서별 조회</button>
+                <button class="btn" id="btn_nuga" onclick="switchTab('nuga')">📝 누가기록</button>
                 <button class="btn" id="btn_request" onclick="switchTab('request')">✍️ 수정/추가 요청</button>
             </div>
         </div>
@@ -298,6 +315,7 @@
         <button class="btn active" id="m_btn_calendar" onclick="switchTab('calendar')">🗓️ 달력</button>
         <button class="btn" id="m_btn_plan" onclick="switchTab('plan')">📋 계획표</button>
         <button class="btn" id="m_btn_dept" onclick="switchTab('dept')">🏢 부서별</button>
+        <button class="btn" id="m_btn_nuga" onclick="switchTab('nuga')">📝 누가기록</button>
         <button class="btn" id="m_btn_request" onclick="switchTab('request')">✍️ 요청</button>
     </div>
 </div>
@@ -310,6 +328,7 @@
     const FIXED_DEPTS = ["교목부", "교무부", "연구부", "상담부", "정보부", "1학년부", "2학년부", "3학년부", "기획위원", "행정실", "국어과", "영어과", "수학과", "사회과", "과학과", "예체능과", "정보과", "외국어과", "기타"];
     
     let scheduleData = [], supervisorMap = {}, prayerMap = {}, deptColors = {}, dataLoaded = 0;
+    let nugaData = []; // 누가기록 데이터
     
     // 자동 모바일 모드 감지 (창 폭이 850px 이하일 때 최초 자동 실행)
     let isMobileMode = window.innerWidth <= 850; 
@@ -323,9 +342,13 @@
     let optShowDept = true;
     let optShowPrayer = true;
     let optShowSuper = true;
-    let optExcludeWeekends = false; // 주말 제외 추가
-    let optHorizontalEvents = false; // 일정 가로 배열 추가
-    let optYearlyView = false; // 📌 연별(1년 전체) 보기 옵션 추가
+    let optExcludeWeekends = false;
+    let optHorizontalEvents = false;
+    let optYearlyView = false;
+    
+    // 누가기록 상태 변수
+    let nugaGrade = 1;      // 선택된 학년 (1, 2, 3)
+    let nugaCategory = '전체'; // 선택된 영역
     
     // 고속 검색 및 모달용 인덱스
     let eventSeq = 0;
@@ -339,6 +362,11 @@
         '#bdb2ff', '#ece8ff', '#ffc6ff', '#ffebff', '#ffb7e5', '#ffe4f3', '#e9ecef'
     ];
     FIXED_DEPTS.forEach((d, i) => { deptColors[d] = PASTELS[i] || '#f1f3f5'; });
+
+    // 영역별 색상
+    const NUGA_CATEGORY_COLORS = {
+        '자율': '#a0c4ff', '봉사': '#caffbf', '동아리': '#ffd6a5', '진로': '#ffc6ff', '자율자치': '#bdb2ff'
+    };
 
     // 유틸리티 함수
     function parseGDate(v) {
@@ -395,7 +423,7 @@
     // 데이터 로딩 파트
     function checkReady() {
         dataLoaded++;
-        if (dataLoaded >= 4) {
+        if (dataLoaded >= 5) {
             document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('errorBanner').style.display = 'none';
             rebuildIndexes(); 
@@ -477,11 +505,54 @@
         checkReady();
     };
 
+    // 누가기록 콜백
+    window.cb_nuga = function(data) {
+        nugaData = [];
+        data.table.rows.forEach((r, i) => {
+            if (i < 1 || !r.c) return; // 헤더 행 건너뜀
+            const category = r.c[1] ? String(r.c[1].v || "").trim() : "";
+            const dateObj = parseGDate(r.c[2] ? r.c[2].v : null);
+            const dayOfWeek = r.c[3] ? String(r.c[3].v || "").trim() : "";
+            const periods = r.c[4] ? String(r.c[4].v || "").trim() : "";
+            // 이수시간: 교시 개수로 자동 계산
+            const periodCount = periods ? periods.split(',').map(s => s.trim()).filter(Boolean).length : 0;
+            const g1 = r.c[6] ? String(r.c[6].v || "").trim() : "";
+            const g2 = r.c[7] ? String(r.c[7].v || "").trim() : "";
+            const g3 = r.c[8] ? String(r.c[8].v || "").trim() : "";
+            const content = r.c[9] ? String(r.c[9].v || "").trim() : "";
+            const remark = r.c[10] ? String(r.c[10].v || "").trim() : "";
+
+            if (!category || category === "null") return;
+            if (!dateObj) return;
+
+            nugaData.push({
+                category,       // 영역: 자율, 봉사, 동아리, 진로
+                date: dateObj,
+                dateKey: getLocalDateKey(dateObj),
+                dayOfWeek,
+                periods,
+                hours: periodCount,
+                grades: [g1 === '1', g2 === '1', g3 === '1'], // [1학년, 2학년, 3학년]
+                content,
+                remark
+            });
+        });
+        // 날짜순 정렬
+        nugaData.sort((a, b) => a.date - b.date);
+        checkReady();
+    };
+
     function fetchAll() {
-        scheduleData = []; supervisorMap = {}; prayerMap = {}; dataLoaded = 0;
+        scheduleData = []; supervisorMap = {}; prayerMap = {}; nugaData = []; dataLoaded = 0;
         document.getElementById('loadingOverlay').style.display = 'flex';
         
-        const sheets =[{gid:'0',cb:'cb_schedule'}, {gid:'1459415616',cb:'cb_super'}, {gid:'1697887995',cb:'cb_prayer'}, {gid:'1487091944',cb:'cb_notice'}];
+        const sheets = [
+            {gid:'0', cb:'cb_schedule'},
+            {gid:'1459415616', cb:'cb_super'},
+            {gid:'1697887995', cb:'cb_prayer'},
+            {gid:'1487091944', cb:'cb_notice'},
+            {gid:'2041576858', cb:'cb_nuga'}
+        ];
         sheets.forEach(s => {
             const script = document.createElement('script');
             script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${s.cb}&gid=${s.gid}&_=${Date.now()}`;
@@ -591,6 +662,7 @@
         if(currentTab === 'calendar') renderCalendar(mc);
         else if(currentTab === 'plan') renderPlan(mc);
         else if(currentTab === 'dept') renderDept(mc);
+        else if(currentTab === 'nuga') renderNuga(mc);
         else if(currentTab === 'request') renderRequestForm(mc);
     }
 
@@ -611,7 +683,6 @@
             </div>
         `;
 
-        // 연별 보기면 1월(0)부터 12월(11)까지, 아니면 현재 선택된 월만
         const startM = optYearlyView ? 0 : currentM;
         const endM = optYearlyView ? 11 : currentM;
 
@@ -631,7 +702,6 @@
             let diff = curr.getDay() - 1; if(diff === -1) diff = 6;
             curr.setDate(curr.getDate() - diff);
 
-            // 주 단위로 잘림 방지 (최대 6주 = 42일 렌더링)
             for (let i=0; i<42; i++) { 
                 const dKey = getLocalDateKey(curr);
                 const isToday = dKey === todayKey;
@@ -686,7 +756,7 @@
         c.innerHTML = html; 
     }
 
-    // --- 계획표 렌더링 (옵션 체크박스 및 가변 열 처리 반영) ---
+    // --- 계획표 렌더링 ---
     function renderPlan(c) {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         const lastDay = new Date(y, m + 1, 0).getDate();
@@ -710,15 +780,14 @@
             
             <div class="print-title">${y}학년도 ${m + 1}월중 학사운영 계획</div>`;
 
-        // 가로 배열 모드 클래스 설정
         const containerClass = optHorizontalEvents ? 'event-container horizontal-container' : 'event-container';
 
-        // 📱 모바일 뷰 전용 리스트 래퍼
+        // 📱 모바일 뷰
         html += `<div class="m-plan-wrapper" ${!isMobileMode ? 'style="display:none;"' : ''}>`;
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
             const dowNum = date.getDay();
-            if (optExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue; // 주말 제외 옵션 적용
+            if (optExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue;
 
             const dateKey = getLocalDateKey(date);
             const day = daysByKey[dateKey];
@@ -766,7 +835,7 @@
         }
         html += `</div>`;
 
-        // 💻 PC 테이블 & 인쇄용 표 래퍼
+        // 💻 PC 테이블
         let thHtml = `<th class="col-date" style="width:40px">날짜</th>
                       <th class="col-day" style="width:40px">요일</th>
                       <th class="col-content">주요 행사 내용</th>`;
@@ -781,7 +850,7 @@
         for (let d=1; d<=lastDay; d++) {
             const date = new Date(y, m, d);
             const dowNum = date.getDay();
-            if (optExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue; // 주말 제외 옵션 적용
+            if (optExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue;
 
             const dateKey = getLocalDateKey(date);
             const day = daysByKey[dateKey];
@@ -875,6 +944,152 @@
             });
         }
         c.innerHTML = html + `</div>`;
+    }
+
+    // --- 누가기록 렌더링 ---
+    function getNugaCategories(grade) {
+        if (grade === 3) return ['전체', '자율', '봉사', '동아리', '진로'];
+        return ['전체', '자율자치', '동아리', '진로'];
+    }
+
+    function nugaCategoryMatch(rowCategory, filterCategory) {
+        if (filterCategory === '전체') return true;
+        if (filterCategory === '자율자치') return (rowCategory === '자율' || rowCategory === '봉사');
+        return rowCategory === filterCategory;
+    }
+
+    function renderNuga(c) {
+        const gradeIdx = nugaGrade - 1; // 0, 1, 2
+        const categories = getNugaCategories(nugaGrade);
+
+        // 현재 선택된 카테고리가 이 학년에 없으면 '전체'로 리셋
+        if (!categories.includes(nugaCategory)) nugaCategory = '전체';
+
+        // 이 학년에 해당하는 데이터 필터링
+        const gradeFiltered = nugaData.filter(row => row.grades[gradeIdx]);
+
+        // 카테고리별 누적 이수시간 계산
+        const hoursByCategory = {};
+        categories.forEach(cat => {
+            if (cat === '전체') {
+                hoursByCategory['전체'] = gradeFiltered.reduce((sum, row) => sum + row.hours, 0);
+            } else {
+                hoursByCategory[cat] = gradeFiltered
+                    .filter(row => nugaCategoryMatch(row.category, cat))
+                    .reduce((sum, row) => sum + row.hours, 0);
+            }
+        });
+
+        // 현재 카테고리로 최종 필터
+        const filtered = gradeFiltered.filter(row => nugaCategoryMatch(row.category, nugaCategory));
+
+        // 검색 필터 적용
+        const searchFiltered = searchTokens.length
+            ? filtered.filter(row => {
+                const hay = `${row.category} ${row.content} ${row.remark}`.toLowerCase();
+                return searchTokens.every(t => hay.includes(t));
+            })
+            : filtered;
+
+        let html = `<div class="limit-wrapper">
+            <!-- 학년 서브탭 -->
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                <span style="font-weight:900; font-size:15px;">📝 누가기록</span>
+                <div class="nuga-subtabs">
+                    ${[1,2,3].map(g => `<button class="nuga-subtab ${nugaGrade===g?'active':''}" onclick="nugaGrade=${g}; nugaCategory='전체'; render();">${g}학년</button>`).join('')}
+                </div>
+            </div>
+
+            <!-- 영역 서브탭 -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px; flex-wrap:wrap;">
+                <span style="font-weight:800; font-size:13px; color:var(--text-muted);">영역:</span>
+                <div class="nuga-subtabs" style="border-color: var(--accent);">
+                    ${categories.map(cat => {
+                        const isActive = nugaCategory === cat;
+                        const color = NUGA_CATEGORY_COLORS[cat] || '';
+                        const style = isActive ? '' : (color ? `background:${color}40; color:var(--text-main);` : '');
+                        return `<button class="nuga-subtab ${isActive?'active':''}" style="${style}" onclick="nugaCategory='${cat}'; render();">${cat}</button>`;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- 이수시간 누계 요약 -->
+            <div class="nuga-summary">
+                ${categories.map(cat => {
+                    const isActive = nugaCategory === cat;
+                    const color = NUGA_CATEGORY_COLORS[cat] || '#868e96';
+                    return `<div class="nuga-summary-card ${isActive ? 'active-card' : ''}" style="cursor:pointer; ${isActive ? '' : `border-left: 4px solid ${color};`}" onclick="nugaCategory='${cat}'; render();">
+                        <div class="nuga-summary-label">${cat}</div>
+                        <div class="nuga-summary-value">${hoursByCategory[cat] || 0}<span class="nuga-summary-unit"> 시간</span></div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+
+        if (!searchFiltered.length) {
+            html += `<div style="text-align:center; padding:60px; color:var(--text-muted); font-weight:800; border:2px dashed var(--border-heavy); border-radius:15px; margin-top:10px;">해당 조건의 누가기록이 없습니다.</div>`;
+        } else if (isMobileMode) {
+            // 모바일: 카드형
+            let runningHours = 0;
+            searchFiltered.forEach((row, idx) => {
+                runningHours += row.hours;
+                const catColor = NUGA_CATEGORY_COLORS[row.category] || '#e9ecef';
+                const displayCat = (nugaGrade !== 3 && (row.category === '자율' || row.category === '봉사')) ? '자율자치' : row.category;
+                html += `<div class="m-plan-card" style="border-left: 6px solid ${catColor};">
+                    <div class="m-plan-date">${row.date.getMonth()+1}/${row.date.getDate()} (${row.dayOfWeek})</div>
+                    <div style="margin-bottom:6px;">
+                        <span class="screen-dept" style="background:${catColor};">${escapeHTML(displayCat)}</span>
+                        <span style="font-weight:800; margin-left:8px;">${highlightHTML(row.content)}</span>
+                    </div>
+                    <div class="m-plan-meta">
+                        <div>교시: ${escapeHTML(row.periods)}</div>
+                        <div>이수: ${row.hours}시간 (누계 ${runningHours})</div>
+                    </div>
+                    ${row.remark ? `<div style="margin-top:6px; font-size:calc(var(--base-font)-2px); color:var(--text-muted); font-weight:700;">비고: ${highlightHTML(row.remark)}</div>` : ''}
+                </div>`;
+            });
+        } else {
+            // PC: 테이블
+            html += `<div class="table-container"><table class="plan-table" style="min-width:500px;">
+                <thead><tr>
+                    <th style="width:35px;">No</th>
+                    <th style="width:70px;">영역</th>
+                    <th style="width:80px;">일자</th>
+                    <th style="width:40px;">요일</th>
+                    <th style="width:70px;">교시</th>
+                    <th style="width:55px;">이수시간</th>
+                    <th>활동내용</th>
+                    <th style="width:120px;">비고</th>
+                </tr></thead><tbody>`;
+
+            let runningHours = 0;
+            searchFiltered.forEach((row, idx) => {
+                runningHours += row.hours;
+                const catColor = NUGA_CATEGORY_COLORS[row.category] || '#e9ecef';
+                const displayCat = (nugaGrade !== 3 && (row.category === '자율' || row.category === '봉사')) ? '자율자치' : row.category;
+                html += `<tr>
+                    <td style="font-weight:800;">${idx + 1}</td>
+                    <td><span class="screen-dept" style="background:${catColor};">${escapeHTML(displayCat)}</span></td>
+                    <td style="font-weight:700;">${row.date.getMonth()+1}/${row.date.getDate()}</td>
+                    <td>${escapeHTML(row.dayOfWeek)}</td>
+                    <td>${escapeHTML(row.periods)}</td>
+                    <td style="font-weight:800;">${row.hours}</td>
+                    <td style="text-align:left; font-weight:700;">${highlightHTML(row.content)}</td>
+                    <td style="text-align:left; font-size:calc(var(--base-font)-1px); color:var(--text-muted);">${highlightHTML(row.remark)}</td>
+                </tr>`;
+            });
+
+            // 합계 행
+            html += `<tr style="background:#f1f3f5; font-weight:900;">
+                <td colspan="5" style="text-align:right;">합계</td>
+                <td>${runningHours}</td>
+                <td colspan="2"></td>
+            </tr>`;
+
+            html += `</tbody></table></div>`;
+        }
+
+        html += `</div>`;
+        c.innerHTML = html;
     }
 
     // --- 수정 요청 폼 ---
