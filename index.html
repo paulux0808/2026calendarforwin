@@ -508,48 +508,80 @@
     // 누가기록 콜백
     // 시트 헤더: 순번(0)|영역(1)|일자(2)|교시(3)|1학년(4)|2학년(5)|3학년(6)|활동내용(7)|비고(8)
     // 요일·이수시간은 프론트에서 자동 계산
+function getCellText(cell) {
+    if (!cell) return "";
+    const value = cell.f ?? cell.v ?? "";
+    return String(value).trim();
+}
+
+function parsePeriods(cell) {
+    const raw = getCellText(cell)
+        .replace(/교시/g, "")
+        .replace(/[，、\/|]+/g, ",")
+        .replace(/\s+/g, "");
+
+    if (!raw) {
+        return { periods: "", hours: 0 };
+    }
+
+    const parts = raw
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+    return {
+        periods: parts.join(","),
+        hours: parts.length
+    };
+}
+
+// 누가기록 콜백
+// 시트 헤더: 순번(0)|영역(1)|일자(2)|교시(3)|1학년(4)|2학년(5)|3학년(6)|활동내용(7)|비고(8)
+// 요일·이수시간은 프론트에서 자동 계산
     window.cb_nuga = function(data) {
         nugaData = [];
         const DOW_NAMES = ['일','월','화','수','목','금','토'];
-        data.table.rows.forEach((r, i) => {
-            if (i < 1 || !r.c) return;
-            let rawCategory = r.c[1] ? String(r.c[1].v || "").trim() : "";
-            // "자율(1, 2학년자율자치)" → "자율", "봉사(1, 2학년자율자치)" → "봉사"
+    
+        data.table.rows.forEach((r) => {
+            if (!r.c) return;
+    
+            let rawCategory = getCellText(r.c[1]);
             rawCategory = rawCategory.replace(/\(.*$/, '').trim();
+    
             const dateObj = parseGDate(r.c[2] ? r.c[2].v : null);
-            const periods = r.c[3] ? String(r.c[3].v || "").trim() : "";
-            const g1 = r.c[4] ? String(r.c[4].v || "").trim() : "";
-            const g2 = r.c[5] ? String(r.c[5].v || "").trim() : "";
-            const g3 = r.c[6] ? String(r.c[6].v || "").trim() : "";
-            const content = r.c[7] ? String(r.c[7].v || "").trim() : "";
-            const remark = r.c[8] ? String(r.c[8].v || "").trim() : "";
-
+            const { periods, hours } = parsePeriods(r.c[3]);
+    
+            const g1 = getCellText(r.c[4]);
+            const g2 = getCellText(r.c[5]);
+            const g3 = getCellText(r.c[6]);
+            const content = getCellText(r.c[7]);
+            const remark = getCellText(r.c[8]);
+    
             if (!rawCategory || rawCategory === "null") return;
             if (!dateObj) return;
-
+    
             const dayOfWeek = DOW_NAMES[dateObj.getDay()];
-            const periodCount = periods ? periods.split(',').map(s => s.trim()).filter(Boolean).length : 0;
-
-            // 학년별 영역명 미리 계산: 1,2학년은 자율/봉사 → 자율자치
+    
             const isAutoVol = (rawCategory === '자율' || rawCategory === '봉사');
             const dispCat = {
                 1: isAutoVol ? '자율자치' : rawCategory,
                 2: isAutoVol ? '자율자치' : rawCategory,
                 3: rawCategory
             };
-
+    
             nugaData.push({
-                displayCategory: dispCat, // { 1:'자율자치', 2:'자율자치', 3:'자율' }
+                displayCategory: dispCat,
                 date: dateObj,
                 dateKey: getLocalDateKey(dateObj),
                 dayOfWeek,
                 periods,
-                hours: periodCount,       // "6,7" → 2시간
+                hours,
                 grades: [g1 === '1', g2 === '1', g3 === '1'],
                 content,
                 remark
             });
         });
+    
         nugaData.sort((a, b) => a.date - b.date);
         checkReady();
     };
