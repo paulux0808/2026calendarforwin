@@ -617,63 +617,70 @@ function pushNugaRow({ rawCategory, dateObj, periods, hours, g1, g2, g3, content
 
 window.cb_nuga = function(data) {
     nugaData = [];
+    try {
+        const cols = (data && data.table && Array.isArray(data.table.cols)) ? data.table.cols : [];
+        const colMap = Object.create(null);
 
-    // 🔍 디버그: 콘솔에서 window.__NUGA_DEBUG = true 입력 후 새로고침하면 원본 데이터 출력
-    if (window.__NUGA_DEBUG || localStorage.getItem('NUGA_DEBUG')) {
-        console.log('[누가기록 원본 cols]', JSON.stringify(data.table.cols));
-        console.log('[누가기록 원본 rows (처음 3개)]', JSON.stringify((data.table.rows || []).slice(0, 3)));
-    }
+        // 🔍 디버그: 컬럼 헤더 출력
+        console.log('[누가기록 cols]', cols.map((c,i) => `${i}:${c?.label||'?'}(${c?.type||'?'})`).join(' | '));
 
-    const cols = (data && data.table && Array.isArray(data.table.cols)) ? data.table.cols : [];
-    const colMap = Object.create(null);
-
-    cols.forEach((col, idx) => {
-        [col?.label, col?.id, col?.pattern].forEach((key) => {
-            const norm = normalizeHeader(key);
-            if (norm) colMap[norm] = idx;
+        cols.forEach((col, idx) => {
+            [col?.label, col?.id, col?.pattern].forEach((key) => {
+                const norm = normalizeHeader(key);
+                if (norm) colMap[norm] = idx;
+            });
         });
-    });
 
-    const pick = (names, fallbackIndex) => {
-        for (const name of names) {
-            const norm = normalizeHeader(name);
-            if (Object.prototype.hasOwnProperty.call(colMap, norm)) return colMap[norm];
-        }
-        return fallbackIndex;
-    };
+        const pick = (names, fallbackIndex) => {
+            for (const name of names) {
+                const norm = normalizeHeader(name);
+                if (Object.prototype.hasOwnProperty.call(colMap, norm)) return colMap[norm];
+            }
+            return fallbackIndex;
+        };
 
-    const idxCategory = pick(['영역'], 1);
-    const idxDate = pick(['일자', '날짜'], 2);
-    const idxPeriods = pick(['교시텍스트', '교시'], 3);
-    const idxG1 = pick(['1학년', '1'], 4);
-    const idxG2 = pick(['2학년', '2'], 5);
-    const idxG3 = pick(['3학년', '3'], 6);
-    const idxContent = pick(['활동내용', '내용'], 7);
-    const idxRemark = pick(['비고'], 8);
+        const idxCategory = pick(['영역'], 1);
+        const idxDate = pick(['일자', '날짜'], 2);
+        const idxPeriods = pick(['교시텍스트', '교시'], 3);
+        const idxG1 = pick(['1학년', '1'], 4);
+        const idxG2 = pick(['2학년', '2'], 5);
+        const idxG3 = pick(['3학년', '3'], 6);
+        const idxContent = pick(['활동내용', '내용'], 7);
+        const idxRemark = pick(['비고'], 8);
 
-    console.log('[누가기록 컬럼매핑]', { idxCategory, idxDate, idxPeriods, idxG1, idxG2, idxG3, idxContent, idxRemark });
+        console.log('[누가기록 컬럼매핑]', JSON.stringify({ idxCategory, idxDate, idxPeriods, idxG1, idxG2, idxG3, idxContent, idxRemark }));
 
-    (data.table.rows || []).forEach((r) => {
-        if (!r || !r.c) return;
-
-        const rawCategory = normalizeCategory(getCellText(r.c[idxCategory]));
-        const dateObj = parseLooseDateText(r.c[idxDate] ? (r.c[idxDate].f ?? r.c[idxDate].v) : null);
-        const { periods, hours } = parsePeriods(r.c[idxPeriods]);
-        const g1 = getCellText(r.c[idxG1]);
-        const g2 = getCellText(r.c[idxG2]);
-        const g3 = getCellText(r.c[idxG3]);
-        const content = getCellText(r.c[idxContent]);
-        const remark = getCellText(r.c[idxRemark]);
-
-        // 🔍 이수시간이 0이면 디버그 출력 (문제 추적용)
-        if (hours === 0 && content) {
-            console.warn('[누가기록 교시=0]', '내용:', content, '교시셀:', JSON.stringify(r.c[idxPeriods]), 'idxPeriods:', idxPeriods);
+        // 🔍 첫 데이터 행 전체 덤프 → 교시가 실제로 몇 번에 있는지 확인
+        const firstRow = (data.table.rows || [])[1] || (data.table.rows || [])[0];
+        if (firstRow && firstRow.c) {
+            firstRow.c.forEach((cell, i) => {
+                console.log(`  [col ${i}]`, cell ? JSON.stringify(cell) : 'null');
+            });
         }
 
-        pushNugaRow({ rawCategory, dateObj, periods, hours, g1, g2, g3, content, remark });
-    });
+        (data.table.rows || []).forEach((r) => {
+            if (!r || !r.c) return;
 
-    nugaData.sort((a, b) => a.date - b.date);
+            const rawCategory = normalizeCategory(getCellText(r.c[idxCategory]));
+            const dateObj = parseLooseDateText(r.c[idxDate] ? (r.c[idxDate].f ?? r.c[idxDate].v) : null);
+            const { periods, hours } = parsePeriods(r.c[idxPeriods]);
+            const g1 = getCellText(r.c[idxG1]);
+            const g2 = getCellText(r.c[idxG2]);
+            const g3 = getCellText(r.c[idxG3]);
+            const content = getCellText(r.c[idxContent]);
+            const remark = getCellText(r.c[idxRemark]);
+
+            if (hours === 0 && content) {
+                console.warn('[누가기록 교시=0]', '내용:', content, '교시셀:', JSON.stringify(r.c[idxPeriods]), 'idxPeriods:', idxPeriods);
+            }
+
+            pushNugaRow({ rawCategory, dateObj, periods, hours, g1, g2, g3, content, remark });
+        });
+
+        nugaData.sort((a, b) => a.date - b.date);
+    } catch (e) {
+        console.error('[cb_nuga 에러]', e);
+    }
     checkReady();
 };
 
@@ -1190,8 +1197,8 @@ window.cb_nuga = function(data) {
                     <th style="width:40px;">요일</th>
                     <th style="width:70px;">교시</th>
                     <th style="width:55px;">이수시간</th>
-                    <th>활동내용</th>
-                    <th style="width:120px;">비고</th>
+                    <th style="width:40%;">활동내용</th>
+                    <th style="width:20%;">비고</th>
                 </tr></thead><tbody>`;
 
             let runningHours = 0;
