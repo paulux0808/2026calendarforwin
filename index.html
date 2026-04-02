@@ -515,26 +515,33 @@ function getCellText(cell) {
 }
 
 function parsePeriods(cell) {
-    const raw = getCellText(cell)
-        .replace(/교시/g, "")
-        .replace(/[，、\/|]+/g, ",")
-        .replace(/\s+/g, "");
+    const raw = getCellText(cell);
 
-    if (!raw) {
+    if (!raw || raw === "null") {
         return { periods: "", hours: 0 };
     }
 
-    const parts = raw
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
+    // "6교시, 7교시", "6-7", "6~7", "6 / 7", "6·7" 등 전부 대응
+    const normalized = raw
+        .replace(/\s+/g, "")
+        .replace(/교시/g, "")
+        .replace(/[~～\-–—\/|·ㆍ、，]+/g, ",");
+
+    // 숫자만 추출
+    const nums = normalized.match(/\d+/g) || [];
+
+    if (!nums.length) {
+        return {
+            periods: raw.trim(),
+            hours: 0
+        };
+    }
 
     return {
-        periods: parts.join(","),
-        hours: parts.length
+        periods: nums.join(","),
+        hours: nums.length
     };
 }
-
 // 누가기록 콜백
 // 시트 헤더: 순번(0)|영역(1)|일자(2)|교시(3)|1학년(4)|2학년(5)|3학년(6)|활동내용(7)|비고(8)
 // 요일·이수시간은 프론트에서 자동 계산
