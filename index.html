@@ -634,12 +634,7 @@ function findPeriodFallback(texts, preferredStart) {
             let dateObj = parseGDate(r.c[idxDate] ? (r.c[idxDate].v ?? r.c[idxDate].f) : null);
             if (!dateObj) dateObj = findDateCell(r);
 
-            let { periods, hours } = parsePeriods(r.c[idxPeriods]);
-            if (!periods) {
-                const fallback = findPeriodFallback(texts, idxDate + 1);
-                periods = fallback.periods;
-                hours = fallback.hours;
-            }
+            const { periods, hours } = parsePeriods(r.c[idxPeriods]);
 
             const g1 = getCellText(r.c[idxG1]);
             const g2 = getCellText(r.c[idxG2]);
