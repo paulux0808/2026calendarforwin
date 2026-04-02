@@ -506,38 +506,40 @@
     };
 
     // 누가기록 콜백
+    // 시트 헤더: 순번(0)|영역(1)|일자(2)|교시(3)|1학년(4)|2학년(5)|3학년(6)|활동내용(7)|비고(8)
+    // 요일·이수시간은 프론트에서 자동 계산
     window.cb_nuga = function(data) {
         nugaData = [];
+        const DOW_NAMES = ['일','월','화','수','목','금','토'];
         data.table.rows.forEach((r, i) => {
-            if (i < 1 || !r.c) return; // 헤더 행 건너뜀
-            const category = r.c[1] ? String(r.c[1].v || "").trim() : "";
+            if (i < 1 || !r.c) return;
+            const rawCategory = r.c[1] ? String(r.c[1].v || "").trim() : "";
             const dateObj = parseGDate(r.c[2] ? r.c[2].v : null);
-            const dayOfWeek = r.c[3] ? String(r.c[3].v || "").trim() : "";
-            const periods = r.c[4] ? String(r.c[4].v || "").trim() : "";
-            // 이수시간: 교시 개수로 자동 계산
-            const periodCount = periods ? periods.split(',').map(s => s.trim()).filter(Boolean).length : 0;
-            const g1 = r.c[6] ? String(r.c[6].v || "").trim() : "";
-            const g2 = r.c[7] ? String(r.c[7].v || "").trim() : "";
-            const g3 = r.c[8] ? String(r.c[8].v || "").trim() : "";
-            const content = r.c[9] ? String(r.c[9].v || "").trim() : "";
-            const remark = r.c[10] ? String(r.c[10].v || "").trim() : "";
+            const periods = r.c[3] ? String(r.c[3].v || "").trim() : "";
+            const g1 = r.c[4] ? String(r.c[4].v || "").trim() : "";
+            const g2 = r.c[5] ? String(r.c[5].v || "").trim() : "";
+            const g3 = r.c[6] ? String(r.c[6].v || "").trim() : "";
+            const content = r.c[7] ? String(r.c[7].v || "").trim() : "";
+            const remark = r.c[8] ? String(r.c[8].v || "").trim() : "";
 
-            if (!category || category === "null") return;
+            if (!rawCategory || rawCategory === "null") return;
             if (!dateObj) return;
 
+            const dayOfWeek = DOW_NAMES[dateObj.getDay()];
+            const periodCount = periods ? periods.split(',').map(s => s.trim()).filter(Boolean).length : 0;
+
             nugaData.push({
-                category,       // 영역: 자율, 봉사, 동아리, 진로
+                rawCategory,    // 시트 원본 영역 (자율, 봉사, 동아리, 진로)
                 date: dateObj,
                 dateKey: getLocalDateKey(dateObj),
                 dayOfWeek,
                 periods,
                 hours: periodCount,
-                grades: [g1 === '1', g2 === '1', g3 === '1'], // [1학년, 2학년, 3학년]
+                grades: [g1 === '1', g2 === '1', g3 === '1'],
                 content,
                 remark
             });
         });
-        // 날짜순 정렬
         nugaData.sort((a, b) => a.date - b.date);
         checkReady();
     };
@@ -952,41 +954,47 @@
         return ['전체', '자율자치', '동아리', '진로'];
     }
 
-    function nugaCategoryMatch(rowCategory, filterCategory) {
+    // 시트의 rawCategory → 학년별 표시 영역명 변환
+    function getDisplayCategory(rawCat, grade) {
+        if (grade !== 3 && (rawCat === '자율' || rawCat === '봉사')) return '자율자치';
+        return rawCat;
+    }
+
+    function nugaCategoryMatch(rawCat, filterCategory, grade) {
         if (filterCategory === '전체') return true;
-        if (filterCategory === '자율자치') return (rowCategory === '자율' || rowCategory === '봉사');
-        return rowCategory === filterCategory;
+        const display = getDisplayCategory(rawCat, grade);
+        return display === filterCategory;
     }
 
     function renderNuga(c) {
-        const gradeIdx = nugaGrade - 1; // 0, 1, 2
+        const gradeIdx = nugaGrade - 1;
         const categories = getNugaCategories(nugaGrade);
 
-        // 현재 선택된 카테고리가 이 학년에 없으면 '전체'로 리셋
         if (!categories.includes(nugaCategory)) nugaCategory = '전체';
 
-        // 이 학년에 해당하는 데이터 필터링
+        // 이 학년에 해당하는 데이터
         const gradeFiltered = nugaData.filter(row => row.grades[gradeIdx]);
 
-        // 카테고리별 누적 이수시간 계산
+        // 카테고리별 누적 이수시간
         const hoursByCategory = {};
         categories.forEach(cat => {
             if (cat === '전체') {
                 hoursByCategory['전체'] = gradeFiltered.reduce((sum, row) => sum + row.hours, 0);
             } else {
                 hoursByCategory[cat] = gradeFiltered
-                    .filter(row => nugaCategoryMatch(row.category, cat))
+                    .filter(row => nugaCategoryMatch(row.rawCategory, cat, nugaGrade))
                     .reduce((sum, row) => sum + row.hours, 0);
             }
         });
 
-        // 현재 카테고리로 최종 필터
-        const filtered = gradeFiltered.filter(row => nugaCategoryMatch(row.category, nugaCategory));
+        // 현재 카테고리 필터
+        const filtered = gradeFiltered.filter(row => nugaCategoryMatch(row.rawCategory, nugaCategory, nugaGrade));
 
-        // 검색 필터 적용
+        // 검색 필터
         const searchFiltered = searchTokens.length
             ? filtered.filter(row => {
-                const hay = `${row.category} ${row.content} ${row.remark}`.toLowerCase();
+                const displayCat = getDisplayCategory(row.rawCategory, nugaGrade);
+                const hay = `${displayCat} ${row.content} ${row.remark}`.toLowerCase();
                 return searchTokens.every(t => hay.includes(t));
             })
             : filtered;
@@ -1030,10 +1038,10 @@
         } else if (isMobileMode) {
             // 모바일: 카드형
             let runningHours = 0;
-            searchFiltered.forEach((row, idx) => {
+            searchFiltered.forEach((row) => {
                 runningHours += row.hours;
-                const catColor = NUGA_CATEGORY_COLORS[row.category] || '#e9ecef';
-                const displayCat = (nugaGrade !== 3 && (row.category === '자율' || row.category === '봉사')) ? '자율자치' : row.category;
+                const displayCat = getDisplayCategory(row.rawCategory, nugaGrade);
+                const catColor = NUGA_CATEGORY_COLORS[displayCat] || '#e9ecef';
                 html += `<div class="m-plan-card" style="border-left: 6px solid ${catColor};">
                     <div class="m-plan-date">${row.date.getMonth()+1}/${row.date.getDate()} (${row.dayOfWeek})</div>
                     <div style="margin-bottom:6px;">
@@ -1064,8 +1072,8 @@
             let runningHours = 0;
             searchFiltered.forEach((row, idx) => {
                 runningHours += row.hours;
-                const catColor = NUGA_CATEGORY_COLORS[row.category] || '#e9ecef';
-                const displayCat = (nugaGrade !== 3 && (row.category === '자율' || row.category === '봉사')) ? '자율자치' : row.category;
+                const displayCat = getDisplayCategory(row.rawCategory, nugaGrade);
+                const catColor = NUGA_CATEGORY_COLORS[displayCat] || '#e9ecef';
                 html += `<tr>
                     <td style="font-weight:800;">${idx + 1}</td>
                     <td><span class="screen-dept" style="background:${catColor};">${escapeHTML(displayCat)}</span></td>
@@ -1078,7 +1086,6 @@
                 </tr>`;
             });
 
-            // 합계 행
             html += `<tr style="background:#f1f3f5; font-weight:900;">
                 <td colspan="5" style="text-align:right;">합계</td>
                 <td>${runningHours}</td>
