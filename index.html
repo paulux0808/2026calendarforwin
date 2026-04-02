@@ -513,7 +513,9 @@
         const DOW_NAMES = ['일','월','화','수','목','금','토'];
         data.table.rows.forEach((r, i) => {
             if (i < 1 || !r.c) return;
-            const rawCategory = r.c[1] ? String(r.c[1].v || "").trim() : "";
+            let rawCategory = r.c[1] ? String(r.c[1].v || "").trim() : "";
+            // "자율(1, 2학년자율자치)" → "자율", "봉사(1, 2학년자율자치)" → "봉사"
+            rawCategory = rawCategory.replace(/\(.*$/, '').trim();
             const dateObj = parseGDate(r.c[2] ? r.c[2].v : null);
             const periods = r.c[3] ? String(r.c[3].v || "").trim() : "";
             const g1 = r.c[4] ? String(r.c[4].v || "").trim() : "";
