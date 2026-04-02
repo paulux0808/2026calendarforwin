@@ -528,13 +528,21 @@
             const dayOfWeek = DOW_NAMES[dateObj.getDay()];
             const periodCount = periods ? periods.split(',').map(s => s.trim()).filter(Boolean).length : 0;
 
+            // 학년별 영역명 미리 계산: 1,2학년은 자율/봉사 → 자율자치
+            const isAutoVol = (rawCategory === '자율' || rawCategory === '봉사');
+            const dispCat = {
+                1: isAutoVol ? '자율자치' : rawCategory,
+                2: isAutoVol ? '자율자치' : rawCategory,
+                3: rawCategory
+            };
+
             nugaData.push({
-                rawCategory,    // 시트 원본 영역 (자율, 봉사, 동아리, 진로)
+                displayCategory: dispCat, // { 1:'자율자치', 2:'자율자치', 3:'자율' }
                 date: dateObj,
                 dateKey: getLocalDateKey(dateObj),
                 dayOfWeek,
                 periods,
-                hours: periodCount,
+                hours: periodCount,       // "6,7" → 2시간
                 grades: [g1 === '1', g2 === '1', g3 === '1'],
                 content,
                 remark
@@ -954,16 +962,9 @@
         return ['전체', '자율자치', '동아리', '진로'];
     }
 
-    // 시트의 rawCategory → 학년별 표시 영역명 변환
-    function getDisplayCategory(rawCat, grade) {
-        if (grade !== 3 && (rawCat === '자율' || rawCat === '봉사')) return '자율자치';
-        return rawCat;
-    }
-
-    function nugaCategoryMatch(rawCat, filterCategory, grade) {
+    function nugaCategoryMatch(row, filterCategory, grade) {
         if (filterCategory === '전체') return true;
-        const display = getDisplayCategory(rawCat, grade);
-        return display === filterCategory;
+        return row.displayCategory[grade] === filterCategory;
     }
 
     function renderNuga(c) {
@@ -982,19 +983,18 @@
                 hoursByCategory['전체'] = gradeFiltered.reduce((sum, row) => sum + row.hours, 0);
             } else {
                 hoursByCategory[cat] = gradeFiltered
-                    .filter(row => nugaCategoryMatch(row.rawCategory, cat, nugaGrade))
+                    .filter(row => nugaCategoryMatch(row, cat, nugaGrade))
                     .reduce((sum, row) => sum + row.hours, 0);
             }
         });
 
         // 현재 카테고리 필터
-        const filtered = gradeFiltered.filter(row => nugaCategoryMatch(row.rawCategory, nugaCategory, nugaGrade));
+        const filtered = gradeFiltered.filter(row => nugaCategoryMatch(row, nugaCategory, nugaGrade));
 
         // 검색 필터
         const searchFiltered = searchTokens.length
             ? filtered.filter(row => {
-                const displayCat = getDisplayCategory(row.rawCategory, nugaGrade);
-                const hay = `${displayCat} ${row.content} ${row.remark}`.toLowerCase();
+                const hay = `${row.displayCategory[nugaGrade]} ${row.content} ${row.remark}`.toLowerCase();
                 return searchTokens.every(t => hay.includes(t));
             })
             : filtered;
@@ -1040,7 +1040,7 @@
             let runningHours = 0;
             searchFiltered.forEach((row) => {
                 runningHours += row.hours;
-                const displayCat = getDisplayCategory(row.rawCategory, nugaGrade);
+                const displayCat = row.displayCategory[nugaGrade];
                 const catColor = NUGA_CATEGORY_COLORS[displayCat] || '#e9ecef';
                 html += `<div class="m-plan-card" style="border-left: 6px solid ${catColor};">
                     <div class="m-plan-date">${row.date.getMonth()+1}/${row.date.getDate()} (${row.dayOfWeek})</div>
@@ -1072,7 +1072,7 @@
             let runningHours = 0;
             searchFiltered.forEach((row, idx) => {
                 runningHours += row.hours;
-                const displayCat = getDisplayCategory(row.rawCategory, nugaGrade);
+                const displayCat = row.displayCategory[nugaGrade];
                 const catColor = NUGA_CATEGORY_COLORS[displayCat] || '#e9ecef';
                 html += `<tr>
                     <td style="font-weight:800;">${idx + 1}</td>
