@@ -527,37 +527,39 @@ function normalizeCategory(raw) {
 }
 
 function parsePeriods(cell) {
-    // 셀에서 가능한 모든 형태의 텍스트 추출
+    if (cell == null) return { periods: "", hours: 0 };
+
+    // GViz 셀에서 가능한 모든 방법으로 텍스트 추출
+    // 숫자/텍스트 혼합 컬럼에서 v=null, f=null 되는 경우까지 대비
     let raw = "";
-    if (cell != null) {
-        // f(포맷된 표시값)를 최우선 → 시트에서 보이는 그대로
-        if (cell.f != null && String(cell.f).trim() !== "") {
-            raw = String(cell.f).trim();
-        } else if (cell.v != null) {
-            raw = String(cell.v).trim();
-        } else if (typeof cell === "string" || typeof cell === "number") {
-            raw = String(cell).trim();
+    const tries = [cell.f, cell.v, cell];
+    for (const c of tries) {
+        if (c == null) continue;
+        const s = String(c).trim();
+        if (s && s !== "null" && s !== "undefined" && s !== "[object Object]") {
+            raw = s;
+            break;
         }
     }
 
-    if (!raw || raw === "null") {
-        return { periods: "", hours: 0 };
+    // 🔍 디버그: 브라우저 콘솔에서 확인 가능
+    if (window.__NUGA_DEBUG) {
+        console.log('[교시 파싱]', 'cell:', JSON.stringify(cell), '→ raw:', raw);
     }
 
-    // 대괄호 제거: [6,7] → 6,7
-    raw = raw.replace(/[\[\]]/g, '');
+    if (!raw) return { periods: "", hours: 0 };
 
-    // 공백, "교시" 텍스트 제거
-    let display = raw.replace(/\s+/g, '').replace(/교시/g, '');
+    // 대괄호 제거, 공백·"교시" 제거
+    let display = raw.replace(/[\[\]]/g, '').replace(/\s+/g, '').replace(/교시/g, '');
 
-    // 구분자 통일: 각종 구분자를 콤마로
-    const normalized = display.replace(/[，、\/|~\-–—]+/g, ',');
+    // 모든 구분자를 콤마로 통일 (점도 포함: 한국 로캘에서 6,7 → 6.7 변환 대비)
+    const normalized = display.replace(/[.，、\/|~\-–—]+/g, ',');
 
-    // 숫자만 추출해서 교시 개수 = 이수시간
+    // 숫자 파트만 추출 → 개수 = 이수시간
     const parts = normalized
         .split(',')
         .map(s => s.trim())
-        .filter(s => s !== '' && !isNaN(s));
+        .filter(s => s !== '' && /^\d+$/.test(s));
 
     return {
         periods: display || raw,
@@ -615,6 +617,13 @@ function pushNugaRow({ rawCategory, dateObj, periods, hours, g1, g2, g3, content
 
 window.cb_nuga = function(data) {
     nugaData = [];
+
+    // 🔍 디버그: 콘솔에서 window.__NUGA_DEBUG = true 입력 후 새로고침하면 원본 데이터 출력
+    if (window.__NUGA_DEBUG || localStorage.getItem('NUGA_DEBUG')) {
+        console.log('[누가기록 원본 cols]', JSON.stringify(data.table.cols));
+        console.log('[누가기록 원본 rows (처음 3개)]', JSON.stringify((data.table.rows || []).slice(0, 3)));
+    }
+
     const cols = (data && data.table && Array.isArray(data.table.cols)) ? data.table.cols : [];
     const colMap = Object.create(null);
 
@@ -642,6 +651,8 @@ window.cb_nuga = function(data) {
     const idxContent = pick(['활동내용', '내용'], 7);
     const idxRemark = pick(['비고'], 8);
 
+    console.log('[누가기록 컬럼매핑]', { idxCategory, idxDate, idxPeriods, idxG1, idxG2, idxG3, idxContent, idxRemark });
+
     (data.table.rows || []).forEach((r) => {
         if (!r || !r.c) return;
 
@@ -653,6 +664,11 @@ window.cb_nuga = function(data) {
         const g3 = getCellText(r.c[idxG3]);
         const content = getCellText(r.c[idxContent]);
         const remark = getCellText(r.c[idxRemark]);
+
+        // 🔍 이수시간이 0이면 디버그 출력 (문제 추적용)
+        if (hours === 0 && content) {
+            console.warn('[누가기록 교시=0]', '내용:', content, '교시셀:', JSON.stringify(r.c[idxPeriods]), 'idxPeriods:', idxPeriods);
+        }
 
         pushNugaRow({ rawCategory, dateObj, periods, hours, g1, g2, g3, content, remark });
     });
