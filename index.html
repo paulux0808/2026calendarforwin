@@ -46,12 +46,12 @@
         .container { flex-grow: 1; overflow-y: auto; display: block; width: 100%; padding: 15px 0; }
         .limit-wrapper { max-width: 1400px; margin: 0 auto; width: 95%; }
 
-        .controls { display: flex; gap: 4px; background: #e9ecef; padding: 3px; border-radius: 10px; border: 2px solid var(--border-heavy); }
-        #topControls { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
-        #topControls .btn { white-space: nowrap; flex-shrink: 0; padding-left: 10px; padding-right: 10px; }
+        .controls { display: flex; flex-wrap: nowrap; gap: 4px; background: #e9ecef; padding: 3px; border-radius: 10px; border: 2px solid var(--border-heavy); }
+        #topControls { flex: 1 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+        #topControls .btn { white-space: nowrap; word-break: keep-all; overflow-wrap: normal; flex: 0 0 auto; min-width: max-content; padding-left: 10px; padding-right: 10px; display:inline-flex; align-items:center; justify-content:center; line-height:1.15; }
         body.dark-mode .controls { background: #343a40; }
         
-        .btn { background: transparent; color: var(--text-muted); border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: 0.15s; font-family: inherit; white-space: nowrap; }
+        .btn { background: transparent; color: var(--text-muted); border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: 0.15s; font-family: inherit; white-space: nowrap; word-break: keep-all; overflow-wrap: normal; }
         .btn:hover { background: #dee2e6; color: var(--text-main); }
         body.dark-mode .btn:hover { background: #495057; color: #fff; }
         .btn.active { background: var(--border-heavy); color: #fff; }
@@ -63,7 +63,7 @@
         #btn_request.active { background: #c92a2a; color: #fff; }
         body.dark-mode #btn_request.active { background: #fa5252; color: #fff; }
 
-        .search-box { width: 260px; max-width: 28vw; flex: 0 0 260px; }
+        .search-box { width: 220px; max-width: 22vw; flex: 0 0 220px; }
         .search-input { width:100%; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--border-heavy);
                         background: var(--bg); color: var(--text-main); font-size: 13.5px; outline:none; transition: 0.2s; }
         
@@ -192,8 +192,8 @@
             .header { flex-direction: column; gap: 10px; padding: 4px 0; }
             .header-left, .header-right { width: 100%; justify-content: center; min-width: auto; }
             .header-mid { width: 100%; flex-direction: column; min-width: auto; gap: 10px; }
-            .header-mid .controls { display: flex; flex-wrap: wrap; justify-content: center; }
-            .search-box { width: 100%; max-width: 100%; }
+            .header-mid .controls { display: flex; flex-wrap: nowrap; justify-content: flex-start; width: 100%; overflow-x: auto; }
+            .search-box { width: 100%; max-width: 100%; flex: 0 0 auto; }
         }
         
         /* 🖨️ A4 가변 인쇄 스타일 - 오직 하나의 A4 세로에 맞게 맞춤 조정! */
@@ -297,12 +297,12 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="행사 내용 또는 부서 검색 (공백=AND)..." oninput="handleSearch()">
             </div>
             <div class="controls" id="topControls">
-                <button class="btn active" id="btn_calendar" onclick="switchTab('calendar')">🗓️ 달력 일정</button>
-                <button class="btn" id="btn_plan" onclick="switchTab('plan')">📋 월중 계획표</button>
-                <button class="btn" id="btn_student" onclick="switchTab('student')">🎒 학생일정</button>
-                <button class="btn" id="btn_dept" onclick="switchTab('dept')">🏢 부서별 조회</button>
-                <button class="btn" id="btn_nuga" onclick="switchTab('nuga')">📝 누가기록</button>
-                <button class="btn" id="btn_request" onclick="switchTab('request')">✍️ 수정/추가 요청</button>
+                <button class="btn active" id="btn_calendar" onclick="switchTab('calendar')">🗓️&nbsp;달력&nbsp;일정</button>
+                <button class="btn" id="btn_plan" onclick="switchTab('plan')">📋&nbsp;월중&nbsp;계획표</button>
+                <button class="btn" id="btn_student" onclick="switchTab('student')">🎒&nbsp;학생일정</button>
+                <button class="btn" id="btn_dept" onclick="switchTab('dept')">🏢&nbsp;부서별&nbsp;조회</button>
+                <button class="btn" id="btn_nuga" onclick="switchTab('nuga')">📝&nbsp;누가기록</button>
+                <button class="btn" id="btn_request" onclick="switchTab('request')">✍️&nbsp;수정/추가&nbsp;요청</button>
             </div>
         </div>
 
@@ -321,7 +321,7 @@
         <button class="btn" id="m_btn_plan" onclick="switchTab('plan')">📋 계획표</button>
         <button class="btn" id="m_btn_student" onclick="switchTab('student')">🎒 학생</button>
         <button class="btn" id="m_btn_dept" onclick="switchTab('dept')">🏢 부서별</button>
-        <button class="btn" id="m_btn_nuga" onclick="switchTab('nuga')">📝 누가기록</button>
+        <button class="btn" id="m_btn_nuga" onclick="switchTab('nuga')">📝&nbsp;누가기록</button>
         <button class="btn" id="m_btn_request" onclick="switchTab('request')">✍️ 요청</button>
     </div>
 </div>
