@@ -295,6 +295,7 @@
             <div class="controls" id="topControls">
                 <button class="btn active" id="btn_calendar" onclick="switchTab('calendar')">🗓️ 달력 일정</button>
                 <button class="btn" id="btn_plan" onclick="switchTab('plan')">📋 월중 계획표</button>
+                <button class="btn" id="btn_student" onclick="switchTab('student')">🎒 학생일정</button>
                 <button class="btn" id="btn_dept" onclick="switchTab('dept')">🏢 부서별 조회</button>
                 <button class="btn" id="btn_nuga" onclick="switchTab('nuga')">📝 누가기록</button>
                 <button class="btn" id="btn_request" onclick="switchTab('request')">✍️ 수정/추가 요청</button>
@@ -314,6 +315,7 @@
     <div class="controls" style="background:transparent; border:none;">
         <button class="btn active" id="m_btn_calendar" onclick="switchTab('calendar')">🗓️ 달력</button>
         <button class="btn" id="m_btn_plan" onclick="switchTab('plan')">📋 계획표</button>
+        <button class="btn" id="m_btn_student" onclick="switchTab('student')">🎒 학생</button>
         <button class="btn" id="m_btn_dept" onclick="switchTab('dept')">🏢 부서별</button>
         <button class="btn" id="m_btn_nuga" onclick="switchTab('nuga')">📝 누가기록</button>
         <button class="btn" id="m_btn_request" onclick="switchTab('request')">✍️ 요청</button>
@@ -325,9 +327,12 @@
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7y4g3X-UxdwBR97fdS0N667G4Y4Mia4p0IBIJlBvU8ZkG7NaVD_HITsxANGt_aue-LA/exec";
     const SHEET_ID = '10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg';
+    const STUDENT_SCHEDULE_GID = '1112677469';
+    const DATA_LOAD_COUNT = 6;
     const FIXED_DEPTS = ["교목부", "교무부", "연구부", "상담부", "정보부", "1학년부", "2학년부", "3학년부", "기획위원", "행정실", "국어과", "영어과", "수학과", "사회과", "과학과", "예체능과", "정보과", "외국어과", "기타"];
     
     let scheduleData = [], supervisorMap = {}, prayerMap = {}, deptColors = {}, dataLoaded = 0;
+    let studentScheduleData = []; // 학생일정 데이터
     let nugaData = []; // 누가기록 데이터
     
     // 자동 모바일 모드 감지 (창 폭이 850px 이하일 때 최초 자동 실행)
@@ -344,6 +349,8 @@
     let optShowSuper = true;
     let optExcludeWeekends = false;
     let optHorizontalEvents = false;
+    let optStudentExcludeWeekends = false;
+    let optStudentHorizontalEvents = false;
     let optYearlyView = false;
     
     // 누가기록 상태 변수
@@ -355,6 +362,9 @@
     let eventsById = Object.create(null);
     let daysByKey = Object.create(null);
     let deptIndex = Object.create(null);
+    let studentEventSeq = 0;
+    let studentEventsById = Object.create(null);
+    let studentDaysByKey = Object.create(null);
 
     const PASTELS = [
         '#ffadad', '#ffdada', '#ffd6a5', '#ffecd2', '#fdffb6', '#fdfdf0', 
@@ -393,6 +403,67 @@
         return safe.replace(re, "<mark>$1</mark>");
     }
 
+    function getCellDisplay(cell) {
+        if (cell == null) return "";
+        if (typeof cell === "string" || typeof cell === "number") return String(cell).trim();
+        const fVal = cell.f;
+        const vVal = cell.v;
+        if (fVal != null && String(fVal).trim() !== "") return String(fVal).trim();
+        if (vVal != null) return String(vVal).trim();
+        return "";
+    }
+
+    function getFallbackScheduleYear() {
+        if (scheduleData.length && scheduleData[0].date instanceof Date) return scheduleData[0].date.getFullYear();
+        return viewDate.getFullYear();
+    }
+
+    function parseStudentDateCell(cell) {
+        // 시트에 연도가 보이지 않아도 GViz 원시값(v)에는 Date(연도,월,일)이 들어오는 경우가 많다.
+        // 표시값(f)보다 원시값(v)을 먼저 확인해야 기존 연중행사계획처럼 연도를 안정적으로 가져올 수 있다.
+        if (cell && typeof cell === "object") {
+            const rawValueDate = parseGDate(cell.v);
+            if (rawValueDate) return rawValueDate;
+        }
+
+        const raw = getCellDisplay(cell);
+        const gvizDate = parseGDate(raw);
+        if (gvizDate) return gvizDate;
+
+        const fullDate = raw.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+        if (fullDate) {
+            const dt = new Date(Number(fullDate[1]), Number(fullDate[2]) - 1, Number(fullDate[3]));
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
+
+        const md = raw.match(/(\d{1,2})\s*[-./]\s*(\d{1,2})/);
+        if (!md) return null;
+
+        // 정말로 월-일 텍스트만 넘어오는 예외 상황에서는 기존 학사일정 데이터의 연도를 우선 사용한다.
+        const dt = new Date(getFallbackScheduleYear(), Number(md[1]) - 1, Number(md[2]));
+        return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function stripLeadingDeptTag(text) {
+        return String(text || "")
+            .replace(/^\s*[-•]\s*/, "")
+            .replace(/^\s*\[[^\]]+\]\s*/, "")
+            .trim();
+    }
+
+    function extractStudentFallbackContent(dateText) {
+        const raw = String(dateText || "").trim();
+        const m = raw.match(/^\s*\d{1,2}\s*[-./]\s*\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
+        return m ? stripLeadingDeptTag(m[1]) : "";
+    }
+
+    function matchesStudentSearch(text) {
+        if (!searchTokens.length) return true;
+        const hay = String(text || "").toLowerCase();
+        return searchTokens.every(t => hay.includes(t));
+    }
+
+
     // 데이터 인덱싱
     function rebuildIndexes() {
         eventSeq = 0;
@@ -420,14 +491,32 @@
         });
     }
 
+    function rebuildStudentIndexes() {
+        studentEventSeq = 0;
+        studentEventsById = Object.create(null);
+        studentDaysByKey = Object.create(null);
+
+        studentScheduleData.forEach(day => {
+            const dateKey = getLocalDateKey(day.date);
+            if (!studentDaysByKey[dateKey]) studentDaysByKey[dateKey] = { dateKey, date: day.date, eventIds: [] };
+            day.events.forEach(text => {
+                const id = studentEventSeq++;
+                studentEventsById[id] = { id, dateKey, text };
+                studentDaysByKey[dateKey].eventIds.push(id);
+            });
+        });
+    }
+
+
     // 데이터 로딩 파트
     function checkReady() {
         dataLoaded++;
-        if (dataLoaded >= 5) {
+        if (dataLoaded >= DATA_LOAD_COUNT) {
             document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('errorBanner').style.display = 'none';
-            rebuildIndexes(); 
-            applyScale();     
+            rebuildIndexes();
+            rebuildStudentIndexes();
+            applyScale();
             switchTab('calendar');
         }
     }
@@ -450,6 +539,35 @@
         });
         checkReady();
     };
+
+    window.cb_student = function(data) {
+        studentScheduleData = [];
+        (data.table.rows || []).forEach(r => {
+            if (!r.c || !r.c[0]) return;
+            const date = parseStudentDateCell(r.c[0]);
+            if (!date) return;
+
+            const contentParts = [];
+            for (let i = 2; i < r.c.length; i++) {
+                const t = getCellDisplay(r.c[i]);
+                if (t && t !== "null") contentParts.push(t);
+            }
+
+            let content = contentParts.join('
+').trim();
+            if (!content) content = extractStudentFallbackContent(getCellDisplay(r.c[0]));
+            if (!content || content === "null") return;
+
+            const events = content
+                .split('
+')
+                .map(stripLeadingDeptTag)
+                .filter(Boolean);
+            if (events.length) studentScheduleData.push({ date, events });
+        });
+        checkReady();
+    };
+
 
     window.cb_super = function(data) {
         data.table.rows.forEach(r => {
@@ -685,11 +803,12 @@ window.cb_nuga = function(data) {
 };
 
     function fetchAll() {
-        scheduleData = []; supervisorMap = {}; prayerMap = {}; nugaData = []; dataLoaded = 0;
+        scheduleData = []; studentScheduleData = []; supervisorMap = {}; prayerMap = {}; nugaData = []; dataLoaded = 0;
         document.getElementById('loadingOverlay').style.display = 'flex';
 
         const sheets = [
             {gid:'0', cb:'cb_schedule'},
+            {gid:STUDENT_SCHEDULE_GID, cb:'cb_student'},
             {gid:'1459415616', cb:'cb_super'},
             {gid:'1697887995', cb:'cb_prayer'},
             {gid:'1487091944', cb:'cb_notice'},
@@ -782,13 +901,33 @@ window.cb_nuga = function(data) {
         }
 
         document.getElementById('eventModalBody').innerText = lines.join("\n");
-        document.getElementById('eventGoDeptBtn').onclick = () => { window._selDept = ev.dept; closeEventModal(); switchTab('dept'); };
+        const goDeptBtn = document.getElementById('eventGoDeptBtn');
+        goDeptBtn.style.display = '';
+        goDeptBtn.onclick = () => { window._selDept = ev.dept; closeEventModal(); switchTab('dept'); };
+        document.getElementById('eventModal').style.display = 'flex';
+    }
+
+    function openStudentEventModalById(id) {
+        const ev = studentEventsById[id];
+        if (!ev) return;
+        const dateObj = new Date(ev.dateKey + "T00:00:00");
+        const dow = ['일','월','화','수','목','금','토'][dateObj.getDay()];
+
+        document.getElementById('eventModalTitle').innerText = `🎒 ${dateObj.getMonth()+1}월 ${dateObj.getDate()}일 (${dow}) · 학생일정`;
+        document.getElementById('eventModalBody').innerText = [`날짜: ${ev.dateKey} (${dow})`, `내용: ${ev.text}`].join("\n");
+        document.getElementById('eventGoDeptBtn').style.display = 'none';
         document.getElementById('eventModal').style.display = 'flex';
     }
     
     function closeEventModal() { document.getElementById('eventModal').style.display = 'none'; }
     
     document.addEventListener('click', (e) => {
+        const st = e.target.closest('[data-student-eid]');
+        if (st && Number.isFinite(Number(st.getAttribute('data-student-eid')))) {
+            openStudentEventModalById(Number(st.getAttribute('data-student-eid')));
+            return;
+        }
+
         const t = e.target.closest('[data-eid]');
         if (t && Number.isFinite(Number(t.getAttribute('data-eid')))) {
             openEventModalById(Number(t.getAttribute('data-eid')));
@@ -803,6 +942,7 @@ window.cb_nuga = function(data) {
         const mc = document.getElementById('mainContainer'); mc.innerHTML = '';
         if(currentTab === 'calendar') renderCalendar(mc);
         else if(currentTab === 'plan') renderPlan(mc);
+        else if(currentTab === 'student') renderStudentPlan(mc);
         else if(currentTab === 'dept') renderDept(mc);
         else if(currentTab === 'nuga') renderNuga(mc);
         else if(currentTab === 'request') renderRequestForm(mc);
@@ -1037,6 +1177,112 @@ window.cb_nuga = function(data) {
         
         c.innerHTML = html;
     }
+
+    // --- 학생일정 렌더링 ---
+    function renderStudentPlan(c) {
+        const y = viewDate.getFullYear(), m = viewDate.getMonth();
+        const lastDay = new Date(y, m + 1, 0).getDate();
+        const containerClass = optStudentHorizontalEvents ? 'event-container horizontal-container' : 'event-container';
+
+        let html = `<div class="limit-wrapper">
+            <div class="month-selector no-print" style="margin-bottom: 5px;">
+                <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
+                <div class="month-title">${y}년 ${m + 1}월</div>
+                <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
+                <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
+            </div>
+
+            <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
+                <label style="cursor:pointer; color: #c92a2a;"><input type="checkbox" ${optStudentExcludeWeekends ? 'checked' : ''} onchange="optStudentExcludeWeekends=this.checked; render()"> 주말 제외</label>
+                <label style="cursor:pointer; color: #1864ab;"><input type="checkbox" ${optStudentHorizontalEvents ? 'checked' : ''} onchange="optStudentHorizontalEvents=this.checked; render()"> 일정 가로 배열</label>
+            </div>
+
+            <div class="print-title">${y}학년도 ${m + 1}월 학생일정</div>`;
+
+        // 📱 모바일 뷰
+        html += `<div class="m-plan-wrapper" ${!isMobileMode ? 'style="display:none;"' : ''}>`;
+        for (let d=1; d<=lastDay; d++) {
+            const date = new Date(y, m, d);
+            const dowNum = date.getDay();
+            if (optStudentExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue;
+
+            const dateKey = getLocalDateKey(date);
+            const day = studentDaysByKey[dateKey];
+            const rowClass = dowNum===0 ? 'sun-text' : dowNum===6 ? 'sat-text' : '';
+            const dow = ['일','월','화','수','목','금','토'][dowNum];
+
+            let eventsHtml = "";
+            if (day && day.eventIds.length) {
+                const ids = day.eventIds.filter(id => matchesStudentSearch(studentEventsById[id].text));
+                eventsHtml = ids.map((id, index) => {
+                    const ev = studentEventsById[id];
+                    if (optStudentHorizontalEvents) {
+                        let sep = index < ids.length - 1 ? `<span style="margin: 0 4px; color: #adb5bd; font-weight: 300;">|</span>` : '';
+                        return `
+                            <div class="event-row" data-student-eid="${id}" style="display:inline-flex; align-items:center; gap:4px; width:auto; page-break-inside:avoid; break-inside:avoid;">
+                                <div style="word-break:keep-all;">${highlightHTML(ev.text)}</div>
+                            </div>${sep}`;
+                    }
+                    return `
+                        <div class="event-row" data-student-eid="${id}" style="margin-bottom:5px;">
+                            <div>${highlightHTML(ev.text)}</div>
+                        </div>`;
+                }).join("");
+            }
+
+            html += `<div class="m-plan-card">
+                <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
+                <div class="${containerClass}" style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
+            </div>`;
+        }
+        html += `</div>`;
+
+        // 💻 PC 테이블
+        html += `<div class="pc-plan-wrapper" ${isMobileMode ? 'style="display:none;"' : ''}>
+            <div class="table-container"><table class="plan-table"><thead><tr>
+                <th class="col-date" style="width:40px">날짜</th>
+                <th class="col-day" style="width:40px">요일</th>
+                <th class="col-content">학생 일정</th>
+            </tr></thead><tbody>`;
+
+        for (let d=1; d<=lastDay; d++) {
+            const date = new Date(y, m, d);
+            const dowNum = date.getDay();
+            if (optStudentExcludeWeekends && (dowNum === 0 || dowNum === 6)) continue;
+
+            const dateKey = getLocalDateKey(date);
+            const day = studentDaysByKey[dateKey];
+            const rowClass = dowNum===0 ? 'row-sun' : dowNum===6 ? 'row-sat' : '';
+
+            let eventsHtml = "";
+            if (day && day.eventIds.length) {
+                const ids = day.eventIds.filter(id => matchesStudentSearch(studentEventsById[id].text));
+                eventsHtml = ids.map((id, index) => {
+                    const ev = studentEventsById[id];
+                    if (optStudentHorizontalEvents) {
+                        let sep = index < ids.length - 1 ? `<span style="margin: 0 4px; color: #adb5bd; font-weight: 300;">|</span>` : '';
+                        return `
+                            <div class="event-row" data-student-eid="${id}" style="display:inline-flex; align-items:center; gap:4px; width:auto; page-break-inside:avoid; break-inside:avoid;">
+                                <div style="word-break:keep-all;">${highlightHTML(ev.text)}</div>
+                            </div>${sep}`;
+                    }
+                    return `
+                        <div class="event-row" data-student-eid="${id}">
+                            <div>${highlightHTML(ev.text)}</div>
+                        </div>`;
+                }).join("");
+            }
+
+            html += `<tr class="${rowClass}">
+                <td style="font-weight:900;">${d}</td>
+                <td style="font-weight:900;">${['일','월','화','수','목','금','토'][dowNum]}</td>
+                <td style="text-align:left;"><div class="${containerClass}">${eventsHtml}</div></td>
+            </tr>`;
+        }
+        html += `</tbody></table></div></div></div>`;
+        c.innerHTML = html;
+    }
+
 
     // --- 부서별 조회 ---
     function renderDept(c) {
