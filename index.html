@@ -37,19 +37,21 @@
         body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
         .header-wrapper { background: var(--surface); z-index: 1000; border-bottom: 2px solid var(--border-heavy); padding: 8px 20px; flex-shrink: 0; transition: background 0.2s; }
-        .header { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+        .header { max-width: 1600px; width: 98%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         
-        .header-left { display:flex; align-items:center; gap: 12px; min-width: 220px; }
-        .header-mid { display:flex; align-items:center; gap: 10px; flex: 1; justify-content:center; }
-        .header-right { display:flex; align-items:center; gap: 6px; min-width: 180px; justify-content:flex-end; }
+        .header-left { display:flex; align-items:center; gap: 12px; min-width: 180px; }
+        .header-mid { display:flex; align-items:center; gap: 8px; flex: 1; justify-content:flex-start; min-width: 0; }
+        .header-right { display:flex; align-items:center; gap: 6px; min-width: 150px; justify-content:flex-end; }
 
         .container { flex-grow: 1; overflow-y: auto; display: block; width: 100%; padding: 15px 0; }
         .limit-wrapper { max-width: 1400px; margin: 0 auto; width: 95%; }
 
         .controls { display: flex; gap: 4px; background: #e9ecef; padding: 3px; border-radius: 10px; border: 2px solid var(--border-heavy); }
+        #topControls { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+        #topControls .btn { white-space: nowrap; flex-shrink: 0; padding-left: 10px; padding-right: 10px; }
         body.dark-mode .controls { background: #343a40; }
         
-        .btn { background: transparent; color: var(--text-muted); border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: 0.15s; font-family: inherit; }
+        .btn { background: transparent; color: var(--text-muted); border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: 0.15s; font-family: inherit; white-space: nowrap; }
         .btn:hover { background: #dee2e6; color: var(--text-main); }
         body.dark-mode .btn:hover { background: #495057; color: #fff; }
         .btn.active { background: var(--border-heavy); color: #fff; }
@@ -61,7 +63,7 @@
         #btn_request.active { background: #c92a2a; color: #fff; }
         body.dark-mode #btn_request.active { background: #fa5252; color: #fff; }
 
-        .search-box { width: 340px; max-width: 45vw; }
+        .search-box { width: 260px; max-width: 28vw; flex: 0 0 260px; }
         .search-input { width:100%; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--border-heavy);
                         background: var(--bg); color: var(--text-main); font-size: 13.5px; outline:none; transition: 0.2s; }
         
@@ -106,7 +108,7 @@
         body.dark-mode .cal-head { background: #343a40; color: #fff; }
         
         .cal-cell { background: var(--surface); border: 2px solid var(--border-heavy); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; min-width: 0; }
-        .cal-cell.today { background: #fff9db; border-color: #fcc419; border-width: 3px; }
+        .cal-cell.today { background: #fff9db; border-color: #fcc419; border-width: 3px; scroll-margin-top: 90px; }
         body.dark-mode .cal-cell.today { background: #3b3000; border-color: #ffd43b; }
         .cal-cell.other-month { opacity: 0.3; background: var(--bg); }
         
@@ -139,6 +141,7 @@
         body.dark-mode .plan-table tr.row-sun { color: #ff8787; }
         .plan-table tr.row-sat { background: var(--sat-bg); color: #1864ab; }
         body.dark-mode .plan-table tr.row-sat { color: #74c0fc; }
+        .plan-table tr.today-row { outline: 3px solid #fcc419; outline-offset: -3px; scroll-margin-top: 90px; }
         
         .event-container { display: flex; flex-direction: column; gap: 3px; text-align: left; }
         /* 새로 추가: 수평 배열 컨테이너 */
@@ -153,6 +156,7 @@
         
         /* 모바일 모드용 계획표 카드 스타일 */
         .m-plan-card { background: var(--surface); border: 2px solid var(--border-heavy); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+        .m-plan-card.today-card { border-color: #fcc419; border-width: 3px; scroll-margin-top: 90px; }
         .m-plan-date { font-weight: 900; font-size: calc(var(--base-font) + 1px); margin-bottom: 8px; border-bottom: 1px solid #dee2e6; padding-bottom: 6px; }
         body.dark-mode .m-plan-date { border-bottom-color: #495057; }
         .m-plan-date.sun-text { color: #c92a2a; }
@@ -552,31 +556,50 @@
         }
     }
 
-    function alignViewDateToLoadedData() {
-        const dates = []
-            .concat(scheduleData.map(x => x.date))
-            .concat(studentScheduleData.map(x => x.date))
-            .filter(d => d instanceof Date && !Number.isNaN(d.getTime()));
-        if (!dates.length || !(viewDate instanceof Date)) return;
+    function normalizeDateOnly(dateObj) {
+        if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return null;
+        return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    }
 
-        const currentYear = viewDate.getFullYear();
-        if (!dates.some(d => d.getFullYear() === currentYear)) {
-            dates.sort((a, b) => a - b);
-            viewDate = new Date(dates[0].getFullYear(), dates[0].getMonth(), 1);
+    function getValidDatesFromSource(source) {
+        return (source || [])
+            .map(x => normalizeDateOnly(x.date))
+            .filter(Boolean)
+            .sort((a, b) => a - b);
+    }
+
+    function chooseRelevantMonthForToday(dates, preferTodayMonth = true) {
+        if (!dates.length) return null;
+
+        const today = normalizeDateOnly(new Date());
+        if (preferTodayMonth && dates.some(d => d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth())) {
+            return new Date(today.getFullYear(), today.getMonth(), 1);
         }
+
+        const future = dates.find(d => d >= today);
+        const chosen = future || dates[dates.length - 1];
+        return new Date(chosen.getFullYear(), chosen.getMonth(), 1);
+    }
+
+    function alignViewDateToLoadedData() {
+        const primaryDates = getValidDatesFromSource(scheduleData);
+        const fallbackDates = getValidDatesFromSource(scheduleData.concat(studentScheduleData));
+        const chosen = chooseRelevantMonthForToday(primaryDates.length ? primaryDates : fallbackDates, true);
+        if (chosen) viewDate = chosen;
     }
 
     function ensureViewDateForTab(tabId) {
         const source = tabId === 'student' ? studentScheduleData
             : (tabId === 'calendar' || tabId === 'plan') ? scheduleData
             : [];
-        const dates = source.map(x => x.date).filter(d => d instanceof Date && !Number.isNaN(d.getTime()));
+        const dates = getValidDatesFromSource(source);
         if (!dates.length || !(viewDate instanceof Date)) return;
 
-        const currentYear = viewDate.getFullYear();
-        if (!dates.some(d => d.getFullYear() === currentYear)) {
-            dates.sort((a, b) => a - b);
-            viewDate = new Date(dates[0].getFullYear(), dates[0].getMonth(), 1);
+        const hasVisibleMonthData = dates.some(d => d.getFullYear() === viewDate.getFullYear() && d.getMonth() === viewDate.getMonth());
+        const hasVisibleYearData = dates.some(d => d.getFullYear() === viewDate.getFullYear());
+        if (!hasVisibleMonthData && !hasVisibleYearData) {
+            const chosen = chooseRelevantMonthForToday(dates, true);
+            if (chosen) viewDate = chosen;
         }
     }
 
@@ -968,8 +991,21 @@ window.cb_nuga = function(data) {
     fetchAll();
 
     // 탭 및 UI 상호작용
-    let currentTab = 'calendar', viewDate = new Date();
+    let currentTab = 'calendar';
+    const initialToday = new Date();
+    let viewDate = new Date(initialToday.getFullYear(), initialToday.getMonth(), 1);
     
+    function goToday() {
+        const today = new Date();
+        viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        render();
+    }
+
+    function scrollTodayIntoViewIfVisible() {
+        const todayEl = document.querySelector('.cal-cell.today, tr.today-row, .m-plan-card.today-card');
+        if (todayEl) todayEl.scrollIntoView({ block: 'center', inline: 'nearest' });
+    }
+
     function switchTab(id) {
         currentTab = id;
         ensureViewDateForTab(id);
@@ -1090,6 +1126,8 @@ window.cb_nuga = function(data) {
         else if(currentTab === 'dept') renderDept(mc);
         else if(currentTab === 'nuga') renderNuga(mc);
         else if(currentTab === 'request') renderRequestForm(mc);
+
+        requestAnimationFrame(scrollTodayIntoViewIfVisible);
     }
 
     // --- 달력 렌더링 (연별/월별 보기 옵션 지원) ---
@@ -1100,6 +1138,7 @@ window.cb_nuga = function(data) {
         let html = `<div class="limit-wrapper">
             <div class="month-selector no-print" style="margin-bottom: 5px;">
                 <button class="btn" onclick="changeMonth(optYearlyView ? -12 : -1)">◀ 이전</button>
+                <button class="btn" onclick="goToday()">오늘</button>
                 <div class="month-title">${y}년 ${optYearlyView ? '전체' : (currentM + 1) + '월'}</div>
                 <button class="btn" onclick="changeMonth(optYearlyView ? 12 : 1)">다음 ▶</button>
             </div>
@@ -1190,6 +1229,7 @@ window.cb_nuga = function(data) {
         let html = `<div class="limit-wrapper">
             <div class="month-selector no-print" style="margin-bottom: 5px;">
                 <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
+                <button class="btn" onclick="goToday()">오늘</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
                 <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
                 <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
@@ -1253,7 +1293,9 @@ window.cb_nuga = function(data) {
                 metaHtml += `</div>`;
             }
 
-            html += `<div class="m-plan-card">
+            const todayKey = getLocalDateKey(new Date());
+            const isTodayRow = dateKey === todayKey;
+            html += `<div class="m-plan-card ${isTodayRow ? 'today-card' : ''}" data-date-key="${dateKey}">
                 <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
                 <div class="${containerClass}" style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
                 ${metaHtml}
@@ -1307,7 +1349,8 @@ window.cb_nuga = function(data) {
                 }).join("");
             }
 
-            html += `<tr class="${rowClass}">
+            const isTodayRow = dateKey === getLocalDateKey(new Date());
+            html += `<tr class="${rowClass} ${isTodayRow ? 'today-row' : ''}" data-date-key="${dateKey}">
                 <td style="font-weight:900;">${d}</td>
                 <td style="font-weight:900;">${['일','월','화','수','목','금','토'][dowNum]}</td>
                 <td style="text-align:left;"><div class="${containerClass}">${eventsHtml}</div></td>`;
@@ -1331,6 +1374,7 @@ window.cb_nuga = function(data) {
         let html = `<div class="limit-wrapper">
             <div class="month-selector no-print" style="margin-bottom: 5px;">
                 <button class="btn" onclick="changeMonth(-1)">◀ 이전</button>
+                <button class="btn" onclick="goToday()">오늘</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
                 <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
                 <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
@@ -1374,7 +1418,9 @@ window.cb_nuga = function(data) {
                 }).join("");
             }
 
-            html += `<div class="m-plan-card">
+            const todayKey = getLocalDateKey(new Date());
+            const isTodayRow = dateKey === todayKey;
+            html += `<div class="m-plan-card ${isTodayRow ? 'today-card' : ''}" data-date-key="${dateKey}">
                 <div class="m-plan-date ${rowClass}">${d}일 (${dow})</div>
                 <div class="${containerClass}" style="margin-bottom:8px; min-height:20px;">${eventsHtml || '<span style="color:var(--text-muted); font-size:calc(var(--base-font) - 1px);">일정 없음</span>'}</div>
             </div>`;
@@ -1417,7 +1463,8 @@ window.cb_nuga = function(data) {
                 }).join("");
             }
 
-            html += `<tr class="${rowClass}">
+            const isTodayRow = dateKey === getLocalDateKey(new Date());
+            html += `<tr class="${rowClass} ${isTodayRow ? 'today-row' : ''}" data-date-key="${dateKey}">
                 <td style="font-weight:900;">${d}</td>
                 <td style="font-weight:900;">${['일','월','화','수','목','금','토'][dowNum]}</td>
                 <td style="text-align:left;"><div class="${containerClass}">${eventsHtml}</div></td>
