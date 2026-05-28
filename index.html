@@ -366,6 +366,13 @@
     let studentEventsById = Object.create(null);
     let studentDaysByKey = Object.create(null);
 
+    // JSONP 로딩 안정화용 상태값
+    let expectedLoadCount = 0;
+    let loadedSheetKeys = new Set();
+    let activeSheetKey = null;
+    let loadFinished = false;
+    let loadTimeoutId = null;
+
     const PASTELS = [
         '#ffadad', '#ffdada', '#ffd6a5', '#ffecd2', '#fdffb6', '#fdfdf0', 
         '#caffbf', '#e9ffeb', '#9bf6ff', '#e0ffff', '#a0c4ff', '#e2edff', 
@@ -380,9 +387,32 @@
 
     // 유틸리티 함수
     function parseGDate(v) {
-        if (!v || typeof v !== 'string' || !v.includes('Date')) return null;
-        const parts = v.match(/\d+/g);
-        return new Date(parts[0], parts[1], parts[2]);
+        if (!v) return null;
+        if (v instanceof Date) return Number.isNaN(v.getTime()) ? null : v;
+        if (typeof v === "number" && Number.isFinite(v)) {
+            // Google/Excel serial date fallback: 1899-12-30 기준
+            const utc = new Date(Math.round((v - 25569) * 86400 * 1000));
+            if (!Number.isNaN(utc.getTime())) return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+        }
+
+        const raw = String(v).trim();
+        if (!raw || raw === "null" || raw === "undefined") return null;
+
+        // Google GViz 날짜 원시값: Date(2027,0,18) / Date(2027,0,18,0,0,0)
+        const gviz = raw.match(/Date\s*\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/);
+        if (gviz) {
+            const dt = new Date(Number(gviz[1]), Number(gviz[2]), Number(gviz[3]));
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
+
+        // 텍스트 날짜: 2027. 1. 18 / 2027-01-18 / 2027/1/18
+        const fullDate = raw.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+        if (fullDate) {
+            const dt = new Date(Number(fullDate[1]), Number(fullDate[2]) - 1, Number(fullDate[3]));
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
+
+        return null;
     }
     function getLocalDateKey(dateObj) {
         const y = dateObj.getFullYear();
@@ -453,8 +483,12 @@
 
     function extractStudentFallbackContent(dateText) {
         const raw = String(dateText || "").trim();
-        const m = raw.match(/^\s*\d{1,2}\s*[-./]\s*\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
-        return m ? stripLeadingDeptTag(m[1]) : "";
+        // 한 셀에 "2027. 1. 18 월 행사" 또는 "01-18 월 행사"처럼 들어온 경우 대비
+        const full = raw.match(/^\s*\d{4}\D+\d{1,2}\D+\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
+        if (full) return stripLeadingDeptTag(full[1]);
+
+        const md = raw.match(/^\s*\d{1,2}\s*[-./]\s*\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
+        return md ? stripLeadingDeptTag(md[1]) : "";
     }
 
     function matchesStudentSearch(text) {
@@ -509,16 +543,88 @@
 
 
     // 데이터 로딩 파트
-    function checkReady() {
-        dataLoaded++;
-        if (dataLoaded >= DATA_LOAD_COUNT) {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('errorBanner').style.display = 'none';
-            rebuildIndexes();
-            rebuildStudentIndexes();
-            applyScale();
-            switchTab('calendar');
+    function showLoadWarning(message) {
+        const banner = document.getElementById('errorBanner');
+        const detail = document.getElementById('errorDetail');
+        if (banner && detail) {
+            detail.textContent = message;
+            banner.style.display = 'block';
         }
+    }
+
+    function alignViewDateToLoadedData() {
+        const dates = []
+            .concat(scheduleData.map(x => x.date))
+            .concat(studentScheduleData.map(x => x.date))
+            .filter(d => d instanceof Date && !Number.isNaN(d.getTime()));
+        if (!dates.length || !(viewDate instanceof Date)) return;
+
+        const currentYear = viewDate.getFullYear();
+        if (!dates.some(d => d.getFullYear() === currentYear)) {
+            dates.sort((a, b) => a - b);
+            viewDate = new Date(dates[0].getFullYear(), dates[0].getMonth(), 1);
+        }
+    }
+
+    function ensureViewDateForTab(tabId) {
+        const source = tabId === 'student' ? studentScheduleData
+            : (tabId === 'calendar' || tabId === 'plan') ? scheduleData
+            : [];
+        const dates = source.map(x => x.date).filter(d => d instanceof Date && !Number.isNaN(d.getTime()));
+        if (!dates.length || !(viewDate instanceof Date)) return;
+
+        const currentYear = viewDate.getFullYear();
+        if (!dates.some(d => d.getFullYear() === currentYear)) {
+            dates.sort((a, b) => a - b);
+            viewDate = new Date(dates[0].getFullYear(), dates[0].getMonth(), 1);
+        }
+    }
+
+    function finishLoading(forceMessage = "") {
+        if (loadFinished) return;
+        loadFinished = true;
+        if (loadTimeoutId) clearTimeout(loadTimeoutId);
+
+        rebuildIndexes();
+        rebuildStudentIndexes();
+        alignViewDateToLoadedData();
+        applyScale();
+
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.style.display = 'none';
+
+        if (forceMessage) showLoadWarning(forceMessage);
+        else document.getElementById('errorBanner').style.display = 'none';
+
+        switchTab(currentTab || 'calendar');
+    }
+
+    function checkReady(key) {
+        const sheetKey = key || activeSheetKey || `sheet_${loadedSheetKeys.size + 1}`;
+        loadedSheetKeys.add(sheetKey);
+        dataLoaded = loadedSheetKeys.size;
+
+        if (expectedLoadCount > 0 && dataLoaded >= expectedLoadCount) {
+            finishLoading();
+        }
+    }
+
+    function wrapJsonpCallback(name) {
+        const original = window[name];
+        if (typeof original !== 'function') return;
+        window[name] = function(data) {
+            const prev = activeSheetKey;
+            activeSheetKey = name;
+            try {
+                return original(data);
+            } catch (e) {
+                console.error(`[${name} 콜백 에러]`, e);
+                showLoadWarning(`${name} 데이터를 처리하지 못했습니다. 나머지 데이터만 표시합니다.`);
+                checkReady(name);
+            } finally {
+                activeSheetKey = prev;
+            }
+        };
     }
 
     window.cb_schedule = function(data) {
@@ -542,33 +648,45 @@
 
     window.cb_student = function(data) {
         studentScheduleData = [];
-        (data.table.rows || []).forEach(r => {
-            if (!r.c || !r.c[0]) return;
-            const date = parseStudentDateCell(r.c[0]);
-            if (!date) return;
+        try {
+            const rows = (data && data.table && Array.isArray(data.table.rows)) ? data.table.rows : [];
+            rows.forEach(r => {
+                if (!r.c || !r.c[0]) return;
+                const date = parseStudentDateCell(r.c[0]);
+                if (!date) return;
 
-            const contentParts = [];
-            for (let i = 2; i < r.c.length; i++) {
-                const t = getCellDisplay(r.c[i]);
-                if (t && t !== "null") contentParts.push(t);
-            }
+                const primaryParts = [];
+                for (let i = 2; i < r.c.length; i++) {
+                    const t = getCellDisplay(r.c[i]);
+                    if (t && t !== "null") primaryParts.push(t);
+                }
 
-            let content = contentParts.join('
-').trim();
-            if (!content) content = extractStudentFallbackContent(getCellDisplay(r.c[0]));
-            if (!content || content === "null") return;
+                // 열 구조가 바뀌거나 요일/일정이 합쳐져 들어온 경우까지 대비
+                const secondaryParts = [];
+                for (let i = 1; i < r.c.length; i++) {
+                    const t = getCellDisplay(r.c[i]);
+                    if (!t || t === "null" || /^[월화수목금토일]$/.test(t)) continue;
+                    secondaryParts.push(t);
+                }
 
-            const events = content
-                .split('
-')
-                .map(stripLeadingDeptTag)
-                .filter(Boolean);
-            if (events.length) studentScheduleData.push({ date, events });
-        });
-        checkReady();
+                let content = primaryParts.join('\n').trim();
+                if (!content) content = secondaryParts.join('\n').trim();
+                if (!content) content = extractStudentFallbackContent(getCellDisplay(r.c[0]));
+                if (!content || content === "null") return;
+
+                const events = content
+                    .split('\n')
+                    .map(stripLeadingDeptTag)
+                    .filter(Boolean);
+                if (events.length) studentScheduleData.push({ date, events });
+            });
+        } catch (e) {
+            console.error('[학생일정 파싱 에러]', e);
+            showLoadWarning('학생일정 데이터를 파싱하지 못했습니다.');
+        } finally {
+            checkReady();
+        }
     };
-
-
     window.cb_super = function(data) {
         data.table.rows.forEach(r => {
             if (!r.c || !r.c[0]) return;
@@ -802,25 +920,50 @@ window.cb_nuga = function(data) {
     checkReady();
 };
 
+    ['cb_schedule', 'cb_super', 'cb_prayer', 'cb_notice', 'cb_nuga', 'cb_student'].forEach(wrapJsonpCallback);
+
     function fetchAll() {
-        scheduleData = []; studentScheduleData = []; supervisorMap = {}; prayerMap = {}; nugaData = []; dataLoaded = 0;
+        scheduleData = [];
+        studentScheduleData = [];
+        supervisorMap = {};
+        prayerMap = {};
+        nugaData = [];
+        dataLoaded = 0;
+        loadedSheetKeys = new Set();
+        loadFinished = false;
+        if (loadTimeoutId) clearTimeout(loadTimeoutId);
+
         document.getElementById('loadingOverlay').style.display = 'flex';
 
         const sheets = [
-            {gid:'0', cb:'cb_schedule'},
-            {gid:STUDENT_SCHEDULE_GID, cb:'cb_student'},
-            {gid:'1459415616', cb:'cb_super'},
-            {gid:'1697887995', cb:'cb_prayer'},
-            {gid:'1487091944', cb:'cb_notice'},
-            {gid:'2041576858', cb:'cb_nuga'}
+            {gid:'0', cb:'cb_schedule', label:'연중행사계획'},
+            {gid:STUDENT_SCHEDULE_GID, cb:'cb_student', label:'학생일정'},
+            {gid:'1459415616', cb:'cb_super', label:'자습감독'},
+            {gid:'1697887995', cb:'cb_prayer', label:'기도순서'},
+            {gid:'1487091944', cb:'cb_notice', label:'공지사항'},
+            {gid:'2041576858', cb:'cb_nuga', label:'창체누가기록'}
         ];
+        expectedLoadCount = sheets.length;
+
+        loadTimeoutId = setTimeout(() => {
+            const missing = sheets
+                .filter(s => !loadedSheetKeys.has(s.cb))
+                .map(s => s.label)
+                .join(', ');
+            finishLoading(missing ? `일부 시트 로딩이 지연/실패했습니다: ${missing}` : '일부 시트 로딩이 지연되었습니다.');
+        }, 12000);
+
         sheets.forEach(s => {
             const script = document.createElement('script');
             script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${s.cb}&gid=${s.gid}&_=${Date.now()}`;
+            script.onerror = () => {
+                console.error('[시트 로딩 실패]', s.gid, s.cb);
+                showLoadWarning(`${s.label} 데이터를 불러오지 못했습니다.`);
+                checkReady(s.cb);
+            };
             document.body.appendChild(script);
         });
     }
-
     function retryFetchAll() { fetchAll(); }
     fetchAll();
 
@@ -829,6 +972,7 @@ window.cb_nuga = function(data) {
     
     function switchTab(id) {
         currentTab = id;
+        ensureViewDateForTab(id);
         document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
         const dBtn = document.getElementById('btn_' + id); if(dBtn) dBtn.classList.add('active');
         const mBtn = document.getElementById('m_btn_' + id); if(mBtn) mBtn.classList.add('active');
