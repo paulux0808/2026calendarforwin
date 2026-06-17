@@ -138,15 +138,15 @@
         body.dark-mode .plan-table td { border-color: #495057; }
         
         .plan-table tr.row-sun { background: var(--sun-bg); color: #000; }
-        body.dark-mode .plan-table tr.row-sun { color: #ff8787; }
+        body.dark-mode .plan-table tr.row-sun { color: #000; }
         .plan-table tr.row-sat { background: var(--sat-bg); color: #000; }
-        body.dark-mode .plan-table tr.row-sat { color: #74c0fc; }
+        body.dark-mode .plan-table tr.row-sat { color: #000; }
         .plan-table tr.today-row { outline: 3px solid #fcc419; outline-offset: -3px; scroll-margin-top: 90px; }
         
         .event-container { display: flex; flex-direction: column; gap: 3px; text-align: left; }
         /* 새로 추가: 수평 배열 컨테이너 */
         .horizontal-container { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 4px; }
-        .event-row { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 6px; font-size: calc(var(--base-font) - 0.5px); font-weight: 700; line-height: 1.4; cursor: pointer; color: var(--text-main); }
+        .event-row { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 6px; font-size: calc(var(--base-font) - 0.5px); font-weight: 700; line-height: 1.4; cursor: pointer; color: inherit; }
         .event-row:hover { text-decoration: underline; }
         
         .screen-dept { display: inline-block; padding: 1.5px 6px; border-radius: 4px; font-size: calc(var(--base-font) - 3.5px); border: 1px solid rgba(0,0,0,0.1); font-weight: 900; white-space: nowrap; color: #000; }
