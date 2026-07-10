@@ -1,65 +1,2928 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#2563eb">
-<title>학사 캘린더</title>
-<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<style>
-:root{--bg:#f3f6fb;--panel:#fff;--panel2:#eef3f9;--line:#d8e0eb;--text:#172033;--muted:#667085;--primary:#2563eb;--primary2:#dbeafe;--danger:#dc2626;--today:#fff7cc;--sat:#e8f3ff;--sun:#ffe9ea;--shadow:0 12px 34px rgba(15,23,42,.08);--radius:18px;--font:14px}
-body.dark{--bg:#0f172a;--panel:#182235;--panel2:#223047;--line:#334155;--text:#f8fafc;--muted:#aebbd0;--primary:#60a5fa;--primary2:#193657;--today:#4b4012;--sat:#173552;--sun:#4a2328;--shadow:none}
-*{box-sizing:border-box}html,body{margin:0;height:100%}body{font-family:Pretendard,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:var(--font);overflow:hidden}.app{height:100%;display:grid;grid-template-rows:auto 1fr}.top{background:var(--panel);border-bottom:1px solid var(--line);padding:12px 18px;z-index:20}.toprow{max-width:1600px;margin:auto;display:flex;align-items:center;gap:12px}.brand{font-size:20px;font-weight:900;white-space:nowrap}.status{font-size:12px;color:var(--muted);white-space:nowrap}.search{flex:1;min-width:180px;position:relative}.search input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:12px;padding:10px 38px 10px 12px;font:inherit}.search button{position:absolute;right:4px;top:4px;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}.tools{display:flex;gap:6px}.iconbtn,.btn,.tab{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:9px 11px;font:inherit;font-weight:800;cursor:pointer}.iconbtn:hover,.btn:hover,.tab:hover{background:var(--panel2)}.nav{max-width:1600px;margin:10px auto 0;display:flex;gap:7px;overflow:auto;padding-bottom:2px}.tab{white-space:nowrap}.tab.active{background:var(--primary);border-color:var(--primary);color:#fff}.main{overflow:auto;padding:18px}.wrap{max-width:1500px;margin:auto}.banner{display:none;background:#fff1f2;color:#9f1239;border:1px solid #fda4af;border-radius:14px;padding:12px 14px;margin-bottom:12px;font-weight:800}.banner.show{display:flex;justify-content:space-between;gap:12px;align-items:center}.hero{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.hero h2{margin:0;font-size:24px}.hero .actions{display:flex;gap:7px;flex-wrap:wrap}.monthnav{display:flex;align-items:center;gap:7px}.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.summary .card{padding:14px}.summary b{display:block;font-size:23px;margin-top:4px}.muted{color:var(--muted)}.calendar{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:8px;min-width:920px}.calendarbox{overflow:auto}.dow{font-weight:900;text-align:center;padding:9px}.day{min-height:150px;padding:9px;border:1px solid var(--line);background:var(--panel);border-radius:14px}.day.other{opacity:.42}.day.today{background:var(--today);outline:3px solid #fbbf24}.date{display:flex;justify-content:space-between;font-weight:900;margin-bottom:7px}.sun{background:var(--sun)}.sat{background:var(--sat)}.event{display:flex;align-items:flex-start;gap:5px;padding:4px 0;cursor:pointer;line-height:1.35}.event:hover .et{text-decoration:underline}.tag{font-size:10px;font-weight:900;color:#111;border:1px solid rgba(0,0,0,.12);border-radius:5px;padding:2px 5px;white-space:nowrap}.tablewrap{overflow:auto}.table{width:100%;border-collapse:separate;border-spacing:0;min-width:800px}.table th,.table td{padding:9px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}.table th{position:sticky;top:0;background:var(--panel2);z-index:2}.table tr:last-child td{border-bottom:0}.table th:last-child,.table td:last-child{border-right:0}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.filters select,.filters input,.form input,.form select,.form textarea{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:10px 12px;font:inherit}.filters select{min-width:160px}.deptgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}.deptcard{padding:15px;border-left:7px solid var(--primary)}.deptcard h3{margin:0 0 8px}.empty{text-align:center;padding:60px 20px;color:var(--muted);font-weight:800}.notice{padding:14px;margin-bottom:12px}.request{max-width:720px;margin:auto;padding:22px}.form{display:grid;gap:12px}.form label{font-weight:900}.form textarea{min-height:150px;resize:vertical}.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.modal.show{display:flex}.modalbox{width:min(660px,100%);max-height:80vh;overflow:auto;background:var(--panel);border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow)}.modalhead,.modalfoot{padding:15px 18px;border-bottom:1px solid var(--line)}.modalfoot{border-bottom:0;border-top:1px solid var(--line);display:flex;justify-content:flex-end}.modalbody{padding:18px;white-space:pre-wrap;line-height:1.7}.loading{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;font-weight:900}.spin{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-right:12px}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:900px){.toprow{flex-wrap:wrap}.brand{font-size:18px}.status{order:3;width:100%}.summary{grid-template-columns:repeat(2,1fr)}.main{padding:12px}.hero{align-items:flex-start;flex-direction:column}.calendar{grid-template-columns:1fr;min-width:0}.dow{display:none}.day{min-height:auto}.day.other{display:none}.nav{margin-top:8px}.tools .label{display:none}}
-@media print{body{overflow:visible;background:#fff;color:#000}.top,.banner,.hero .actions,.filters{display:none!important}.main{overflow:visible;padding:0}.card{box-shadow:none;border-radius:0}.calendar{min-width:0;gap:2px}.day{min-height:120px;border-radius:0}.table th{position:static}@page{size:A4 portrait;margin:8mm}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#2563eb">
+  <title>학사 캘린더</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef3f9;
+      --surface-3: #e5ebf3;
+      --text: #172033;
+      --muted: #60708a;
+      --line: #d6deea;
+      --line-strong: #aab7ca;
+      --primary: #2563eb;
+      --primary-strong: #1d4ed8;
+      --primary-soft: #dbeafe;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --warning: #b45309;
+      --warning-soft: #fef3c7;
+      --success: #047857;
+      --success-soft: #d1fae5;
+      --shadow: 0 14px 40px rgba(30, 64, 175, 0.10);
+      --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.08);
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --font-size: 14px;
+      --calendar-min-height: 142px;
+      --gap: 12px;
+      --header-h: 74px;
+      --sat: #e0f2fe;
+      --sun: #ffe4e6;
+      --today: #fff7cc;
+      --focus: 0 0 0 3px rgba(37, 99, 235, .22);
+    }
+
+    body[data-theme="dark"] {
+      --bg: #0f172a;
+      --surface: #172033;
+      --surface-2: #202c42;
+      --surface-3: #2a3850;
+      --text: #eef4ff;
+      --muted: #aab9cf;
+      --line: #34445d;
+      --line-strong: #50627d;
+      --primary: #60a5fa;
+      --primary-strong: #93c5fd;
+      --primary-soft: #1e3a5f;
+      --danger: #fb7185;
+      --danger-soft: #4c1d2b;
+      --warning: #fbbf24;
+      --warning-soft: #4a3610;
+      --success: #34d399;
+      --success-soft: #103c31;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+      --shadow-sm: 0 8px 24px rgba(0, 0, 0, .22);
+      --sat: #123a57;
+      --sun: #4a2029;
+      --today: #463d13;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% -10%, rgba(59,130,246,.12), transparent 35%),
+        radial-gradient(circle at 100% 10%, rgba(14,165,233,.08), transparent 32%),
+        var(--bg);
+      color: var(--text);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: var(--font-size);
+      overflow: hidden;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    :focus-visible { outline: none; box-shadow: var(--focus); }
+    .sr-only {
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
+    }
+
+    .app-shell {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 238px minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      position: relative;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 20px 14px 14px;
+      color: #e8eef9;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(59,130,246,.26), transparent 34%),
+        linear-gradient(180deg, #152238 0%, #111b2d 56%, #0d1626 100%);
+      border-right: 1px solid rgba(255,255,255,.08);
+      box-shadow: 16px 0 45px rgba(15,23,42,.12);
+    }
+    .sidebar .brand { padding: 0 7px 20px; }
+    .sidebar .brand-title { color: #fff; }
+    .sidebar .brand-meta { color: #9fb0ca; }
+    .sidebar .brand-mark {
+      background: linear-gradient(135deg, #60a5fa, #2563eb);
+      box-shadow: 0 12px 28px rgba(37,99,235,.35);
+    }
+    .sidebar-label {
+      padding: 0 11px 8px;
+      color: #7f91ad;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 7px 0;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: grid;
+      gap: 8px;
+    }
+    .sidebar-tip {
+      color: #8fa1bc;
+      font-size: 10.5px;
+      font-weight: 650;
+      line-height: 1.55;
+    }
+    .workspace {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .app-header {
+      position: relative;
+      z-index: 30;
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 4px 16px rgba(15,23,42,.035);
+    }
+
+    .header-row {
+      max-width: 1720px;
+      margin: 0 auto;
+      padding: 14px clamp(14px, 2vw, 30px);
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+    .brand-mark {
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #0ea5e9);
+      box-shadow: 0 9px 22px rgba(37,99,235,.28);
+      font-size: 21px;
+      flex: 0 0 auto;
+    }
+    .brand-copy { min-width: 0; }
+    .brand-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      white-space: nowrap;
+    }
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .sync-dot {
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: var(--muted);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--muted) 16%, transparent);
+    }
+    .sync-dot.loading { background: var(--warning); animation: pulse 1.1s infinite; }
+    .sync-dot.ok { background: var(--success); }
+    .sync-dot.partial, .sync-dot.error { background: var(--danger); }
+    @keyframes pulse { 50% { opacity: .35; } }
+
+    .global-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .search-wrap {
+      min-width: 0;
+      flex: 1;
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      height: 42px;
+      padding: 0 42px 0 39px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-weight: 700;
+      transition: .18s ease;
+    }
+    .search-input:hover { border-color: var(--line-strong); }
+    .search-input:focus {
+      background: var(--surface);
+      border-color: var(--primary);
+    }
+    .search-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      width: 28px; height: 28px;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: none;
+    }
+    .search-clear.visible { display: grid; place-items: center; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .icon-btn, .action-btn, .tab-btn, .chip-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      min-height: 38px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .16s ease;
+    }
+    .icon-btn {
+      width: 40px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+    .action-btn {
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .icon-btn:hover, .action-btn:hover, .chip-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary-strong);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .action-btn.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+    .action-btn.danger {
+      border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+      color: var(--danger);
+    }
+    .action-btn:disabled, .icon-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .tab-strip {
+      display: grid;
+      gap: 5px;
+      padding: 0;
+      overflow: visible;
+    }
+    .tab-btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: transparent;
+      color: #a9b8ce;
+      text-align: left;
+      white-space: nowrap;
+      box-shadow: none;
+    }
+    .tab-btn::before {
+      content: attr(data-icon);
+      width: 23px;
+      color: #7f91ad;
+      font-size: 15px;
+      text-align: center;
+    }
+    .tab-btn:hover {
+      background: rgba(255,255,255,.07);
+      color: #fff;
+      transform: none;
+      box-shadow: none;
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(37,99,235,.82));
+      border-color: rgba(147,197,253,.3);
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+    }
+    .tab-btn.active::before { color: #fff; }
+    .tab-btn[data-tab="request"] { margin-top: 9px; color: #fda4af; }
+    .tab-btn[data-tab="request"].active { background: linear-gradient(135deg, #e11d48, #be123c); border-color: rgba(253,164,175,.35); color: #fff; }
+
+    .main-scroll {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-padding-top: 18px;
+    }
+    .page {
+      max-width: 1720px;
+      margin: 0 auto;
+      padding: 18px clamp(14px, 2vw, 30px) 72px;
+    }
+
+    .notice-banner, .load-banner {
+      display: none;
+      margin-bottom: 14px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      border: 1px solid;
+      box-shadow: var(--shadow-sm);
+    }
+    .notice-banner.visible, .load-banner.visible { display: block; }
+    .notice-banner {
+      background: var(--primary-soft);
+      border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
+    }
+    .load-banner {
+      background: var(--danger-soft);
+      border-color: color-mix(in srgb, var(--danger) 45%, var(--line));
+    }
+    .banner-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .banner-title { font-weight: 900; }
+    .banner-detail { margin-top: 3px; color: var(--muted); font-weight: 650; line-height: 1.45; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .month-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 15px;
+      box-shadow: var(--shadow-sm);
+    }
+    .month-title {
+      min-width: 130px;
+      padding: 0 8px;
+      font-size: 19px;
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: -.02em;
+    }
+    .month-nav .icon-btn {
+      width: 34px; height: 34px; min-height: 34px;
+      border: 0;
+      background: var(--surface-2);
+      box-shadow: none;
+    }
+    .chip-btn {
+      min-height: 36px;
+      padding: 0 11px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .chip-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary-strong);
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    }
+    .panel-title {
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .panel-desc {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 650;
+    }
+
+    .calendar-wrap {
+      padding: 13px;
+      overflow-x: auto;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--calendar-cols, 5), minmax(150px, 1fr));
+      gap: var(--gap);
+      min-width: calc(var(--calendar-cols, 5) * 150px);
+    }
+    .cal-head {
+      padding: 10px 8px;
+      text-align: center;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .cal-head.sat { background: var(--sat); color: #075985; }
+    .cal-head.sun { background: var(--sun); color: #9f1239; }
+    body[data-theme="dark"] .cal-head.sat { color: #bae6fd; }
+    body[data-theme="dark"] .cal-head.sun { color: #fecdd3; }
+
+    .cal-cell {
+      position: relative;
+      min-height: var(--calendar-min-height);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 10px;
+      transition: .16s ease;
+      overflow: hidden;
+    }
+    .cal-cell:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+    .cal-cell.other-month { opacity: .44; background: var(--surface-2); }
+    .cal-cell.today { background: var(--today); border: 2px solid #eab308; }
+    .cal-cell.sat { background: color-mix(in srgb, var(--sat) 58%, var(--surface)); }
+    .cal-cell.sun { background: color-mix(in srgb, var(--sun) 58%, var(--surface)); }
+    .cal-date {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-weight: 950;
+    }
+    .date-num {
+      width: 30px; height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+    .today .date-num { background: #eab308; color: #111827; }
+    .day-count {
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 800;
+    }
+    .events {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .event-item {
+      display: grid;
+      grid-template-columns: auto minmax(0,1fr);
+      gap: 6px;
+      align-items: start;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      color: inherit;
+    }
+    .event-item:hover .event-text { color: var(--primary-strong); text-decoration: underline; }
+    .dept-tag {
+      max-width: 78px;
+      padding: 3px 6px;
+      border-radius: 7px;
+      border: 1px solid rgba(15,23,42,.10);
+      color: #111827;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .event-text {
+      min-width: 0;
+      padding-top: 2px;
+      font-size: calc(var(--font-size) - 2px);
+      font-weight: 720;
+      line-height: 1.38;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+    .no-event {
+      padding: 12px 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+
+    .calendar-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 14px;
+      align-items: start;
+    }
+    .calendar-panel { min-width: 0; }
+    .cal-cell { cursor: pointer; }
+    .cal-cell.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent), var(--shadow-sm);
+    }
+    .day-drawer {
+      position: sticky;
+      top: 14px;
+      max-height: calc(100vh - 122px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .drawer-head {
+      padding: 17px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(145deg, var(--surface), var(--surface-2));
+    }
+    .drawer-eyebrow {
+      color: var(--primary-strong);
+      font-size: 10.5px;
+      font-weight: 950;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .drawer-date {
+      margin-top: 5px;
+      font-size: 23px;
+      font-weight: 950;
+      letter-spacing: -.035em;
+    }
+    .drawer-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .drawer-body { padding: 14px; overflow: auto; }
+    .drawer-section + .drawer-section { margin-top: 16px; }
+    .drawer-section-title {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 950;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .drawer-event {
+      width: 100%;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+    .drawer-event + .drawer-event { margin-top: 7px; }
+    .drawer-event:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .drawer-meta-card {
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      line-height: 1.55;
+    }
+    .drawer-meta-card + .drawer-meta-card { margin-top: 7px; }
+    .drawer-meta-label { color: var(--muted); font-size: 10.5px; font-weight: 900; }
+    .drawer-meta-value { margin-top: 3px; font-weight: 760; white-space: pre-wrap; }
+    .drawer-foot {
+      padding: 11px 14px;
+      display: flex;
+      gap: 7px;
+      border-top: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .drawer-foot .action-btn { flex: 1; }
+    .drawer-empty {
+      min-height: 210px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+      font-weight: 700;
+    }
+    .calendar-more {
+      width: 100%;
+      padding: 5px 7px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--primary-strong);
+      text-align: left;
+      font-size: 10.5px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .search-results {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 14px;
+      align-items: start;
+    }
+    .search-result-list { display: grid; gap: 8px; padding: 12px; }
+    .search-result {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+    .search-result:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .search-result-date { font-weight: 900; }
+    .search-result-main { min-width: 0; }
+    .search-result-type { color: var(--muted); font-size: 10.5px; font-weight: 850; }
+    .search-result-text { margin-top: 3px; font-weight: 760; line-height: 1.45; }
+    .search-result-arrow { color: var(--muted); font-size: 18px; }
+    .search-help {
+      position: sticky;
+      top: 14px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+    .search-help-title { font-weight: 950; }
+    .search-help p { margin: 8px 0 0; color: var(--muted); font-size: 11.5px; font-weight: 650; line-height: 1.6; }
+
+    .table-scroll { overflow: auto; }
+    .data-table {
+      width: 100%;
+      min-width: 850px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+    .data-table th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--surface-2);
+      color: var(--muted);
+      border-bottom: 1px solid var(--line-strong);
+      padding: 10px 8px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .data-table td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 8px;
+      text-align: center;
+      vertical-align: top;
+    }
+    .data-table td:last-child, .data-table th:last-child { border-right: 0; }
+    .data-table tr:last-child td { border-bottom: 0; }
+    .data-table tr.today-row { outline: 3px solid #eab308; outline-offset: -3px; }
+    .data-table tr.sat-row { background: color-mix(in srgb, var(--sat) 55%, var(--surface)); }
+    .data-table tr.sun-row { background: color-mix(in srgb, var(--sun) 55%, var(--surface)); }
+    .table-events {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      text-align: left;
+    }
+    .table-events.horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .table-event {
+      display: grid;
+      grid-template-columns: auto minmax(0,1fr);
+      gap: 7px;
+      align-items: start;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .table-event:hover { color: var(--primary-strong); }
+    .meta-stack {
+      display: grid;
+      gap: 3px;
+      text-align: left;
+      line-height: 1.35;
+    }
+    .meta-label { color: var(--muted); font-size: 10.5px; font-weight: 800; }
+    .meta-value { font-weight: 750; word-break: keep-all; overflow-wrap: anywhere; }
+
+    .mobile-cards {
+      display: none;
+      padding: 12px;
+      gap: 9px;
+    }
+    .mobile-card {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 12px;
+      background: var(--surface);
+    }
+    .mobile-card.today-card { border: 2px solid #eab308; background: var(--today); }
+    .mobile-card-date {
+      font-weight: 950;
+      margin-bottom: 9px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--line);
+    }
+    .mobile-card-meta {
+      margin-top: 9px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 7px;
+    }
+    .meta-box {
+      padding: 8px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      min-width: 0;
+    }
+
+    .filter-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+    }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-label {
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 900;
+      margin-right: 2px;
+    }
+    .select {
+      min-height: 38px;
+      padding: 0 36px 0 11px;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .dept-layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0,1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .dept-sidebar {
+      position: sticky;
+      top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      padding: 10px;
+      box-shadow: var(--shadow-sm);
+      max-height: calc(100vh - 190px);
+      overflow: auto;
+    }
+    .dept-btn {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .dept-btn:hover { background: var(--surface-2); color: var(--text); }
+    .dept-btn.active { background: var(--primary); color: #fff; }
+    .count-badge {
+      min-width: 25px;
+      height: 21px;
+      padding: 0 6px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      background: var(--surface-3);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .dept-btn.active .count-badge { background: rgba(255,255,255,.2); color: #fff; }
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+    .month-section {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .month-section-title {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .dept-event-list { padding: 8px 14px 14px; }
+    .dept-event-card {
+      display: grid;
+      grid-template-columns: 88px minmax(0,1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+    .dept-event-card:last-child { border-bottom: 0; }
+    .dept-date { font-weight: 900; }
+    .dept-event-text { min-width: 0; font-weight: 760; line-height: 1.45; }
+    .link-btn {
+      border: 0;
+      background: transparent;
+      color: var(--primary-strong);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .nuga-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 9px;
+      margin: 12px 0;
+    }
+    .nuga-card {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 12px;
+      background: var(--surface);
+      cursor: pointer;
+      text-align: left;
+      transition: .16s ease;
+    }
+    .nuga-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .nuga-card.active { border-color: var(--primary); box-shadow: var(--focus); }
+    .nuga-card-label { color: var(--muted); font-size: 11px; font-weight: 900; }
+    .nuga-card-value { margin-top: 5px; font-size: 21px; font-weight: 950; }
+
+    .request-layout {
+      display: grid;
+      grid-template-columns: minmax(0, .78fr) minmax(320px, 1.22fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .info-card, .form-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3vw, 28px);
+    }
+    .info-card {
+      background:
+        linear-gradient(145deg, color-mix(in srgb, var(--primary-soft) 80%, var(--surface)), var(--surface));
+    }
+    .info-card h2, .form-card h2 {
+      margin: 0;
+      font-size: 23px;
+      letter-spacing: -.03em;
+    }
+    .info-card p, .form-card p {
+      color: var(--muted);
+      font-weight: 650;
+      line-height: 1.65;
+    }
+    .guide-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 18px;
+    }
+    .guide-item {
+      display: grid;
+      grid-template-columns: 28px minmax(0,1fr);
+      gap: 9px;
+      align-items: start;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+    .guide-num {
+      width: 27px; height: 27px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 900;
+    }
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+    .field label { font-weight: 900; }
+    .field small { color: var(--muted); font-weight: 650; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 11px 12px;
+      font-weight: 700;
+    }
+    .form-textarea { min-height: 180px; resize: vertical; line-height: 1.55; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--primary);
+      background: var(--surface);
+    }
+    .submit-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      padding: 56px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 34px; margin-bottom: 9px; }
+    .empty-title { color: var(--text); font-size: 16px; font-weight: 900; }
+    .empty-desc { margin-top: 5px; font-weight: 650; }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      place-items: center;
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+      backdrop-filter: blur(12px);
+    }
+    .loading-overlay.visible { display: grid; }
+    .loading-card {
+      width: min(390px, calc(100vw - 32px));
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .loader {
+      width: 48px; height: 48px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      border: 5px solid var(--surface-3);
+      border-top-color: var(--primary);
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-list {
+      margin-top: 14px;
+      display: grid;
+      gap: 5px;
+      text-align: left;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15,23,42,.58);
+      backdrop-filter: blur(6px);
+    }
+    .modal.visible { display: flex; }
+    .modal-card {
+      width: min(680px, 100%);
+      max-height: min(82vh, 760px);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: 0 28px 80px rgba(0,0,0,.32);
+      display: grid;
+      grid-template-rows: auto minmax(0,1fr) auto;
+    }
+    .modal-head, .modal-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 17px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .modal-foot {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      justify-content: flex-end;
+    }
+    .modal-title { font-size: 17px; font-weight: 900; }
+    .modal-body {
+      padding: 18px;
+      overflow: auto;
+      white-space: pre-wrap;
+      line-height: 1.7;
+      font-weight: 680;
+    }
+
+    .toast-region {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 120;
+      display: grid;
+      gap: 8px;
+      width: min(380px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--primary);
+      border-radius: 13px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      animation: toast-in .2s ease;
+    }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.success { border-left-color: var(--success); }
+    .toast-title { font-weight: 900; }
+    .toast-message { margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.45; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(7px); } }
+
+    body[data-density="compact"] {
+      --font-size: 13px;
+      --calendar-min-height: 118px;
+      --gap: 8px;
+    }
+    body[data-density="comfortable"] {
+      --font-size: 15px;
+      --calendar-min-height: 166px;
+      --gap: 14px;
+    }
+
+    @media (max-width: 1100px) {
+      .header-row { grid-template-columns: minmax(190px, auto) minmax(220px,1fr) auto; }
+      .header-actions .action-label { display: none; }
+      .header-actions .action-btn { width: 40px; padding: 0; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .request-layout { grid-template-columns: 1fr; }
+      .dept-layout { grid-template-columns: 210px minmax(0,1fr); }
+    }
+
+    @media (max-width: 760px) {
+      body { overflow: auto; }
+      .app-shell { height: auto; min-height: 100vh; overflow: visible; }
+      .app-header { position: sticky; top: 0; }
+      .header-row {
+        grid-template-columns: 1fr auto;
+        padding-bottom: 8px;
+      }
+      .global-search { grid-column: 1 / -1; grid-row: 2; }
+      .brand-meta { max-width: 210px; overflow: hidden; text-overflow: ellipsis; }
+      .main-scroll { overflow: visible; }
+      .page { padding-top: 12px; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .month-title { min-width: 108px; font-size: 17px; }
+      .calendar-grid { grid-template-columns: 1fr; min-width: 0; }
+      .cal-head { display: none; }
+      .cal-cell {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 56px minmax(0,1fr);
+        gap: 9px;
+      }
+      .cal-date { align-content: start; flex-direction: column; justify-content: flex-start; margin: 0; }
+      .date-num { width: 42px; height: 42px; font-size: 16px; }
+      .day-count { text-align: center; }
+      .desktop-table { display: none; }
+      .mobile-cards { display: grid; }
+      .dept-layout { grid-template-columns: 1fr; }
+      .dept-sidebar {
+        position: static;
+        display: flex;
+        overflow-x: auto;
+        max-height: none;
+      }
+      .dept-btn { width: auto; min-width: max-content; }
+      .dept-event-card { grid-template-columns: 74px minmax(0,1fr); }
+      .dept-event-card .link-btn { grid-column: 2; justify-self: start; }
+      .request-layout { grid-template-columns: 1fr; }
+      .toolbar { align-items: stretch; }
+      .toolbar-left, .toolbar-right { width: 100%; }
+      .toolbar-right { justify-content: flex-start; }
+      .panel { border-radius: 17px; }
+      .modal { padding: 10px; }
+    }
+
+    @media (max-width: 430px) {
+      .brand-meta { display: none; }
+      .brand-title { font-size: 16px; }
+      .brand-mark { width: 38px; height: 38px; }
+      .header-actions { gap: 4px; }
+      .header-actions .icon-btn, .header-actions .action-btn { width: 37px; min-height: 37px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+      .summary-value { font-size: 19px; }
+      .mobile-card-meta { grid-template-columns: 1fr; }
+    }
+
+
+    @media (max-width: 1280px) {
+      .app-shell { grid-template-columns: 206px minmax(0, 1fr); }
+      .calendar-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+    }
+
+    @media (max-width: 920px) {
+      body { overflow: auto; }
+      .app-shell { height: auto; min-height: 100vh; display: block; overflow: visible; }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        z-index: 60;
+        padding: 9px 12px;
+        display: block;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255,255,255,.1);
+      }
+      .sidebar .brand { padding: 0 2px 8px; }
+      .sidebar .brand-meta, .sidebar-label, .sidebar-footer { display: none; }
+      .tab-strip { display: flex; gap: 5px; overflow-x: auto; }
+      .tab-btn { width: auto; min-width: max-content; min-height: 37px; padding: 0 10px; }
+      .tab-btn::before { width: auto; }
+      .tab-btn[data-tab="request"] { margin-top: 0; }
+      .workspace { overflow: visible; display: block; }
+      .app-header { position: sticky; top: 103px; }
+      .header-row { grid-template-columns: minmax(0, 1fr) auto; padding: 9px 12px; }
+      .main-scroll { overflow: visible; }
+      .page { padding: 12px 12px 72px; }
+      .calendar-layout { display: block; }
+      .day-drawer {
+        position: fixed;
+        left: 0; right: 0; bottom: 0; top: auto;
+        z-index: 100;
+        max-height: min(76vh, 680px);
+        border-radius: 22px 22px 0 0;
+        transform: translateY(calc(100% + 24px));
+        transition: transform .22s ease;
+        box-shadow: 0 -24px 70px rgba(15,23,42,.28);
+      }
+      .day-drawer.open { transform: translateY(0); }
+      .drawer-foot { padding-bottom: calc(11px + env(safe-area-inset-bottom)); }
+      .search-results { grid-template-columns: 1fr; }
+      .search-help { position: static; }
+      .search-result { grid-template-columns: 76px minmax(0,1fr) auto; }
+    }
+
+    @media print {
+      @page { size: A4 portrait; margin: 8mm; }
+      body { overflow: visible !important; background: #fff !important; color: #000 !important; }
+      .app-shell, .main-scroll { display: block !important; height: auto !important; overflow: visible !important; }
+      .app-header, .sidebar, .notice-banner, .load-banner, .toolbar .no-print,
+      .mobile-cards, .toast-region, .loading-overlay, .modal, .day-drawer { display: none !important; }
+      .page { max-width: none; padding: 0; }
+      .panel { box-shadow: none; border: 0; border-radius: 0; overflow: visible; }
+      .panel-head { background: #fff !important; padding: 0 0 8px; }
+      .desktop-table { display: block !important; }
+      .table-scroll { overflow: visible; }
+      .data-table {
+        min-width: 0 !important;
+        width: 100% !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+        background: #fff !important;
+      }
+      .data-table th {
+        position: static;
+        background: #eee !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        padding: 3px !important;
+      }
+      .data-table td {
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        padding: 3px !important;
+      }
+      .dept-tag { color: #000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .sat-row, .sun-row { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
 </head>
-<body>
-<div class="loading" id="loading"><span class="spin"></span>학사 데이터를 불러오는 중입니다.</div>
-<div class="app">
-<header class="top"><div class="toprow"><div class="brand">학사 캘린더</div><div class="status" id="syncStatus">동기화 준비</div><div class="search"><input id="search" placeholder="일정·부서·내용 검색 (공백은 AND)" aria-label="통합 검색"><button id="clearSearch" title="검색 지우기">×</button></div><div class="tools"><button class="iconbtn" id="refreshBtn">↻ <span class="label">새로고침</span></button><button class="iconbtn" id="fontBtn">A+</button><button class="iconbtn" id="themeBtn">◐</button></div></div><nav class="nav" id="nav"><button class="tab active" data-tab="calendar">달력</button><button class="tab" data-tab="plan">월중 계획표</button><button class="tab" data-tab="student">학생일정</button><button class="tab" data-tab="dept">부서별</button><button class="tab" data-tab="nuga">누가기록</button><button class="tab" data-tab="request">수정 요청</button></nav></header>
-<main class="main"><div class="wrap"><div class="banner" id="banner"><span id="bannerText"></span><button class="btn" id="hideBanner">닫기</button></div><section id="content"></section></div></main>
-</div>
-<div class="modal" id="modal"><div class="modalbox"><div class="modalhead"><strong id="modalTitle">상세</strong></div><div class="modalbody" id="modalBody"></div><div class="modalfoot"><button class="btn primary" id="modalClose">닫기</button></div></div></div>
-<script>
-const WEB_APP_URL="https://script.google.com/macros/s/AKfycbzk1DN0iDS7EdZvKq-iomzgxmiCzOwCUZwWZkN4fjvkzOZPdF1d3P9d1xt6Ii8VNnmmPQ/exec";
-const SHEET_ID="10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg";
-const STUDENT_SCHEDULE_GID="1112677469";
-const SHEETS=[['schedule','0','연중행사계획'],['student',STUDENT_SCHEDULE_GID,'학생일정'],['super','1459415616','자습감독'],['prayer','1697887995','기도순서'],['notice','1487091944','공지사항'],['nuga','2041576858','창체누가기록']];
-const DEPTS=["교목부","교무부","연구부","상담부","정보부","1학년부","2학년부","3학년부","기획위원","행정실","국어과","영어과","수학과","사회과","과학과","예체능과","정보과","외국어과","기타"];
-const COLORS=['#ffd6a5','#caffbf','#9bf6ff','#a0c4ff','#bdb2ff','#ffc6ff','#ffadad','#fde68a','#bfdbfe','#ddd6fe','#fecdd3','#bbf7d0','#bae6fd','#fed7aa','#e9d5ff','#fbcfe8','#d1fae5','#e5e7eb','#cbd5e1'];
-const state={tab:'calendar',view:new Date(new Date().getFullYear(),new Date().getMonth(),1),query:'',font:0,loaded:new Set(),failed:new Set(),schedule:[],student:[],super:{},prayer:{},notice:[],nuga:[],events:[],studentEvents:[],lastSync:null};
-const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const key=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-function parseDate(v){if(!v)return null;if(v instanceof Date)return v;if(typeof v==='number'){const u=new Date(Math.round((v-25569)*86400000));return new Date(u.getUTCFullYear(),u.getUTCMonth(),u.getUTCDate())}const s=String(v);let m=s.match(/Date\s*\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/);if(m)return new Date(+m[1],+m[2],+m[3]);m=s.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null}
-function cell(c){if(c==null)return'';if(typeof c!=='object')return String(c).trim();return String(c.f??c.v??'').trim()}
-function tokens(){return state.query.toLowerCase().split(/\s+/).filter(Boolean)}function match(...xs){const h=xs.join(' ').toLowerCase();return tokens().every(t=>h.includes(t))}
-function showBanner(t){$('#bannerText').textContent=t;$('#banner').classList.add('show')}function hideBanner(){$('#banner').classList.remove('show')}
-function color(d){return COLORS[Math.max(0,DEPTS.indexOf(d))%COLORS.length]}
-function cbSchedule(data){state.schedule=[];(data?.table?.rows||[]).forEach(r=>{const d=parseDate(r.c?.[0]?.v),raw=cell(r.c?.[2]);if(!d||!raw)return;const events=raw.split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{const m=line.match(/^\[([^\]]+)\]/);let dept=m?m[1].trim():'기타',text=m?line.replace(m[0],'').trim():line;if(!DEPTS.includes(dept)){dept='기타';text=line}return{dept,text}});state.schedule.push({date:d,events})});reindex()}
-function cbStudent(data){state.student=[];(data?.table?.rows||[]).forEach(r=>{const d=parseDate(r.c?.[0]?.v)||parseDate(cell(r.c?.[0]));if(!d)return;let parts=[];for(let i=2;i<(r.c||[]).length;i++){const t=cell(r.c[i]);if(t&&t!=='null')parts.push(t)}if(!parts.length)for(let i=1;i<(r.c||[]).length;i++){const t=cell(r.c[i]);if(t&&!/^[월화수목금토일]$/.test(t)&&t!=='null')parts.push(t)}const events=parts.join('\n').split('\n').map(x=>x.trim()).filter(Boolean);if(events.length)state.student.push({date:d,events})});reindex()}
-function cbSuper(data){state.super={};(data?.table?.rows||[]).forEach(r=>{const d=parseDate(r.c?.[0]?.v),v=cell(r.c?.[2]);if(d&&v)state.super[key(d)]=v})}
-function cbPrayer(data){state.prayer={};(data?.table?.rows||[]).forEach(r=>{const d=parseDate(r.c?.[0]?.v);if(d)state.prayer[key(d)]={name:cell(r.c?.[2]),bible:cell(r.c?.[3]),hymn:cell(r.c?.[4])}})}
-function cbNotice(data){state.notice=[];(data?.table?.rows||[]).forEach(r=>{const s=parseDate(r.c?.[0]?.v),e=parseDate(r.c?.[1]?.v),text=cell(r.c?.[2]);if(s&&e&&text)state.notice.push({s,e,text})})}
-function cbNuga(data){state.nuga=[];(data?.table?.rows||[]).forEach(r=>{const c=r.c||[],cat=cell(c[1]),d=parseDate(c[2]?.v)||parseDate(cell(c[2])),period=cell(c[3]),content=cell(c[7]),remark=cell(c[8]);if(!cat||!d)return;const hours=(period.replace(/교시|\[|\]|\s/g,'').split(/[,.，、\/|~\-–—]+/).filter(x=>/^\d+$/.test(x))).length;state.nuga.push({cat,date:d,period,hours,grades:[cell(c[4]),cell(c[5]),cell(c[6])],content,remark})});state.nuga.sort((a,b)=>a.date-b.date)}
-function reindex(){state.events=[];state.schedule.forEach(x=>x.events.forEach(e=>state.events.push({...e,date:x.date,dateKey:key(x.date)})));state.studentEvents=[];state.student.forEach(x=>x.events.forEach(text=>state.studentEvents.push({text,date:x.date,dateKey:key(x.date)})))}
-const callbacks={schedule:cbSchedule,student:cbStudent,super:cbSuper,prayer:cbPrayer,notice:cbNotice,nuga:cbNuga};
-function loadAll(){state.loaded.clear();state.failed.clear();$('#loading').style.display='flex';hideBanner();SHEETS.forEach(([name,gid,label])=>{const cb='__cal_'+name+'_'+Date.now()+'_'+Math.random().toString(36).slice(2);let done=false;const finish=ok=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];script.remove();(ok?state.loaded:state.failed).add(name);if(state.loaded.size+state.failed.size===SHEETS.length)finishAll()};window[cb]=data=>{try{callbacks[name](data);finish(true)}catch(e){console.error(e);finish(false)}};const script=document.createElement('script');script.src=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cb}&gid=${gid}&_=${Date.now()}`;script.onerror=()=>finish(false);const timer=setTimeout(()=>finish(false),12000);document.body.appendChild(script)})}
-function finishAll(){state.lastSync=new Date();$('#loading').style.display='none';$('#syncStatus').textContent=`${state.lastSync.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 동기화 · ${state.loaded.size}/${SHEETS.length}`;if(state.failed.size)showBanner(`일부 데이터를 불러오지 못했습니다: ${[...state.failed].map(x=>SHEETS.find(s=>s[0]===x)?.[2]).join(', ')}`);if(state.schedule.length){const now=new Date(),future=state.schedule.map(x=>x.date).sort((a,b)=>a-b).find(d=>d>=now)||state.schedule.at(-1).date;state.view=new Date(future.getFullYear(),future.getMonth(),1)}render()}
-function header(title){return `<div class="hero"><div><h2>${title}</h2><div class="muted">Google 시트 원본을 읽어 표시합니다.</div></div><div class="actions"><div class="monthnav"><button class="btn" data-month="-1">‹</button><button class="btn" id="todayBtn">오늘</button><button class="btn" data-month="1">›</button></div><button class="btn" onclick="print()">인쇄</button></div></div>`}
-function currentNotices(){const n=new Date();n.setHours(0,0,0,0);return state.notice.filter(x=>n>=x.s&&n<=new Date(x.e.getFullYear(),x.e.getMonth(),x.e.getDate(),23,59,59))}
-function renderCalendar(){const y=state.view.getFullYear(),m=state.view.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-first.getDay()),today=key(new Date());let cells='';for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const dk=key(d),evs=state.events.filter(e=>e.dateKey===dk&&match(e.dept,e.text));const cls=[d.getMonth()!==m?'other':'',dk===today?'today':'',d.getDay()===0?'sun':'',d.getDay()===6?'sat':''].join(' ');cells+=`<div class="day ${cls}"><div class="date"><span>${d.getDate()}</span><span class="muted">${['일','월','화','수','목','금','토'][d.getDay()]}</span></div>${evs.map(e=>`<div class="event" data-detail="event" data-key="${dk}" data-dept="${esc(e.dept)}" data-text="${esc(e.text)}"><span class="tag" style="background:${color(e.dept)}">${esc(e.dept)}</span><span class="et">${esc(e.text)}</span></div>`).join('')}</div>`}const monthE=state.events.filter(e=>e.date.getFullYear()===y&&e.date.getMonth()===m);const notices=currentNotices();return header(`${y}년 ${m+1}월`)+(notices.length?`<div class="card notice"><b>공지사항</b><div>${notices.map(x=>esc(x.text).replace(/\n/g,'<br>')).join('<hr>')}</div></div>`:'')+`<div class="summary"><div class="card"><span class="muted">월간 일정</span><b>${monthE.length}</b></div><div class="card"><span class="muted">일정 부서</span><b>${new Set(monthE.map(x=>x.dept)).size}</b></div><div class="card"><span class="muted">학생 일정</span><b>${state.studentEvents.filter(e=>e.date.getFullYear()===y&&e.date.getMonth()===m).length}</b></div><div class="card"><span class="muted">검색 결과</span><b>${monthE.filter(e=>match(e.dept,e.text)).length}</b></div></div><div class="calendarbox"><div class="calendar">${['일','월','화','수','목','금','토'].map(x=>`<div class="dow">${x}</div>`).join('')}${cells}</div></div>`}
-function renderPlan(student=false){const y=state.view.getFullYear(),m=state.view.getMonth(),last=new Date(y,m+1,0).getDate(),source=student?state.studentEvents:state.events;let rows='';for(let d=1;d<=last;d++){const dt=new Date(y,m,d),dk=key(dt),list=source.filter(e=>e.dateKey===dk&&match(student?'':e.dept,student?e.text:e.text));rows+=`<tr class="${dt.getDay()===0?'sun':dt.getDay()===6?'sat':''}"><td><b>${d}</b></td><td>${['일','월','화','수','목','금','토'][dt.getDay()]}</td><td>${list.map(e=>student?`<div class="event">${esc(e.text)}</div>`:`<div class="event" data-detail="event" data-key="${dk}" data-dept="${esc(e.dept)}" data-text="${esc(e.text)}"><span class="tag" style="background:${color(e.dept)}">${esc(e.dept)}</span><span>${esc(e.text)}</span></div>`).join('')}</td>${student?'':`<td>${esc(state.super[dk]||'')}</td><td>${state.prayer[dk]?`${esc(state.prayer[dk].name)}<br><span class="muted">${esc(state.prayer[dk].hymn)} ${esc(state.prayer[dk].bible)}</span>`:''}</td>`}</tr>`}return header(`${y}년 ${m+1}월 ${student?'학생일정':'월중 계획표'}`)+`<div class="card tablewrap"><table class="table"><thead><tr><th>일</th><th>요일</th><th>${student?'학생 일정':'학사 일정'}</th>${student?'':'<th>자습감독</th><th>기도·말씀</th>'}</tr></thead><tbody>${rows}</tbody></table></div>`}
-function renderDept(){let selected=window._dept||DEPTS[0];let list=state.events.filter(e=>e.dept===selected&&match(e.dept,e.text));return `<div class="hero"><div><h2>부서별 일정</h2><div class="muted">부서를 선택하면 전체 기간의 일정을 모아봅니다.</div></div></div><div class="filters"><select id="deptSelect">${DEPTS.map(d=>`<option ${d===selected?'selected':''}>${d}</option>`).join('')}</select></div>${list.length?`<div class="deptgrid">${list.map(e=>`<div class="card deptcard" style="border-left-color:${color(e.dept)}"><h3>${e.date.getFullYear()}년 ${e.date.getMonth()+1}월 ${e.date.getDate()}일</h3><div>${esc(e.text)}</div></div>`).join('')}</div>`:'<div class="card empty">해당 부서의 일정이 없습니다.</div>'}`}
-function gradeOn(v){return ['1','o','○','◯','v','✓','✔','true','y'].includes(String(v).trim().toLowerCase())}
-function renderNuga(){const grade=+(window._grade||1),cat=window._cat||'전체';const base=state.nuga.filter(r=>gradeOn(r.grades[grade-1]));const cats=['전체',...new Set(base.map(r=>r.cat))];const list=base.filter(r=>(cat==='전체'||r.cat===cat)&&match(r.cat,r.content,r.remark));let total=0;return `<div class="hero"><div><h2>창체 누가기록</h2><div class="muted">시트 구조는 그대로 유지하며 학년·영역별로 집계합니다.</div></div></div><div class="filters"><select id="gradeSelect">${[1,2,3].map(g=>`<option value="${g}" ${g===grade?'selected':''}>${g}학년</option>`).join('')}</select><select id="catSelect">${cats.map(c=>`<option ${c===cat?'selected':''}>${esc(c)}</option>`).join('')}</select></div><div class="card tablewrap"><table class="table"><thead><tr><th>No</th><th>영역</th><th>일자</th><th>교시</th><th>시간</th><th>활동내용</th><th>비고</th></tr></thead><tbody>${list.map((r,i)=>{total+=r.hours;return`<tr><td>${i+1}</td><td>${esc(r.cat)}</td><td>${r.date.getMonth()+1}/${r.date.getDate()}</td><td>${esc(r.period)}</td><td>${r.hours}</td><td>${esc(r.content)}</td><td>${esc(r.remark)}</td></tr>`}).join('')}<tr><td colspan="4" style="text-align:right"><b>합계</b></td><td><b>${total}</b></td><td colspan="2"></td></tr></tbody></table></div>`}
-function renderRequest(){return `<div class="card request"><h2>학사일정 수정·추가 요청</h2><p class="muted">기존 Google Apps Script 주소를 그대로 사용합니다. 전송 방식도 기존과 동일합니다.</p><div class="form"><label>작성자<input id="reqName" placeholder="성함"></label><label>요청 유형<select id="reqType"><option>일정수정</option><option>프로그램 개선</option><option>기타</option></select></label><label>요청 내용<textarea id="reqContent" placeholder="날짜, 부서, 변경 내용을 구체적으로 입력해 주세요."></textarea></label><button class="btn primary" id="sendRequest">요청 전송</button></div></div>`}
-function render(){document.documentElement.style.setProperty('--font',`${14+state.font}px`);const c=$('#content');c.innerHTML=state.tab==='calendar'?renderCalendar():state.tab==='plan'?renderPlan(false):state.tab==='student'?renderPlan(true):state.tab==='dept'?renderDept():state.tab==='nuga'?renderNuga():renderRequest();bindContent()}
-function bindContent(){document.querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{state.view.setMonth(state.view.getMonth()+(+b.dataset.month));render()});if($('#todayBtn'))$('#todayBtn').onclick=()=>{const n=new Date();state.view=new Date(n.getFullYear(),n.getMonth(),1);render()};if($('#deptSelect'))$('#deptSelect').onchange=e=>{window._dept=e.target.value;render()};if($('#gradeSelect'))$('#gradeSelect').onchange=e=>{window._grade=e.target.value;window._cat='전체';render()};if($('#catSelect'))$('#catSelect').onchange=e=>{window._cat=e.target.value;render()};document.querySelectorAll('[data-detail="event"]').forEach(el=>el.onclick=()=>openEvent(el));if($('#sendRequest'))$('#sendRequest').onclick=sendRequest}
-function openEvent(el){const dk=el.dataset.key,dept=el.dataset.dept,text=el.dataset.text,p=state.prayer[dk],same=state.events.filter(e=>e.dateKey===dk);$('#modalTitle').textContent=`${dk} · ${dept}`;$('#modalBody').textContent=[text,state.super[dk]?`\n자습감독: ${state.super[dk]}`:'',p?`\n기도/말씀: ${p.name} · ${p.hymn} · ${p.bible}`:'',same.length>1?'\n같은 날 다른 일정\n'+same.map(x=>`• [${x.dept}] ${x.text}`).join('\n'):''].join('');$('#modal').classList.add('show')}
-async function sendRequest(){const name=$('#reqName').value.trim(),type=$('#reqType').value,content=$('#reqContent').value.trim(),btn=$('#sendRequest');if(!name||!content)return alert('작성자와 요청 내용을 입력해 주세요.');btn.disabled=true;btn.textContent='전송 중…';try{await fetch(WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type,content})});alert('요청을 전송했습니다. 관리자 시트 반영 여부를 확인해 주세요.');state.tab='calendar';syncTabs();render()}catch(e){alert('전송 중 오류가 발생했습니다.')}finally{btn.disabled=false;btn.textContent='요청 전송'}}
-function syncTabs(){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===state.tab))}
-$('#nav').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;state.tab=b.dataset.tab;syncTabs();render()};$('#search').oninput=e=>{state.query=e.target.value;render()};$('#clearSearch').onclick=()=>{$('#search').value='';state.query='';render()};$('#refreshBtn').onclick=loadAll;$('#fontBtn').onclick=()=>{state.font=state.font>=3?-1:state.font+1;render()};$('#themeBtn').onclick=()=>{document.body.classList.toggle('dark');localStorage.setItem('calendar-theme',document.body.classList.contains('dark')?'dark':'light')};$('#hideBanner').onclick=hideBanner;$('#modalClose').onclick=()=>$('#modal').classList.remove('show');$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('show')};if(localStorage.getItem('calendar-theme')==='dark'||(!localStorage.getItem('calendar-theme')&&matchMedia('(prefers-color-scheme:dark)').matches))document.body.classList.add('dark');addEventListener('keydown',e=>{if(e.key==='Escape')$('#modal').classList.remove('show');if((e.ctrlKey||e.metaKey)&&e.key==='f'){e.preventDefault();$('#search').focus()}});loadAll();
-</script>
+<body data-theme="light" data-density="standard">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand" role="button" tabindex="0" aria-label="학사 캘린더 새로고침" id="brandHome">
+        <div class="brand-mark" aria-hidden="true">학</div>
+        <div class="brand-copy">
+          <h1 class="brand-title">학사 캘린더</h1>
+          <div class="brand-meta"><span class="sync-dot loading" id="syncDot"></span><span id="syncText">연결 준비 중</span></div>
+        </div>
+      </div>
+      <div class="sidebar-label">업무 메뉴</div>
+      <nav class="tab-strip" aria-label="주요 메뉴" id="tabStrip">
+        <button class="tab-btn active" data-tab="calendar" data-icon="▦" type="button">달력 일정</button>
+        <button class="tab-btn" data-tab="plan" data-icon="▤" type="button">월중 계획표</button>
+        <button class="tab-btn" data-tab="student" data-icon="◫" type="button">학생 일정</button>
+        <button class="tab-btn" data-tab="dept" data-icon="⌘" type="button">부서별 조회</button>
+        <button class="tab-btn" data-tab="nuga" data-icon="✓" type="button">누가기록</button>
+        <button class="tab-btn" data-tab="request" data-icon="＋" type="button">수정·추가 요청</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-tip">/ 검색 · T 오늘 · Alt+←/→ 월 이동</div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="app-header">
+        <div class="header-row">
+          <div class="global-search">
+            <div class="search-wrap">
+              <span class="search-icon" aria-hidden="true">⌕</span>
+              <label class="sr-only" for="searchInput">일정 통합 검색</label>
+              <input id="searchInput" class="search-input" type="search" autocomplete="off"
+                     placeholder="행사명, 부서, 학생 일정, 누가기록 통합 검색 · / 키">
+              <button id="searchClear" class="search-clear" type="button" aria-label="검색어 지우기">✕</button>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="action-btn" id="refreshBtn" type="button" title="데이터 새로고침"><span aria-hidden="true">↻</span><span class="action-label">새로고침</span></button>
+            <button class="icon-btn" id="densityBtn" type="button" title="화면 밀도 변경" aria-label="화면 밀도 변경">Aa</button>
+            <button class="icon-btn" id="themeBtn" type="button" title="다크 모드" aria-label="다크 모드 전환">◐</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-scroll" id="mainScroll">
+        <div class="page">
+          <section class="notice-banner" id="noticeBanner" aria-live="polite">
+            <div class="banner-row"><div><div class="banner-title">공지사항</div><div class="banner-detail" id="noticePreview"></div></div><button class="action-btn" id="noticeOpenBtn" type="button">전체 보기</button></div>
+          </section>
+          <section class="load-banner" id="loadBanner" aria-live="assertive">
+            <div class="banner-row"><div><div class="banner-title">일부 데이터를 불러오지 못했습니다.</div><div class="banner-detail" id="loadBannerDetail"></div></div><button class="action-btn danger" id="retryBtn" type="button">다시 시도</button></div>
+          </section>
+          <div id="viewRoot"></div>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <div class="loading-overlay visible" id="loadingOverlay" aria-live="polite" aria-busy="true">
+    <div class="loading-card">
+      <div class="loader" aria-hidden="true"></div>
+      <div style="font-size:18px;font-weight:900;">학사 데이터를 동기화하고 있습니다.</div>
+      <div style="margin-top:6px;color:var(--muted);font-weight:650;">연결 가능한 데이터부터 안전하게 표시합니다.</div>
+      <div class="load-list" id="loadingList"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="noticeModal" role="dialog" aria-modal="true" aria-labelledby="noticeModalTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title" id="noticeModalTitle">공지사항</div>
+        <button class="icon-btn modal-close" type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body" id="noticeModalBody"></div>
+      <div class="modal-foot">
+        <button class="action-btn primary modal-close" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+
+    /* 데이터 원본 설정: 기존 Google Sheet / Apps Script 계약을 그대로 유지합니다. */
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzk1DN0iDS7EdZvKq-iomzgxmiCzOwCUZwWZkN4fjvkzOZPdF1d3P9d1xt6Ii8VNnmmPQ/exec";
+    const SHEET_ID = "10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg";
+    const STUDENT_SCHEDULE_GID = "1112677469";
+
+    const FIXED_DEPTS = [
+      "교목부", "교무부", "연구부", "상담부", "정보부", "1학년부", "2학년부", "3학년부",
+      "기획위원", "행정실", "국어과", "영어과", "수학과", "사회과", "과학과",
+      "예체능과", "정보과", "외국어과", "기타"
+    ];
+
+    const SHEETS = [
+      { key: "schedule", gid: "0", callback: "cb_schedule", label: "연중행사계획" },
+      { key: "student", gid: STUDENT_SCHEDULE_GID, callback: "cb_student", label: "학생일정" },
+      { key: "super", gid: "1459415616", callback: "cb_super", label: "자습감독" },
+      { key: "prayer", gid: "1697887995", callback: "cb_prayer", label: "기도순서" },
+      { key: "notice", gid: "1487091944", callback: "cb_notice", label: "공지사항" },
+      { key: "nuga", gid: "2041576858", callback: "cb_nuga", label: "창체누가기록" }
+    ];
+
+    const PASTELS = [
+      "#ffd6a5", "#caffbf", "#9bf6ff", "#a0c4ff", "#bdb2ff", "#ffc6ff", "#ffadad",
+      "#fdffb6", "#e2edff", "#d9ead3", "#fce5cd", "#cfe2f3", "#d9d2e9", "#ead1dc",
+      "#f4cccc", "#c9daf8", "#d0e0e3", "#fff2cc", "#e9ecef"
+    ];
+
+    const NUGA_CATEGORY_COLORS = {
+      "자율": "#a0c4ff",
+      "봉사": "#caffbf",
+      "동아리": "#ffd6a5",
+      "진로": "#ffc6ff",
+      "자율자치": "#bdb2ff",
+      "전체": "#e2e8f0"
+    };
+
+    const state = {
+      currentTab: "calendar",
+      viewDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      query: "",
+      tokens: [],
+      theme: localStorage.getItem("calendar.theme") || "light",
+      density: localStorage.getItem("calendar.density") || "standard",
+      showWeekends: localStorage.getItem("calendar.showWeekends") === "true",
+      planShowDept: localStorage.getItem("calendar.planShowDept") !== "false",
+      planShowPrayer: localStorage.getItem("calendar.planShowPrayer") !== "false",
+      planShowSuper: localStorage.getItem("calendar.planShowSuper") !== "false",
+      planHorizontal: localStorage.getItem("calendar.planHorizontal") === "true",
+      studentShowWeekends: localStorage.getItem("calendar.studentShowWeekends") === "true",
+      studentHorizontal: localStorage.getItem("calendar.studentHorizontal") === "true",
+      selectedDept: localStorage.getItem("calendar.selectedDept") || FIXED_DEPTS[0],
+      nugaGrade: Number(localStorage.getItem("calendar.nugaGrade")) || 1,
+      nugaCategory: localStorage.getItem("calendar.nugaCategory") || "전체",
+      loading: false,
+      lastSyncedAt: null,
+      loadStatus: Object.create(null),
+      loadErrors: Object.create(null),
+      requestId: 0,
+      openEventId: null,
+      selectedDateKey: localStorage.getItem("calendar.selectedDateKey") || localDateKey(new Date()),
+      calendarMode: localStorage.getItem("calendar.calendarMode") || "month"
+    };
+
+    const data = {
+      schedule: [],
+      students: [],
+      supervisor: Object.create(null),
+      prayer: Object.create(null),
+      notice: [],
+      nuga: []
+    };
+
+    const index = {
+      eventSeq: 0,
+      eventsById: Object.create(null),
+      daysByKey: Object.create(null),
+      dept: Object.create(null),
+      studentEventSeq: 0,
+      studentEventsById: Object.create(null),
+      studentDaysByKey: Object.create(null)
+    };
+
+    const deptColors = Object.create(null);
+    FIXED_DEPTS.forEach((dept, i) => { deptColors[dept] = PASTELS[i] || "#e9ecef"; });
+
+    const el = {
+      root: document.getElementById("viewRoot"),
+      mainScroll: document.getElementById("mainScroll"),
+      loading: document.getElementById("loadingOverlay"),
+      loadingList: document.getElementById("loadingList"),
+      loadBanner: document.getElementById("loadBanner"),
+      loadBannerDetail: document.getElementById("loadBannerDetail"),
+      noticeBanner: document.getElementById("noticeBanner"),
+      noticePreview: document.getElementById("noticePreview"),
+      noticeModalBody: document.getElementById("noticeModalBody"),
+      syncDot: document.getElementById("syncDot"),
+      syncText: document.getElementById("syncText"),
+      search: document.getElementById("searchInput"),
+      searchClear: document.getElementById("searchClear"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      toastRegion: document.getElementById("toastRegion")
+    };
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normalizeQuery(value) {
+      return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function highlightHTML(value) {
+      const safe = escapeHTML(value);
+      if (!state.tokens.length) return safe;
+      const tokens = [...new Set(state.tokens)]
+        .filter(Boolean)
+        .sort((a, b) => b.length - a.length)
+        .map(token => token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      if (!tokens.length) return safe;
+      return safe.replace(new RegExp(`(${tokens.join("|")})`, "ig"), "<mark>$1</mark>");
+    }
+
+    function localDateKey(dateObj) {
+      if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return "";
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const d = String(dateObj.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function dateFromKey(key) {
+      const [y, m, d] = String(key).split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function parseGDate(value) {
+      if (!value) return null;
+      if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+      if (typeof value === "number" && Number.isFinite(value)) {
+        const utc = new Date(Math.round((value - 25569) * 86400 * 1000));
+        if (!Number.isNaN(utc.getTime())) {
+          return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+        }
+      }
+
+      if (typeof value === "object") {
+        const direct = parseGDate(value.v);
+        if (direct) return direct;
+        return parseGDate(value.f);
+      }
+
+      const raw = String(value).trim();
+      if (!raw || raw === "null" || raw === "undefined") return null;
+
+      const gviz = raw.match(/Date\s*\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/);
+      if (gviz) {
+        const result = new Date(Number(gviz[1]), Number(gviz[2]), Number(gviz[3]));
+        return Number.isNaN(result.getTime()) ? null : result;
+      }
+
+      const full = raw.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+      if (full) {
+        const result = new Date(Number(full[1]), Number(full[2]) - 1, Number(full[3]));
+        return Number.isNaN(result.getTime()) ? null : result;
+      }
+
+      return null;
+    }
+
+    function getCellDisplay(cell) {
+      if (cell == null) return "";
+      if (typeof cell === "string" || typeof cell === "number") return String(cell).trim();
+      if (cell.f != null && String(cell.f).trim() !== "") return String(cell.f).trim();
+      if (cell.v != null && String(cell.v).trim() !== "") return String(cell.v).trim();
+      return "";
+    }
+
+    function fallbackScheduleYear() {
+      const first = data.schedule.find(item => item.date instanceof Date);
+      return first ? first.date.getFullYear() : state.viewDate.getFullYear();
+    }
+
+    function parseStudentDateCell(cell) {
+      if (cell && typeof cell === "object") {
+        const rawDate = parseGDate(cell.v);
+        if (rawDate) return rawDate;
+      }
+
+      const display = getCellDisplay(cell);
+      const direct = parseGDate(display);
+      if (direct) return direct;
+
+      const md = display.match(/(\d{1,2})\s*[-./]\s*(\d{1,2})/);
+      if (!md) return null;
+      const result = new Date(fallbackScheduleYear(), Number(md[1]) - 1, Number(md[2]));
+      return Number.isNaN(result.getTime()) ? null : result;
+    }
+
+    function stripLeadingDeptTag(text) {
+      return String(text || "")
+        .replace(/^\s*[-•]\s*/, "")
+        .replace(/^\s*\[[^\]]+\]\s*/, "")
+        .trim();
+    }
+
+    function extractStudentFallbackContent(dateText) {
+      const raw = String(dateText || "").trim();
+      const full = raw.match(/^\s*\d{4}\D+\d{1,2}\D+\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
+      if (full) return stripLeadingDeptTag(full[1]);
+      const md = raw.match(/^\s*\d{1,2}\s*[-./]\s*\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
+      return md ? stripLeadingDeptTag(md[1]) : "";
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "").replace(/\s+/g, "").replace(/[()（）]/g, "").toLowerCase();
+    }
+
+    function normalizeCategory(value) {
+      const raw = String(value || "").trim();
+      if (!raw || raw === "null") return "";
+      if (/자율.*자치|자치.*자율/.test(raw)) return "자율자치";
+      if (raw.includes("자율")) return "자율";
+      if (raw.includes("봉사")) return "봉사";
+      if (raw.includes("동아리")) return "동아리";
+      if (raw.includes("진로")) return "진로";
+      return raw;
+    }
+
+    function isCheckedGrade(value) {
+      const normalized = String(value ?? "").trim().toLowerCase();
+      return ["1", "o", "○", "◯", "v", "✓", "✔", "true", "y"].includes(normalized);
+    }
+
+    function parsePeriods(cell) {
+      let raw = getCellDisplay(cell);
+      if (!raw && cell && typeof cell === "object") raw = getCellDisplay(cell.v);
+      if (!raw) return { periods: "", hours: 0 };
+
+      const display = raw.replace(/[\[\]]/g, "").replace(/\s+/g, "").replace(/교시/g, "");
+      const normalized = display.replace(/[.，、\/|~\-–—]+/g, ",");
+      const parts = normalized
+        .split(",")
+        .map(item => item.trim())
+        .filter(item => item !== "" && /^\d+$/.test(item));
+
+      return { periods: display || raw, hours: parts.length };
+    }
+
+    function matchesTokens(...values) {
+      if (!state.tokens.length) return true;
+      const haystack = values.join(" ").toLowerCase();
+      return state.tokens.every(token => haystack.includes(token));
+    }
+
+    function formatSyncTime(date) {
+      if (!date) return "동기화 전";
+      return new Intl.DateTimeFormat("ko-KR", {
+        month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"
+      }).format(date);
+    }
+
+    function toast(title, message = "", type = "") {
+      const node = document.createElement("div");
+      node.className = `toast ${type}`.trim();
+      node.innerHTML = `<div class="toast-title">${escapeHTML(title)}</div>${message ? `<div class="toast-message">${escapeHTML(message)}</div>` : ""}`;
+      el.toastRegion.appendChild(node);
+      setTimeout(() => node.remove(), 4500);
+    }
+
+    function setPreference(key, value) {
+      localStorage.setItem(`calendar.${key}`, String(value));
+    }
+
+    function applyPreferences() {
+      document.body.dataset.theme = state.theme;
+      document.body.dataset.density = state.density;
+      document.getElementById("themeBtn").textContent = state.theme === "dark" ? "☀" : "◐";
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", state.theme === "dark" ? "#172033" : "#2563eb");
+    }
+
+    function cycleDensity() {
+      const order = ["compact", "standard", "comfortable"];
+      state.density = order[(order.indexOf(state.density) + 1) % order.length];
+      setPreference("density", state.density);
+      applyPreferences();
+      toast("화면 밀도 변경", state.density === "compact" ? "좁게" : state.density === "comfortable" ? "넓게" : "기본");
+    }
+
+    function toggleTheme() {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      setPreference("theme", state.theme);
+      applyPreferences();
+    }
+
+    function getVisibleDays() {
+      return state.showWeekends ? [0,1,2,3,4,5,6] : [1,2,3,4,5];
+    }
+
+    function weekdayName(day) {
+      return ["일", "월", "화", "수", "목", "금", "토"][day];
+    }
+
+    function rebuildIndexes() {
+      index.eventSeq = 0;
+      index.eventsById = Object.create(null);
+      index.daysByKey = Object.create(null);
+      index.dept = Object.create(null);
+
+      data.schedule
+        .sort((a, b) => a.date - b.date)
+        .forEach(day => {
+          const dateKey = localDateKey(day.date);
+          if (!index.daysByKey[dateKey]) {
+            index.daysByKey[dateKey] = { dateKey, date: day.date, eventIds: [] };
+          }
+          day.events.forEach(event => {
+            const id = index.eventSeq++;
+            index.eventsById[id] = { id, dateKey, dept: event.dept, text: event.text };
+            index.daysByKey[dateKey].eventIds.push(id);
+            if (!index.dept[event.dept]) index.dept[event.dept] = [];
+            index.dept[event.dept].push(id);
+          });
+        });
+
+      Object.values(index.dept).forEach(ids => {
+        ids.sort((a, b) => {
+          const left = index.eventsById[a];
+          const right = index.eventsById[b];
+          return left.dateKey.localeCompare(right.dateKey) || a - b;
+        });
+      });
+    }
+
+    function rebuildStudentIndexes() {
+      index.studentEventSeq = 0;
+      index.studentEventsById = Object.create(null);
+      index.studentDaysByKey = Object.create(null);
+
+      data.students
+        .sort((a, b) => a.date - b.date)
+        .forEach(day => {
+          const dateKey = localDateKey(day.date);
+          if (!index.studentDaysByKey[dateKey]) {
+            index.studentDaysByKey[dateKey] = { dateKey, date: day.date, eventIds: [] };
+          }
+          day.events.forEach(text => {
+            const id = index.studentEventSeq++;
+            index.studentEventsById[id] = { id, dateKey, text };
+            index.studentDaysByKey[dateKey].eventIds.push(id);
+          });
+        });
+    }
+
+    function alignViewDate() {
+      const dates = data.schedule.map(item => item.date).filter(Boolean).sort((a,b) => a-b);
+      if (!dates.length) return;
+      const today = new Date();
+      const sameMonth = dates.some(date => date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth());
+      if (sameMonth) {
+        state.viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        return;
+      }
+      const future = dates.find(date => date >= today) || dates[dates.length - 1];
+      state.viewDate = new Date(future.getFullYear(), future.getMonth(), 1);
+    }
+
+    function ensureTabDate() {
+      const source = state.currentTab === "student" ? data.students
+        : ["calendar", "plan"].includes(state.currentTab) ? data.schedule
+        : [];
+      if (!source.length) return;
+      const hasYear = source.some(item => item.date.getFullYear() === state.viewDate.getFullYear());
+      if (hasYear) return;
+      const first = source[0].date;
+      state.viewDate = new Date(first.getFullYear(), first.getMonth(), 1);
+    }
+
+    function setLoadStatus(key, status, errorMessage = "") {
+      state.loadStatus[key] = status;
+      if (errorMessage) state.loadErrors[key] = errorMessage;
+      else delete state.loadErrors[key];
+      renderLoadingState();
+    }
+
+    function renderLoadingState() {
+      el.loadingList.innerHTML = SHEETS.map(sheet => {
+        const status = state.loadStatus[sheet.key] || "waiting";
+        const symbol = status === "ok" ? "✓" : status === "error" ? "!" : status === "loading" ? "…" : "·";
+        return `<div>${symbol} ${escapeHTML(sheet.label)}</div>`;
+      }).join("");
+
+      const statuses = SHEETS.map(sheet => state.loadStatus[sheet.key] || "waiting");
+      const completed = statuses.filter(status => status === "ok" || status === "error").length;
+      const errors = statuses.filter(status => status === "error").length;
+
+      el.loading.classList.toggle("visible", state.loading && completed === 0);
+      el.refreshBtn.disabled = state.loading;
+
+      if (state.loading) {
+        el.syncDot.className = "sync-dot loading";
+        el.syncText.textContent = `동기화 중 ${completed}/${SHEETS.length}`;
+      } else if (errors) {
+        el.syncDot.className = errors === SHEETS.length ? "sync-dot error" : "sync-dot partial";
+        el.syncText.textContent = `${formatSyncTime(state.lastSyncedAt)} · 일부 연결 실패`;
+      } else {
+        el.syncDot.className = "sync-dot ok";
+        el.syncText.textContent = `${formatSyncTime(state.lastSyncedAt)} 동기화`;
+      }
+
+      const failedSheets = SHEETS.filter(sheet => state.loadStatus[sheet.key] === "error");
+      el.loadBanner.classList.toggle("visible", failedSheets.length > 0);
+      if (failedSheets.length) {
+        el.loadBannerDetail.textContent = failedSheets
+          .map(sheet => `${sheet.label}: ${state.loadErrors[sheet.key] || "응답 없음"}`)
+          .join(" · ");
+      }
+    }
+
+    function finishLoad(requestId) {
+      if (requestId !== state.requestId) return;
+      state.loading = false;
+      state.lastSyncedAt = new Date();
+      rebuildIndexes();
+      rebuildStudentIndexes();
+      if (!state.lastSyncedAt || !data.schedule.length) alignViewDate();
+      renderLoadingState();
+      updateNoticeUI();
+      render();
+    }
+
+    function loadData({ silent = false } = {}) {
+      state.requestId += 1;
+      const requestId = state.requestId;
+      state.loading = true;
+      state.loadStatus = Object.create(null);
+      state.loadErrors = Object.create(null);
+
+      data.schedule = [];
+      data.students = [];
+      data.supervisor = Object.create(null);
+      data.prayer = Object.create(null);
+      data.notice = [];
+      data.nuga = [];
+
+      SHEETS.forEach(sheet => setLoadStatus(sheet.key, "loading"));
+      renderLoadingState();
+
+      let completed = 0;
+      const timeoutIds = [];
+
+      function completeSheet(sheet, ok, message = "") {
+        if (requestId !== state.requestId) return;
+        const current = state.loadStatus[sheet.key];
+        if (current === "ok" || current === "error") return;
+        setLoadStatus(sheet.key, ok ? "ok" : "error", message);
+        completed += 1;
+        if (completed >= SHEETS.length) finishLoad(requestId);
+      }
+
+      window.__sheetComplete = completeSheet;
+      window.__activeLoadRequestId = requestId;
+
+      SHEETS.forEach(sheet => {
+        const script = document.createElement("script");
+        script.dataset.calendarJsonp = sheet.key;
+        const timeout = setTimeout(() => {
+          script.remove();
+          completeSheet(sheet, false, "12초 내 응답이 없습니다.");
+        }, 12000);
+        timeoutIds.push(timeout);
+
+        const callbackName = `__calendar_${sheet.callback}_${requestId}`;
+        window[callbackName] = payload => {
+          clearTimeout(timeout);
+          try {
+            processSheet(sheet.key, payload);
+            completeSheet(sheet, true);
+          } catch (error) {
+            console.error(`[${sheet.label}] 처리 오류`, error);
+            completeSheet(sheet, false, error?.message || "데이터 처리 오류");
+          } finally {
+            delete window[callbackName];
+            script.remove();
+          }
+        };
+
+        script.onerror = () => {
+          clearTimeout(timeout);
+          delete window[callbackName];
+          script.remove();
+          completeSheet(sheet, false, "시트 연결에 실패했습니다.");
+        };
+
+        script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${callbackName}&gid=${sheet.gid}&_=${Date.now()}_${Math.random()}`;
+        document.body.appendChild(script);
+      });
+
+      setTimeout(() => {
+        timeoutIds.forEach(id => clearTimeout(id));
+        if (requestId === state.requestId && state.loading) finishLoad(requestId);
+      }, 13000);
+
+      if (!silent) toast("데이터 새로고침", "Google 시트에서 최신 내용을 다시 불러옵니다.");
+    }
+
+    function processSheet(key, payload) {
+      const rows = payload?.table?.rows || [];
+      if (key === "schedule") processSchedule(rows);
+      else if (key === "student") processStudents(rows);
+      else if (key === "super") processSupervisor(rows);
+      else if (key === "prayer") processPrayer(rows);
+      else if (key === "notice") processNotice(rows);
+      else if (key === "nuga") processNuga(payload);
+    }
+
+    function processSchedule(rows) {
+      rows.forEach(row => {
+        if (!row?.c?.[0]) return;
+        const date = parseGDate(row.c[0].v ?? row.c[0]);
+        const content = getCellDisplay(row.c[2]);
+        if (!date || !content || content === "null") return;
+
+        const events = content
+          .split("\n")
+          .map(line => line.trim())
+          .filter(line => line && line !== "null" && line !== "익")
+          .map(line => {
+            const match = line.match(/^\[([^\]]+)\]/);
+            let dept = match ? match[1].trim() : "기타";
+            let text = match ? line.replace(match[0], "").trim() : line;
+            if (!FIXED_DEPTS.includes(dept)) {
+              dept = "기타";
+              text = line;
+            }
+            return { dept, text };
+          });
+
+        if (events.length) data.schedule.push({ date, events });
+      });
+    }
+
+    function processStudents(rows) {
+      rows.forEach(row => {
+        if (!row?.c?.[0]) return;
+        const date = parseStudentDateCell(row.c[0]);
+        if (!date) return;
+
+        const primary = [];
+        for (let i = 2; i < row.c.length; i += 1) {
+          const value = getCellDisplay(row.c[i]);
+          if (value && value !== "null") primary.push(value);
+        }
+
+        const secondary = [];
+        for (let i = 1; i < row.c.length; i += 1) {
+          const value = getCellDisplay(row.c[i]);
+          if (!value || value === "null" || /^[월화수목금토일]$/.test(value)) continue;
+          secondary.push(value);
+        }
+
+        let content = primary.join("\n").trim() || secondary.join("\n").trim();
+        if (!content) content = extractStudentFallbackContent(getCellDisplay(row.c[0]));
+        if (!content) return;
+
+        const events = content
+          .split("\n")
+          .map(stripLeadingDeptTag)
+          .filter(Boolean);
+
+        if (events.length) data.students.push({ date, events });
+      });
+    }
+
+    function processSupervisor(rows) {
+      rows.forEach(row => {
+        if (!row?.c?.[0]) return;
+        const date = parseGDate(row.c[0].v ?? row.c[0]);
+        const value = getCellDisplay(row.c[2]);
+        if (date && value && value !== "null") data.supervisor[localDateKey(date)] = value;
+      });
+    }
+
+    function processPrayer(rows) {
+      rows.forEach(row => {
+        if (!row?.c?.[0]) return;
+        const date = parseGDate(row.c[0].v ?? row.c[0]);
+        if (!date) return;
+        const name = getCellDisplay(row.c[2]);
+        const bible = getCellDisplay(row.c[3]);
+        const hymn = getCellDisplay(row.c[4]);
+        if (name || bible || hymn) data.prayer[localDateKey(date)] = { name, bible, hymn };
+      });
+    }
+
+    function processNotice(rows) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      rows.forEach(row => {
+        if (!row?.c || row.c.length < 3) return;
+        const start = parseGDate(row.c[0]?.v ?? row.c[0]);
+        const end = parseGDate(row.c[1]?.v ?? row.c[1]);
+        const content = getCellDisplay(row.c[2]);
+        if (!start || !end || !content) return;
+        start.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+        if (today >= start && today <= end) {
+          data.notice.push({ start, end, content });
+        }
+      });
+    }
+
+    function processNuga(payload) {
+      const rows = payload?.table?.rows || [];
+      const cols = payload?.table?.cols || [];
+      const columnMap = Object.create(null);
+
+      cols.forEach((column, idx) => {
+        [column?.label, column?.id, column?.pattern].forEach(key => {
+          const normalized = normalizeHeader(key);
+          if (normalized) columnMap[normalized] = idx;
+        });
+      });
+
+      const pick = (names, fallback) => {
+        for (const name of names) {
+          const normalized = normalizeHeader(name);
+          if (Object.prototype.hasOwnProperty.call(columnMap, normalized)) return columnMap[normalized];
+        }
+        return fallback;
+      };
+
+      const idxCategory = pick(["영역"], 1);
+      const idxDate = pick(["일자", "날짜"], 2);
+      const idxPeriods = pick(["교시텍스트", "교시"], 3);
+      const idxG1 = pick(["1학년", "1"], 4);
+      const idxG2 = pick(["2학년", "2"], 5);
+      const idxG3 = pick(["3학년", "3"], 6);
+      const idxContent = pick(["활동내용", "내용"], 7);
+      const idxRemark = pick(["비고"], 8);
+
+      rows.forEach(row => {
+        if (!row?.c) return;
+        const rawCategory = normalizeCategory(getCellDisplay(row.c[idxCategory]));
+        const date = parseGDate(row.c[idxDate]?.f ?? row.c[idxDate]?.v ?? row.c[idxDate]);
+        const { periods, hours } = parsePeriods(row.c[idxPeriods]);
+        const content = getCellDisplay(row.c[idxContent]);
+        const remark = getCellDisplay(row.c[idxRemark]);
+        if (!rawCategory || !date) return;
+
+        const autoVol = rawCategory === "자율" || rawCategory === "봉사";
+        data.nuga.push({
+          rawCategory,
+          displayCategory: {
+            1: autoVol ? "자율자치" : rawCategory,
+            2: autoVol ? "자율자치" : rawCategory,
+            3: rawCategory
+          },
+          date,
+          dateKey: localDateKey(date),
+          dayOfWeek: weekdayName(date.getDay()),
+          periods,
+          hours,
+          grades: [
+            isCheckedGrade(getCellDisplay(row.c[idxG1])),
+            isCheckedGrade(getCellDisplay(row.c[idxG2])),
+            isCheckedGrade(getCellDisplay(row.c[idxG3]))
+          ],
+          content,
+          remark
+        });
+      });
+
+      data.nuga.sort((a, b) => a.date - b.date);
+    }
+
+    function updateNoticeUI() {
+      const visible = data.notice.length > 0;
+      el.noticeBanner.classList.toggle("visible", visible);
+      if (!visible) return;
+      const combined = data.notice.map(item => item.content).join("\n\n");
+      el.noticePreview.textContent = combined.replace(/\s+/g, " ").slice(0, 180) + (combined.length > 180 ? "…" : "");
+      el.noticeModalBody.textContent = combined;
+    }
+
+    function tabTitle() {
+      const map = {
+        calendar: "달력 일정",
+        plan: "월중 계획표",
+        student: "학생 일정",
+        dept: "부서별 조회",
+        nuga: "창체 누가기록",
+        request: "수정·추가 요청"
+      };
+      return map[state.currentTab] || "";
+    }
+
+    function monthToolbar(extra = "") {
+      const y = state.viewDate.getFullYear();
+      const m = state.viewDate.getMonth() + 1;
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="month-nav">
+              <button class="icon-btn" type="button" data-action="prev-month" aria-label="이전 달">‹</button>
+              <div class="month-title">${y}년 ${m}월</div>
+              <button class="icon-btn" type="button" data-action="next-month" aria-label="다음 달">›</button>
+            </div>
+            <button class="chip-btn" type="button" data-action="today">오늘</button>
+          </div>
+          <div class="toolbar-right">${extra}</div>
+        </div>`;
+    }
+
+    function render() {
+      ensureTabDate();
+      document.querySelectorAll(".tab-btn").forEach(button => {
+        button.classList.toggle("active", button.dataset.tab === state.currentTab);
+      });
+
+      if (state.query && state.currentTab !== "request") renderSearchResults();
+      else if (state.currentTab === "calendar") renderCalendar();
+      else if (state.currentTab === "plan") renderPlan();
+      else if (state.currentTab === "student") renderStudent();
+      else if (state.currentTab === "dept") renderDept();
+      else if (state.currentTab === "nuga") renderNuga();
+      else if (state.currentTab === "request") renderRequest();
+
+      bindRenderedEvents();
+    }
+
+    function renderCalendar() {
+      const weekendsButton = `<button class="chip-btn ${state.showWeekends ? "active" : ""}" type="button" data-action="toggle-weekends">주말</button>`;
+      const modeButtons = `<button class="chip-btn ${state.calendarMode === "month" ? "active" : ""}" type="button" data-action="calendar-month">월간</button><button class="chip-btn ${state.calendarMode === "list" ? "active" : ""}" type="button" data-action="calendar-list">목록</button>`;
+      const printButton = `<button class="chip-btn no-print" type="button" data-action="print">인쇄</button>`;
+      const visibleDays = getVisibleDays();
+      const y = state.viewDate.getFullYear();
+      const m = state.viewDate.getMonth();
+      const monthPrefix = `${y}-${String(m + 1).padStart(2, "0")}`;
+      const monthCount = Object.values(index.eventsById).filter(event => event.dateKey.startsWith(monthPrefix)).length;
+
+      if (!state.selectedDateKey || !state.selectedDateKey.startsWith(monthPrefix)) {
+        const todayKey = localDateKey(new Date());
+        state.selectedDateKey = todayKey.startsWith(monthPrefix) ? todayKey : `${monthPrefix}-01`;
+      }
+
+      const toolbar = monthToolbar(`${modeButtons}${weekendsButton}${printButton}`);
+      const title = `<div class="panel-head"><div><div class="panel-title">${y}년 ${m + 1}월 학사 일정 · ${monthCount}건</div><div class="panel-desc">날짜를 선택하면 오른쪽에서 그날의 전체 일정과 부가 정보를 계속 비교할 수 있습니다.</div></div></div>`;
+
+      if (state.calendarMode === "list") {
+        const days = Object.values(index.daysByKey)
+          .filter(day => day.dateKey.startsWith(monthPrefix))
+          .sort((a,b) => a.date - b.date)
+          .map(day => {
+            const ids = day.eventIds.filter(id => {
+              const event = index.eventsById[id];
+              return matchesTokens(event.dept, event.text);
+            });
+            if (!ids.length) return "";
+            return `<button class="search-result" type="button" data-date-key="${day.dateKey}">
+              <span class="search-result-date">${day.date.getMonth()+1}/${day.date.getDate()} ${weekdayName(day.date.getDay())}</span>
+              <span class="search-result-main"><span class="search-result-type">${ids.length}개 일정</span><span class="search-result-text">${ids.slice(0,2).map(id => `[${escapeHTML(index.eventsById[id].dept)}] ${highlightHTML(index.eventsById[id].text)}`).join("<br>")}${ids.length>2?`<br>외 ${ids.length-2}건`:""}</span></span>
+              <span class="search-result-arrow">›</span>
+            </button>`;
+          }).join("");
+        el.root.innerHTML = `${toolbar}<div class="calendar-layout"><section class="panel calendar-panel">${title}<div class="search-result-list">${days || emptyState("등록된 일정이 없습니다.", "선택한 월의 일정 데이터가 없습니다.")}</div></section>${renderDayDrawer()}</div>`;
+        return;
+      }
+
+      const firstDay = new Date(y, m, 1);
+      const lastDay = new Date(y, m + 1, 0);
+      const startDate = new Date(firstDay);
+      while (!visibleDays.includes(startDate.getDay())) startDate.setDate(startDate.getDate() - 1);
+      if (startDate.getTime() === firstDay.getTime()) {
+        startDate.setDate(startDate.getDate() - (visibleDays.length === 5 ? 7 : visibleDays.length));
+        while (!visibleDays.includes(startDate.getDay())) startDate.setDate(startDate.getDate() - 1);
+      }
+
+      let body = "";
+      const cursor = new Date(startDate);
+      let generated = 0;
+      const maxCells = visibleDays.length * 6;
+      while (generated < maxCells) {
+        if (!visibleDays.includes(cursor.getDay())) { cursor.setDate(cursor.getDate() + 1); continue; }
+        const dateKey = localDateKey(cursor);
+        const day = index.daysByKey[dateKey];
+        const ids = (day?.eventIds || []).filter(id => {
+          const event = index.eventsById[id];
+          return matchesTokens(event.dept, event.text);
+        });
+        const isToday = dateKey === localDateKey(new Date());
+        const otherMonth = cursor.getMonth() !== m;
+        const dow = cursor.getDay();
+        const classes = ["cal-cell", isToday ? "today" : "", otherMonth ? "other-month" : "", dow === 0 ? "sun" : "", dow === 6 ? "sat" : "", state.selectedDateKey === dateKey ? "selected" : ""].filter(Boolean).join(" ");
+        const shown = ids.slice(0, 3);
+        body += `<article class="${classes}" data-date-key="${dateKey}" tabindex="0" aria-label="${cursor.getMonth()+1}월 ${cursor.getDate()}일 ${ids.length}개 일정">
+          <div class="cal-date"><div class="date-num">${cursor.getDate()}</div><div class="day-count">${weekdayName(dow)} · ${ids.length}건</div></div>
+          <div class="events">${shown.length ? shown.map(eventButton).join("") : `<div class="no-event">일정 없음</div>`}${ids.length > 3 ? `<button class="calendar-more" type="button" data-date-key="${dateKey}">+ ${ids.length - 3}개 일정 더 보기</button>` : ""}</div>
+        </article>`;
+        generated += 1;
+        cursor.setDate(cursor.getDate() + 1);
+        if (generated >= visibleDays.length * 5 && cursor > lastDay && cursor.getMonth() !== m) break;
+      }
+      const heads = visibleDays.map(day => `<div class="cal-head ${day === 0 ? "sun" : day === 6 ? "sat" : ""}">${weekdayName(day)}요일</div>`).join("");
+      el.root.innerHTML = `${toolbar}<div class="calendar-layout"><section class="panel calendar-panel">${title}<div class="calendar-wrap"><div class="calendar-grid" style="--calendar-cols:${visibleDays.length}">${heads}${body}</div></div></section>${renderDayDrawer()}</div>`;
+    }
+
+    function renderDayDrawer() {
+      const key = state.selectedDateKey;
+      const date = dateFromKey(key);
+      if (!date || Number.isNaN(date.getTime())) return `<aside class="day-drawer"><div class="drawer-empty">날짜를 선택하면 상세 정보가 표시됩니다.</div></aside>`;
+      const ids = index.daysByKey[key]?.eventIds || [];
+      const studentIds = index.studentDaysByKey[key]?.eventIds || [];
+      const prayer = data.prayer[key] || {};
+      const supervisor = data.supervisor[key] || "";
+      const eventList = ids.length ? ids.map(id => {
+        const event = index.eventsById[id];
+        return `<button class="drawer-event" type="button" data-drawer-event-id="${id}"><span class="dept-tag" style="background:${deptColors[event.dept] || deptColors["기타"]}">${escapeHTML(event.dept)}</span><span class="event-text">${escapeHTML(event.text)}</span></button>`;
+      }).join("") : `<div class="no-event">등록된 전체 일정이 없습니다.</div>`;
+      const studentList = studentIds.length ? studentIds.map(id => `<div class="drawer-meta-card"><div class="drawer-meta-label">학생 일정</div><div class="drawer-meta-value">${escapeHTML(index.studentEventsById[id].text)}</div></div>`).join("") : "";
+      const prayerText = [prayer.name ? `담당 ${prayer.name}` : "", prayer.hymn ? `찬송 ${prayer.hymn}` : "", prayer.bible ? `말씀 ${prayer.bible}` : ""].filter(Boolean).join("\n");
+      return `<aside class="day-drawer open" id="dayDrawer" aria-label="선택 날짜 상세">
+        <div class="drawer-head"><div class="drawer-eyebrow">Selected day</div><div class="drawer-date">${date.getMonth()+1}월 ${date.getDate()}일 ${weekdayName(date.getDay())}요일</div><div class="drawer-sub">전체 일정 ${ids.length}건${studentIds.length ? ` · 학생 일정 ${studentIds.length}건` : ""}</div></div>
+        <div class="drawer-body">
+          <section class="drawer-section"><div class="drawer-section-title">전체 일정</div>${eventList}</section>
+          ${studentList ? `<section class="drawer-section"><div class="drawer-section-title">학생 일정</div>${studentList}</section>` : ""}
+          ${(prayerText || supervisor) ? `<section class="drawer-section"><div class="drawer-section-title">당일 부가 정보</div>${prayerText ? `<div class="drawer-meta-card"><div class="drawer-meta-label">기도·말씀</div><div class="drawer-meta-value">${escapeHTML(prayerText)}</div></div>` : ""}${supervisor ? `<div class="drawer-meta-card"><div class="drawer-meta-label">자습감독</div><div class="drawer-meta-value">${escapeHTML(supervisor)}</div></div>` : ""}</section>` : ""}
+        </div>
+        <div class="drawer-foot"><button class="action-btn" type="button" data-action="drawer-close">닫기</button><button class="action-btn primary" type="button" data-action="print">이 날짜 인쇄</button></div>
+      </aside>`;
+    }
+
+    function selectDate(dateKey) {
+      if (!dateKey) return;
+      state.selectedDateKey = dateKey;
+      setPreference("selectedDateKey", dateKey);
+      const date = dateFromKey(dateKey);
+      if (date && (date.getFullYear() !== state.viewDate.getFullYear() || date.getMonth() !== state.viewDate.getMonth())) state.viewDate = new Date(date.getFullYear(), date.getMonth(), 1);
+      state.currentTab = "calendar";
+      render();
+      requestAnimationFrame(() => document.getElementById("dayDrawer")?.classList.add("open"));
+    }
+
+    function renderSearchResults() {
+      const schedule = Object.values(index.eventsById).filter(event => matchesTokens(event.dept, event.text)).map(event => ({kind:"전체 일정", dateKey:event.dateKey, text:event.text, dept:event.dept}));
+      const students = Object.values(index.studentEventsById).filter(event => matchesTokens(event.text)).map(event => ({kind:"학생 일정", dateKey:event.dateKey, text:event.text, dept:"학생"}));
+      const nuga = data.nuga.filter(item => matchesTokens(item.category, item.content, item.remark)).map(item => ({kind:"누가기록", dateKey:localDateKey(item.date), text:item.content, dept:item.category}));
+      const results = [...schedule, ...students, ...nuga].sort((a,b) => a.dateKey.localeCompare(b.dateKey));
+      const list = results.slice(0, 250).map(item => {
+        const date = dateFromKey(item.dateKey);
+        return `<button class="search-result" type="button" data-search-date="${item.dateKey}"><span class="search-result-date">${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,"0")}.${String(date.getDate()).padStart(2,"0")}</span><span class="search-result-main"><span class="search-result-type">${escapeHTML(item.kind)} · ${escapeHTML(item.dept)}</span><span class="search-result-text">${highlightHTML(item.text)}</span></span><span class="search-result-arrow">›</span></button>`;
+      }).join("");
+      el.root.innerHTML = `<div class="toolbar"><div class="toolbar-left"><div><div class="panel-title">“${escapeHTML(state.query)}” 검색 결과</div><div class="panel-desc">전체 일정, 학생 일정, 누가기록을 날짜순으로 함께 찾았습니다.</div></div></div><div class="toolbar-right"><button class="chip-btn" type="button" data-action="clear-search">검색 닫기</button></div></div><div class="search-results"><section class="panel"><div class="panel-head"><div><div class="panel-title">${results.length}건 발견</div><div class="panel-desc">결과를 누르면 해당 날짜의 달력과 우측 상세 패널로 이동합니다.</div></div></div><div class="search-result-list">${list || emptyState("검색 결과가 없습니다.", "다른 단어나 부서명으로 검색해 보세요.", "⌕")}</div></section><aside class="search-help"><div class="search-help-title">빠른 검색 사용법</div><p>여러 단어를 띄어 쓰면 모든 단어가 포함된 결과만 찾습니다. 결과 선택 시 해당 월과 날짜를 바로 엽니다.</p><p>검색을 종료하려면 Esc 또는 ‘검색 닫기’를 누르세요.</p></aside></div>`;
+    }
+
+    function eventButton(id) {
+      const event = index.eventsById[id];
+      if (!event) return "";
+      return `<button class="event-item" type="button" data-event-id="${id}">
+        <span class="dept-tag" style="background:${deptColors[event.dept] || deptColors["기타"]}">${escapeHTML(event.dept)}</span>
+        <span class="event-text">${highlightHTML(event.text)}</span>
+      </button>`;
+    }
+
+    function renderPlan() {
+      const controls = `
+        <button class="chip-btn ${state.planShowDept ? "active" : ""}" type="button" data-action="plan-dept">부서</button>
+        <button class="chip-btn ${state.planShowPrayer ? "active" : ""}" type="button" data-action="plan-prayer">기도·말씀</button>
+        <button class="chip-btn ${state.planShowSuper ? "active" : ""}" type="button" data-action="plan-super">자습감독</button>
+        <button class="chip-btn ${state.planHorizontal ? "active" : ""}" type="button" data-action="plan-horizontal">가로 배치</button>
+        <button class="chip-btn ${state.showWeekends ? "active" : ""}" type="button" data-action="toggle-weekends">주말</button>
+        <button class="chip-btn no-print" type="button" data-action="print">인쇄</button>`;
+
+      const y = state.viewDate.getFullYear();
+      const m = state.viewDate.getMonth();
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      const rows = [];
+      const cards = [];
+
+      for (let d = 1; d <= lastDay; d += 1) {
+        const date = new Date(y, m, d);
+        if (!state.showWeekends && [0,6].includes(date.getDay())) continue;
+
+        const key = localDateKey(date);
+        const ids = (index.daysByKey[key]?.eventIds || []).filter(id => {
+          const event = index.eventsById[id];
+          return matchesTokens(event.dept, event.text);
+        });
+        const prayer = data.prayer[key] || {};
+        const supervisor = data.supervisor[key] || "";
+        const today = key === localDateKey(new Date());
+        const rowClass = date.getDay() === 0 ? "sun-row" : date.getDay() === 6 ? "sat-row" : "";
+        const eventHTML = ids.length
+          ? ids.map(id => tableEvent(id, state.planShowDept)).join("")
+          : `<span class="no-event">${state.tokens.length ? "검색 결과 없음" : ""}</span>`;
+
+        rows.push(`<tr class="${rowClass} ${today ? "today-row" : ""}">
+          <td style="width:46px;font-weight:950;">${d}</td>
+          <td style="width:46px;font-weight:900;">${weekdayName(date.getDay())}</td>
+          <td>
+            <div class="table-events ${state.planHorizontal ? "horizontal" : ""}">${eventHTML}</div>
+          </td>
+          ${state.planShowPrayer ? `<td style="width:180px;"><div class="meta-stack">
+            <div><span class="meta-label">담당</span> <span class="meta-value">${escapeHTML(prayer.name || "-")}</span></div>
+            <div><span class="meta-label">찬송</span> <span class="meta-value">${escapeHTML(prayer.hymn || "-")}</span></div>
+            <div><span class="meta-label">말씀</span> <span class="meta-value">${escapeHTML(prayer.bible || "-")}</span></div>
+          </div></td>` : ""}
+          ${state.planShowSuper ? `<td style="width:120px;"><span class="meta-value">${escapeHTML(supervisor || "-")}</span></td>` : ""}
+        </tr>`);
+
+        cards.push(`<article class="mobile-card ${today ? "today-card" : ""}">
+          <div class="mobile-card-date">${m + 1}월 ${d}일 (${weekdayName(date.getDay())})</div>
+          <div class="table-events ${state.planHorizontal ? "horizontal" : ""}">${eventHTML || `<div class="no-event">일정 없음</div>`}</div>
+          ${(state.planShowPrayer || state.planShowSuper) ? `<div class="mobile-card-meta">
+            ${state.planShowPrayer ? `<div class="meta-box">
+              <div class="meta-label">기도·말씀</div>
+              <div class="meta-value">${escapeHTML(prayer.name || "-")} · ${escapeHTML(prayer.hymn || "-")} · ${escapeHTML(prayer.bible || "-")}</div>
+            </div>` : ""}
+            ${state.planShowSuper ? `<div class="meta-box">
+              <div class="meta-label">자습감독</div>
+              <div class="meta-value">${escapeHTML(supervisor || "-")}</div>
+            </div>` : ""}
+          </div>` : ""}
+        </article>`);
+      }
+
+      el.root.innerHTML = `
+        ${monthToolbar(controls)}
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">${tabTitle()}</div>
+              <div class="panel-desc">표시 항목을 조절한 뒤 인쇄할 수 있습니다.</div>
+            </div>
+          </div>
+          <div class="desktop-table table-scroll">
+            <table class="data-table">
+              <thead><tr>
+                <th style="width:46px;">날짜</th>
+                <th style="width:46px;">요일</th>
+                <th>학사 일정</th>
+                ${state.planShowPrayer ? `<th style="width:180px;">기도·말씀</th>` : ""}
+                ${state.planShowSuper ? `<th style="width:120px;">자습감독</th>` : ""}
+              </tr></thead>
+              <tbody>${rows.join("")}</tbody>
+            </table>
+          </div>
+          <div class="mobile-cards">${cards.join("")}</div>
+        </section>`;
+    }
+
+    function tableEvent(id, showDept = true) {
+      const event = index.eventsById[id];
+      if (!event) return "";
+      return `<button class="table-event" type="button" data-event-id="${id}">
+        ${showDept ? `<span class="dept-tag" style="background:${deptColors[event.dept] || deptColors["기타"]}">${escapeHTML(event.dept)}</span>` : ""}
+        <span class="event-text">${highlightHTML(event.text)}</span>
+      </button>`;
+    }
+
+    function renderStudent() {
+      const controls = `
+        <button class="chip-btn ${state.studentShowWeekends ? "active" : ""}" type="button" data-action="student-weekends">주말</button>
+        <button class="chip-btn ${state.studentHorizontal ? "active" : ""}" type="button" data-action="student-horizontal">가로 배치</button>
+        <button class="chip-btn no-print" type="button" data-action="print">인쇄</button>`;
+
+      const y = state.viewDate.getFullYear();
+      const m = state.viewDate.getMonth();
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      const rows = [];
+      const cards = [];
+
+      for (let d = 1; d <= lastDay; d += 1) {
+        const date = new Date(y, m, d);
+        if (!state.studentShowWeekends && [0,6].includes(date.getDay())) continue;
+        const key = localDateKey(date);
+        const ids = (index.studentDaysByKey[key]?.eventIds || []).filter(id => {
+          const event = index.studentEventsById[id];
+          return matchesTokens(event.text);
+        });
+        const eventHTML = ids.length
+          ? ids.map(studentEventButton).join("")
+          : `<div class="no-event">${state.tokens.length ? "검색 결과 없음" : ""}</div>`;
+        const rowClass = date.getDay() === 0 ? "sun-row" : date.getDay() === 6 ? "sat-row" : "";
+        const today = key === localDateKey(new Date());
+
+        rows.push(`<tr class="${rowClass} ${today ? "today-row" : ""}">
+          <td style="width:56px;font-weight:950;">${d}</td>
+          <td style="width:56px;font-weight:900;">${weekdayName(date.getDay())}</td>
+          <td><div class="table-events ${state.studentHorizontal ? "horizontal" : ""}">${eventHTML}</div></td>
+        </tr>`);
+
+        cards.push(`<article class="mobile-card ${today ? "today-card" : ""}">
+          <div class="mobile-card-date">${m + 1}월 ${d}일 (${weekdayName(date.getDay())})</div>
+          <div class="table-events ${state.studentHorizontal ? "horizontal" : ""}">${eventHTML}</div>
+        </article>`);
+      }
+
+      el.root.innerHTML = `
+        ${monthToolbar(controls)}
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">${tabTitle()}</div>
+              <div class="panel-desc">학생 일정 시트의 표시 형식이 달라도 날짜와 내용을 최대한 복원합니다.</div>
+            </div>
+          </div>
+          <div class="desktop-table table-scroll">
+            <table class="data-table">
+              <thead><tr><th style="width:56px;">날짜</th><th style="width:56px;">요일</th><th>학생 일정</th></tr></thead>
+              <tbody>${rows.join("")}</tbody>
+            </table>
+          </div>
+          <div class="mobile-cards">${cards.join("")}</div>
+        </section>`;
+    }
+
+    function studentEventButton(id) {
+      const event = index.studentEventsById[id];
+      if (!event) return "";
+      return `<button class="table-event" type="button" data-student-event-id="${id}">
+        <span class="event-text">${highlightHTML(event.text)}</span>
+      </button>`;
+    }
+
+    function renderDept() {
+      const available = FIXED_DEPTS.filter(dept => (index.dept[dept] || []).length > 0 || dept === state.selectedDept);
+      if (!available.includes(state.selectedDept)) state.selectedDept = available[0] || FIXED_DEPTS[0];
+
+      const sidebar = FIXED_DEPTS.map(dept => {
+        const count = (index.dept[dept] || []).filter(id => {
+          const event = index.eventsById[id];
+          return matchesTokens(event.dept, event.text);
+        }).length;
+        return `<button class="dept-btn ${state.selectedDept === dept ? "active" : ""}" type="button" data-dept="${escapeHTML(dept)}">
+          <span>${escapeHTML(dept)}</span><span class="count-badge">${count}</span>
+        </button>`;
+      }).join("");
+
+      const ids = (index.dept[state.selectedDept] || []).filter(id => {
+        const event = index.eventsById[id];
+        return matchesTokens(event.dept, event.text);
+      });
+
+      const grouped = new Map();
+      ids.forEach(id => {
+        const event = index.eventsById[id];
+        const date = dateFromKey(event.dateKey);
+        const key = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push({ id, event, date });
+      });
+
+      const timeline = grouped.size
+        ? [...grouped.entries()].map(([month, entries]) => `
+            <section class="month-section">
+              <div class="month-section-title">${escapeHTML(month)} · ${entries.length}건</div>
+              <div class="dept-event-list">
+                ${entries.map(({ id, event, date }) => `
+                  <article class="dept-event-card">
+                    <div class="dept-date">${date.getMonth() + 1}/${date.getDate()} (${weekdayName(date.getDay())})</div>
+                    <div class="dept-event-text">${highlightHTML(event.text)}</div>
+                    <button class="link-btn" type="button" data-event-id="${id}">상세 보기</button>
+                  </article>`).join("")}
+              </div>
+            </section>`).join("")
+        : emptyState("부서 일정 없음", state.tokens.length ? "검색 조건과 일치하는 일정이 없습니다." : "등록된 일정이 없습니다.", "🏢");
+
+      el.root.innerHTML = `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div>
+              <div style="font-size:20px;font-weight:950;">${tabTitle()}</div>
+              <div style="margin-top:3px;color:var(--muted);font-weight:650;">부서를 선택하면 연간 일정을 월별로 모아봅니다.</div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="chip-btn no-print" type="button" data-action="print">인쇄</button>
+          </div>
+        </div>
+        <div class="dept-layout">
+          <aside class="dept-sidebar" aria-label="부서 선택">${sidebar}</aside>
+          <div class="timeline">${timeline}</div>
+        </div>`;
+    }
+
+    function nugaCategories(grade) {
+      return grade === 3 ? ["전체", "자율", "봉사", "동아리", "진로"] : ["전체", "자율자치", "동아리", "진로"];
+    }
+
+    function nugaCategoryMatch(row, category, grade) {
+      return category === "전체" || row.displayCategory[grade] === category;
+    }
+
+    function renderNuga() {
+      const categories = nugaCategories(state.nugaGrade);
+      if (!categories.includes(state.nugaCategory)) state.nugaCategory = "전체";
+
+      const gradeRows = data.nuga.filter(row => row.grades[state.nugaGrade - 1]);
+      const totals = Object.fromEntries(categories.map(category => {
+        const value = category === "전체"
+          ? gradeRows.reduce((sum, row) => sum + row.hours, 0)
+          : gradeRows.filter(row => nugaCategoryMatch(row, category, state.nugaGrade)).reduce((sum, row) => sum + row.hours, 0);
+        return [category, value];
+      }));
+
+      const filtered = gradeRows
+        .filter(row => nugaCategoryMatch(row, state.nugaCategory, state.nugaGrade))
+        .filter(row => matchesTokens(row.displayCategory[state.nugaGrade], row.content, row.remark, row.periods));
+
+      let running = 0;
+      const rows = filtered.map((row, idx) => {
+        running += row.hours;
+        const category = row.displayCategory[state.nugaGrade];
+        return `<tr>
+          <td style="width:45px;font-weight:900;">${idx + 1}</td>
+          <td style="width:85px;"><span class="dept-tag" style="background:${NUGA_CATEGORY_COLORS[category] || "#e9ecef"}">${escapeHTML(category)}</span></td>
+          <td style="width:85px;font-weight:850;">${row.date.getMonth() + 1}/${row.date.getDate()}</td>
+          <td style="width:50px;">${escapeHTML(row.dayOfWeek)}</td>
+          <td style="width:90px;">${escapeHTML(row.periods || "-")}</td>
+          <td style="width:75px;font-weight:900;">${row.hours}</td>
+          <td style="text-align:left;font-weight:750;">${highlightHTML(row.content || "-")}</td>
+          <td style="text-align:left;color:var(--muted);">${highlightHTML(row.remark || "")}</td>
+          <td style="width:75px;font-weight:900;">${running}</td>
+        </tr>`;
+      }).join("");
+
+      const cards = filtered.map((row, idx) => {
+        const category = row.displayCategory[state.nugaGrade];
+        const runningTotal = filtered.slice(0, idx + 1).reduce((sum, item) => sum + item.hours, 0);
+        return `<article class="mobile-card">
+          <div class="mobile-card-date">${row.date.getMonth() + 1}/${row.date.getDate()} (${escapeHTML(row.dayOfWeek)}) · ${escapeHTML(category)}</div>
+          <div style="font-weight:800;line-height:1.5;">${highlightHTML(row.content || "-")}</div>
+          <div class="mobile-card-meta">
+            <div class="meta-box"><div class="meta-label">교시</div><div class="meta-value">${escapeHTML(row.periods || "-")}</div></div>
+            <div class="meta-box"><div class="meta-label">이수시간</div><div class="meta-value">${row.hours}시간 · 누계 ${runningTotal}</div></div>
+          </div>
+          ${row.remark ? `<div style="margin-top:8px;color:var(--muted);font-weight:650;">비고: ${highlightHTML(row.remark)}</div>` : ""}
+        </article>`;
+      }).join("");
+
+      el.root.innerHTML = `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div>
+              <div style="font-size:20px;font-weight:950;">${tabTitle()}</div>
+              <div style="margin-top:3px;color:var(--muted);font-weight:650;">학년·영역별 이수시간을 누계로 확인합니다.</div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="chip-btn no-print" type="button" data-action="print">인쇄</button>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-row">
+            <span class="filter-label">학년</span>
+            ${[1,2,3].map(grade => `<button class="chip-btn ${state.nugaGrade === grade ? "active" : ""}" type="button" data-nuga-grade="${grade}">${grade}학년</button>`).join("")}
+          </div>
+          <div class="filter-row" style="margin-top:9px;">
+            <span class="filter-label">영역</span>
+            ${categories.map(category => `<button class="chip-btn ${state.nugaCategory === category ? "active" : ""}" type="button" data-nuga-category="${escapeHTML(category)}">${escapeHTML(category)}</button>`).join("")}
+          </div>
+        </div>
+
+        <div class="nuga-summary">
+          ${categories.map(category => `
+            <button class="nuga-card ${state.nugaCategory === category ? "active" : ""}" type="button" data-nuga-category="${escapeHTML(category)}">
+              <div class="nuga-card-label">${escapeHTML(category)}</div>
+              <div class="nuga-card-value">${totals[category] || 0}<span style="font-size:12px;color:var(--muted);"> 시간</span></div>
+            </button>`).join("")}
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">${state.nugaGrade}학년 · ${escapeHTML(state.nugaCategory)}</div>
+              <div class="panel-desc">검색은 활동내용, 비고, 영역, 교시에 함께 적용됩니다.</div>
+            </div>
+          </div>
+          ${filtered.length ? `
+            <div class="desktop-table table-scroll">
+              <table class="data-table">
+                <thead><tr>
+                  <th style="width:45px;">No</th><th style="width:85px;">영역</th><th style="width:85px;">일자</th>
+                  <th style="width:50px;">요일</th><th style="width:90px;">교시</th><th style="width:75px;">시간</th>
+                  <th>활동내용</th><th>비고</th><th style="width:75px;">누계</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+            <div class="mobile-cards">${cards}</div>` : emptyState("누가기록 없음", "선택한 학년·영역·검색 조건에 맞는 기록이 없습니다.", "📝")}
+        </section>`;
+    }
+
+    function renderRequest() {
+      el.root.innerHTML = `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div>
+              <div style="font-size:20px;font-weight:950;">${tabTitle()}</div>
+              <div style="margin-top:3px;color:var(--muted);font-weight:650;">기존 Apps Script 주소로 요청을 전송합니다.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="request-layout">
+          <section class="info-card">
+            <h2>일정 변경 요청 안내</h2>
+            <p>작성한 내용은 기존 Google Apps Script를 통해 관리 시트로 전달됩니다. 현재 전송 방식은 브라우저가 서버 응답을 읽을 수 없는 구조이므로, 앱에서는 “전송 요청 완료”까지만 확인할 수 있습니다.</p>
+            <div class="guide-list">
+              <div class="guide-item"><span class="guide-num">1</span><span>변경이 필요한 날짜, 기존 내용, 변경할 내용을 함께 적어 주세요.</span></div>
+              <div class="guide-item"><span class="guide-num">2</span><span>부서명과 담당자를 명확히 적으면 확인 시간이 줄어듭니다.</span></div>
+              <div class="guide-item"><span class="guide-num">3</span><span>전송 후 실제 일정 반영 여부는 관리자 확인이 필요합니다.</span></div>
+            </div>
+          </section>
+
+          <section class="form-card">
+            <h2>수정·추가 요청서</h2>
+            <p>필수 항목을 작성한 뒤 전송해 주세요.</p>
+            <form class="form-grid" id="requestForm">
+              <div class="field">
+                <label for="reqName">작성자 성함</label>
+                <input class="form-input" id="reqName" name="name" autocomplete="name" required maxlength="40" placeholder="성함을 입력해 주세요">
+              </div>
+              <div class="field">
+                <label for="reqType">요청 유형</label>
+                <select class="form-select" id="reqType" name="type">
+                  <option value="일정수정">일정 수정·추가</option>
+                  <option value="프로그램 개선">프로그램 개선</option>
+                  <option value="기타">기타</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="reqContent">요청 내용</label>
+                <textarea class="form-textarea" id="reqContent" name="content" required maxlength="2000"
+                  placeholder="예: 9월 15일 교무부 행사명을 ‘○○ 연수’로 변경 요청합니다."></textarea>
+                <small><span id="reqCount">0</span>/2000자</small>
+              </div>
+              <div class="submit-row">
+                <button class="action-btn" type="reset">초기화</button>
+                <button class="action-btn primary" id="requestSubmit" type="submit">전송 요청</button>
+              </div>
+            </form>
+          </section>
+        </div>`;
+    }
+
+    function emptyState(title, description, icon = "📭") {
+      return `<div class="empty-state">
+        <div class="empty-icon">${icon}</div>
+        <div class="empty-title">${escapeHTML(title)}</div>
+        <div class="empty-desc">${escapeHTML(description)}</div>
+      </div>`;
+    }
+
+    function changeMonth(delta) {
+      state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1);
+      state.selectedDateKey = localDateKey(state.viewDate);
+      render();
+      el.mainScroll.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function goToday() {
+      const today = new Date();
+      state.viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      state.selectedDateKey = localDateKey(today);
+      render();
+      requestAnimationFrame(() => {
+        document.querySelector(".today, .today-row, .today-card")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+    }
+
+    function switchTab(tab) {
+      if (!["calendar","plan","student","dept","nuga","request"].includes(tab)) return;
+      state.currentTab = tab;
+      render();
+      el.mainScroll.scrollTo({ top: 0, behavior: "instant" });
+    }
+
+    function openEvent(id) {
+      const event = index.eventsById[id];
+      if (!event) return;
+      state.openEventId = id;
+      selectDate(event.dateKey);
+    }
+
+    function openStudentEvent(id) {
+      const event = index.studentEventsById[id];
+      if (!event) return;
+      selectDate(event.dateKey);
+    }
+
+    function closeModals() {
+      document.querySelectorAll(".modal.visible").forEach(modal => modal.classList.remove("visible"));
+      document.getElementById("dayDrawer")?.classList.remove("open");
+    }
+
+    async function submitRequest(form) {
+      const formData = new FormData(form);
+      const name = String(formData.get("name") || "").trim();
+      const type = String(formData.get("type") || "").trim();
+      const content = String(formData.get("content") || "").trim();
+      const button = document.getElementById("requestSubmit");
+
+      if (!name || !content) {
+        toast("입력 확인", "작성자 성함과 요청 내용을 모두 입력해 주세요.", "error");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "전송 중…";
+
+      try {
+        await fetch(WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, type, content })
+        });
+
+        toast("전송 요청 완료", "서버 응답을 확인할 수 없는 방식이므로 실제 반영 여부는 관리자 확인이 필요합니다.", "success");
+        form.reset();
+        document.getElementById("reqCount").textContent = "0";
+      } catch (error) {
+        console.error("요청 전송 오류", error);
+        toast("전송 실패", "네트워크 상태를 확인한 뒤 다시 시도해 주세요.", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "전송 요청";
+      }
+    }
+
+    function bindRenderedEvents() {
+      document.querySelectorAll("[data-date-key]").forEach(node => {
+        node.addEventListener("click", event => {
+          if (event.target.closest("[data-event-id], [data-action]")) return;
+          selectDate(node.dataset.dateKey);
+        });
+        node.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectDate(node.dataset.dateKey); }
+        });
+      });
+      document.querySelectorAll("[data-search-date]").forEach(button => button.addEventListener("click", () => {
+        const dateKey = button.dataset.searchDate;
+        el.search.value = ""; state.query = ""; state.tokens = []; el.searchClear.classList.remove("visible"); selectDate(dateKey);
+      }));
+      document.querySelectorAll("[data-drawer-event-id]").forEach(button => button.addEventListener("click", () => {
+        const event = index.eventsById[Number(button.dataset.drawerEventId)];
+        if (!event) return;
+        state.selectedDept = event.dept;
+        setPreference("selectedDept", state.selectedDept);
+        toast(event.dept, event.text);
+      }));
+      document.querySelectorAll("[data-event-id]").forEach(button => {
+        button.addEventListener("click", () => openEvent(Number(button.dataset.eventId)));
+      });
+      document.querySelectorAll("[data-student-event-id]").forEach(button => {
+        button.addEventListener("click", () => openStudentEvent(Number(button.dataset.studentEventId)));
+      });
+      document.querySelectorAll("[data-dept]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.selectedDept = button.dataset.dept;
+          setPreference("selectedDept", state.selectedDept);
+          renderDept();
+          bindRenderedEvents();
+        });
+      });
+      document.querySelectorAll("[data-nuga-grade]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.nugaGrade = Number(button.dataset.nugaGrade);
+          state.nugaCategory = "전체";
+          setPreference("nugaGrade", state.nugaGrade);
+          setPreference("nugaCategory", state.nugaCategory);
+          render();
+        });
+      });
+      document.querySelectorAll("[data-nuga-category]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.nugaCategory = button.dataset.nugaCategory;
+          setPreference("nugaCategory", state.nugaCategory);
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-action]").forEach(button => {
+        button.addEventListener("click", () => handleAction(button.dataset.action));
+      });
+
+      const requestForm = document.getElementById("requestForm");
+      if (requestForm) {
+        requestForm.addEventListener("submit", event => {
+          event.preventDefault();
+          submitRequest(requestForm);
+        });
+        const textarea = document.getElementById("reqContent");
+        textarea.addEventListener("input", () => {
+          document.getElementById("reqCount").textContent = String(textarea.value.length);
+        });
+      }
+    }
+
+    function handleAction(action) {
+      if (action === "prev-month") changeMonth(-1);
+      else if (action === "next-month") changeMonth(1);
+      else if (action === "today") goToday();
+      else if (action === "print") window.print();
+      else if (action === "calendar-month") { state.calendarMode = "month"; setPreference("calendarMode", state.calendarMode); render(); }
+      else if (action === "calendar-list") { state.calendarMode = "list"; setPreference("calendarMode", state.calendarMode); render(); }
+      else if (action === "drawer-close") document.getElementById("dayDrawer")?.classList.remove("open");
+      else if (action === "clear-search") { el.search.value = ""; state.query = ""; state.tokens = []; el.searchClear.classList.remove("visible"); render(); }
+      else if (action === "toggle-weekends") {
+        state.showWeekends = !state.showWeekends;
+        setPreference("showWeekends", state.showWeekends);
+        render();
+      } else if (action === "plan-dept") {
+        state.planShowDept = !state.planShowDept;
+        setPreference("planShowDept", state.planShowDept);
+        render();
+      } else if (action === "plan-prayer") {
+        state.planShowPrayer = !state.planShowPrayer;
+        setPreference("planShowPrayer", state.planShowPrayer);
+        render();
+      } else if (action === "plan-super") {
+        state.planShowSuper = !state.planShowSuper;
+        setPreference("planShowSuper", state.planShowSuper);
+        render();
+      } else if (action === "plan-horizontal") {
+        state.planHorizontal = !state.planHorizontal;
+        setPreference("planHorizontal", state.planHorizontal);
+        render();
+      } else if (action === "student-weekends") {
+        state.studentShowWeekends = !state.studentShowWeekends;
+        setPreference("studentShowWeekends", state.studentShowWeekends);
+        render();
+      } else if (action === "student-horizontal") {
+        state.studentHorizontal = !state.studentHorizontal;
+        setPreference("studentHorizontal", state.studentHorizontal);
+        render();
+      }
+    }
+
+    document.getElementById("tabStrip").addEventListener("click", event => {
+      const button = event.target.closest("[data-tab]");
+      if (button) switchTab(button.dataset.tab);
+    });
+
+    el.search.addEventListener("input", () => {
+      state.query = normalizeQuery(el.search.value);
+      state.tokens = state.query ? state.query.split(" ").filter(Boolean) : [];
+      el.searchClear.classList.toggle("visible", Boolean(state.query));
+      render();
+    });
+
+    el.searchClear.addEventListener("click", () => {
+      el.search.value = "";
+      state.query = "";
+      state.tokens = [];
+      el.searchClear.classList.remove("visible");
+      el.search.focus();
+      render();
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", () => loadData());
+    document.getElementById("retryBtn").addEventListener("click", () => loadData());
+    document.getElementById("themeBtn").addEventListener("click", toggleTheme);
+    document.getElementById("densityBtn").addEventListener("click", cycleDensity);
+    document.getElementById("noticeOpenBtn").addEventListener("click", () => {
+      document.getElementById("noticeModal").classList.add("visible");
+    });
+
+
+    document.querySelectorAll(".modal-close").forEach(button => button.addEventListener("click", closeModals));
+    document.querySelectorAll(".modal").forEach(modal => {
+      modal.addEventListener("click", event => {
+        if (event.target === modal) closeModals();
+      });
+    });
+
+    document.getElementById("brandHome").addEventListener("click", () => loadData());
+    document.getElementById("brandHome").addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") loadData();
+    });
+
+    document.addEventListener("keydown", event => {
+      const tag = document.activeElement?.tagName;
+      const editing = ["INPUT", "TEXTAREA", "SELECT"].includes(tag);
+
+      if (event.key === "Escape") {
+        if (state.query) { el.search.value = ""; state.query = ""; state.tokens = []; el.searchClear.classList.remove("visible"); render(); }
+        else closeModals();
+      }
+      if (!editing && event.key === "/") {
+        event.preventDefault();
+        el.search.focus();
+      }
+      if (!editing && event.key.toLowerCase() === "t") goToday();
+      if (!editing && event.altKey && event.key === "ArrowLeft") changeMonth(-1);
+      if (!editing && event.altKey && event.key === "ArrowRight") changeMonth(1);
+    });
+
+    window.addEventListener("online", () => toast("네트워크 연결 복구", "데이터 새로고침을 실행합니다.", "success") || loadData({ silent: true }));
+    window.addEventListener("offline", () => toast("오프라인 상태", "현재 화면의 데이터는 유지되지만 새로고침할 수 없습니다.", "error"));
+
+    applyPreferences();
+    render();
+    loadData({ silent: true });
+    setInterval(() => {
+      if (!document.hidden && navigator.onLine && !state.loading) loadData({ silent: true });
+    }, 5 * 60 * 1000);
+  </script>
 </body>
 </html>
