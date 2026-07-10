@@ -1,0 +1,30 @@
+name: Apply verified calendar super update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/apply_verified_super_update.py
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply verified patch to the original single-file app
+        run: python scripts/apply_verified_super_update.py
+      - name: Commit final single-file app
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f scripts/apply_verified_super_update.py
+          rm -f .github/workflows/apply-verified-super-update.yml
+          git add -A
+          git commit -m "feat: preserve original strengths and apply verified super update [skip ci]"
+          git push origin main
