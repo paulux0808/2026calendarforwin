@@ -1,0 +1,20 @@
+name: Export original index
+on:
+  push:
+    branches:
+      - temp/super-update-original
+    paths:
+      - .github/workflows/export-original.yml
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-index
+          path: index.html
+          if-no-files-found: error
+          retention-days: 1
