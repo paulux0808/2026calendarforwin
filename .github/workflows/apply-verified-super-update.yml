@@ -24,6 +24,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -f scripts/apply_verified_super_update.py
+          rm -rf scripts/super_update_parts
           rm -f .github/workflows/apply-verified-super-update.yml
           git add -A
           git commit -m "feat: preserve original strengths and apply verified super update [skip ci]"
