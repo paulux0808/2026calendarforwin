@@ -1,0 +1,31 @@
+name: Apply mobile header viewport fix
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/apply_mobile_header_pin.py
+      - .github/workflows/apply-mobile-header-pin.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply verified viewport patch
+        run: python scripts/apply_mobile_header_pin.py
+      - name: Commit final app and remove staging files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f scripts/apply_mobile_header_pin.py
+          rm -f .github/workflows/apply-mobile-header-pin.yml
+          git add -A
+          git commit -m "fix: keep mobile header inside the visual viewport [skip ci]"
+          git push origin main
