@@ -264,6 +264,14 @@
 @media(max-width:850px){.limit-wrapper{width:calc(100% - 14px)}.super-search-meta{display:none}.super-detail{display:none!important}.month-selector label:has(input[type=checkbox]){min-height:34px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 @media print{.super-detail,.super-status,.super-search-meta,.super-inline{display:none!important}}
+
+/* MOBILE_HEADER_PIN_V2: keep the application shell inside the visual viewport */
+html{height:100%;overflow:hidden;overscroll-behavior:none}
+body{height:100vh;height:100svh;height:var(--app-viewport-height,100dvh);min-height:0;overflow:hidden;overscroll-behavior:none;position:relative}
+.header-wrapper{position:-webkit-sticky;position:sticky;top:0;left:0;right:0;width:100%;flex:0 0 auto;isolation:isolate}
+.container{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scroll-behavior:auto}
+@media(max-width:850px){.header-wrapper{padding-top:max(7px,env(safe-area-inset-top));padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}}
+@media print{html,body{height:auto!important;overflow:visible!important;position:static!important}.header-wrapper{position:static!important}}
 </style>
 </head>
 <body>
@@ -1759,6 +1767,46 @@ submitRequest=async function(){const name=q('#reqName')?.value.trim(),type=q('#r
 function enhance(){requestAnimationFrame(()=>{annotate();inline();requestNote();searchMeta();fitCells();qa('.controls .btn').forEach(b=>b.setAttribute('aria-pressed',b.classList.contains('active')?'true':'false'))})}
 document.addEventListener('click',e=>{if(e.target.closest('[data-eid],[data-student-eid]'))return;const c=e.target.closest('.cal-cell[data-date-key]');if(c)openDay(c.dataset.dateKey)});document.addEventListener('keydown',e=>{const typing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);if(e.key==='/'&&!typing){e.preventDefault();q('#searchInput')?.focus()}else if(e.key==='Escape'){if(q('#superDetail.open'))closePanel();else if(q('#eventModal')?.style.display==='flex')closeEventModal();else if(typing&&q('#searchInput')?.value){q('#searchInput').value='';oldSearch()}}else if(e.altKey&&e.key==='ArrowLeft'&&!typing){e.preventDefault();window.changeMonth(optYearlyView?-12:-1)}else if(e.altKey&&e.key==='ArrowRight'&&!typing){e.preventDefault();window.changeMonth(optYearlyView?12:1)}else if((e.key==='Enter'||e.key===' ')&&document.activeElement?.classList.contains('cal-cell')){e.preventDefault();openDay(document.activeElement.dataset.dateKey)}});
 addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!mobileLocked){const n=innerWidth<=850;if(n!==isMobileMode){isMobileMode=n;document.body.classList.toggle('mobile-mode-active',n);render()}}if(scaleMode==='auto')applyScale();if(innerWidth<=850)closePanel()},160)});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastRefresh>300000&&loadFinished)fetchAll()});setInterval(()=>{if(!document.hidden&&loadFinished)fetchAll()},300000);
+
+function syncAppViewportHeight(){
+    const height=Math.max(320,Math.round(window.visualViewport?.height||window.innerHeight||document.documentElement.clientHeight));
+    document.documentElement.style.setProperty('--app-viewport-height',height+'px');
+}
+function resetOuterDocumentScroll(force=false){
+    const tag=document.activeElement?.tagName;
+    if(!force&&['INPUT','TEXTAREA','SELECT'].includes(tag))return;
+    const root=document.scrollingElement||document.documentElement;
+    if(root&&root.scrollTop!==0)root.scrollTop=0;
+    if(document.body.scrollTop!==0)document.body.scrollTop=0;
+    if(window.pageYOffset!==0)window.scrollTo(0,0);
+}
+scrollTodayIntoViewIfVisible=function(){
+    const target=document.querySelector('.cal-cell.today, tr.today-row, .m-plan-card.today-card');
+    const scroller=document.getElementById('mainContainer');
+    if(!target||!scroller)return;
+    const targetRect=target.getBoundingClientRect();
+    const scrollerRect=scroller.getBoundingClientRect();
+    const centeredOffset=(targetRect.top-scrollerRect.top)-Math.max(0,(scroller.clientHeight-targetRect.height)/2);
+    scroller.scrollTop=Math.max(0,scroller.scrollTop+centeredOffset);
+    resetOuterDocumentScroll(true);
+};
+function stabiliseApplicationViewport(force=false){
+    syncAppViewportHeight();
+    resetOuterDocumentScroll(force);
+}
+window.addEventListener('pageshow',()=>{
+    stabiliseApplicationViewport(true);
+    requestAnimationFrame(()=>stabiliseApplicationViewport(true));
+    setTimeout(()=>stabiliseApplicationViewport(true),180);
+});
+window.addEventListener('load',()=>stabiliseApplicationViewport(true),{once:true});
+window.addEventListener('orientationchange',()=>setTimeout(()=>stabiliseApplicationViewport(true),160));
+window.addEventListener('scroll',()=>resetOuterDocumentScroll(false),{passive:true});
+if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',()=>stabiliseApplicationViewport(false),{passive:true});
+}
+syncAppViewportHeight();
+
 restore();header();createPanel();applyScale();enhance();
 })();
 </script>
