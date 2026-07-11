@@ -1,0 +1,31 @@
+name: Apply request form consistency cleanup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/apply_request_form_consistency.py
+      - .github/workflows/apply-request-form-consistency.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply request form consistency patch
+        run: python scripts/apply_request_form_consistency.py
+      - name: Commit final app and remove staging files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f scripts/apply_request_form_consistency.py
+          rm -f .github/workflows/apply-request-form-consistency.yml
+          git add -A
+          git commit -m "fix: remove intrusive request warning and align form styling [skip ci]"
+          git push origin main
