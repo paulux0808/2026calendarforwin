@@ -272,6 +272,23 @@ body{height:100vh;height:100svh;height:var(--app-viewport-height,100dvh);min-hei
 .container{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scroll-behavior:auto}
 @media(max-width:850px){.header-wrapper{padding-top:max(7px,env(safe-area-inset-top));padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}}
 @media print{html,body{height:auto!important;overflow:visible!important;position:static!important}.header-wrapper{position:static!important}}
+
+/* MOBILE_DENSITY_NAV_V1 */
+:root{--mobile-nav-clearance:96px}
+@media(max-width:850px){
+  body.mobile-mode-active .calendar-grid.mobile-grid-view{grid-auto-rows:auto!important;gap:7px}
+  body.mobile-mode-active .calendar-grid.mobile-grid-view .cal-cell{height:auto;min-height:88px!important}
+  body.mobile-mode-active .calendar-grid.mobile-grid-view .cal-cell.mobile-empty-day{min-height:64px!important;padding:8px 10px;justify-content:flex-start}
+  body.mobile-mode-active .calendar-grid.mobile-grid-view .cal-cell.mobile-empty-day.mobile-empty-weekend{min-height:56px!important}
+  body.mobile-mode-active .calendar-grid.mobile-grid-view .cal-cell.mobile-empty-day.other-month{min-height:50px!important}
+  body.mobile-mode-active .calendar-grid.mobile-grid-view .cal-cell.mobile-empty-day.today{min-height:86px!important}
+  body.mobile-mode-active .calendar-grid.mobile-grid-view .cal-cell.mobile-empty-day:not(.today) .cal-date{margin-bottom:0}
+  body.mobile-mode-active .mobile-nav-container{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));transform:none;width:auto;max-width:none;padding:4px 10px;overflow-x:auto;overflow-y:hidden;scroll-padding-inline:10px;scroll-snap-type:x proximity;scrollbar-width:none}
+  body.mobile-mode-active .mobile-nav-container::-webkit-scrollbar{display:none}
+  body.mobile-mode-active .mobile-nav-container .controls{width:max-content;min-width:max-content;flex-wrap:nowrap}
+  body.mobile-mode-active .mobile-nav-container .btn{min-height:44px;padding:8px 12px;scroll-snap-align:center}
+  body.mobile-mode-active .container{padding-bottom:var(--mobile-nav-clearance,96px)!important;scroll-padding-bottom:var(--mobile-nav-clearance,96px)}
+}
 </style>
 </head>
 <body>
@@ -1806,6 +1823,56 @@ if(window.visualViewport){
     window.visualViewport.addEventListener('resize',()=>stabiliseApplicationViewport(false),{passive:true});
 }
 syncAppViewportHeight();
+
+
+function compactMobileCalendar(){
+    const mobile=isMobileMode||document.body.classList.contains('mobile-mode-active');
+    qa('.cal-cell').forEach(cell=>{
+        cell.classList.remove('mobile-empty-day','mobile-empty-weekend');
+        if(!mobile||cell.querySelector('.cal-ev'))return;
+        cell.classList.add('mobile-empty-day');
+        const dateKey=cell.dataset.dateKey;
+        if(dateKey){
+            const d=new Date(dateKey+'T00:00:00');
+            if(d.getDay()===0||d.getDay()===6)cell.classList.add('mobile-empty-weekend');
+        }
+    });
+}
+function syncMobileNavLayout(smooth=false){
+    const nav=q('#mobileNav');
+    if(!nav)return;
+    if(!document.body.classList.contains('mobile-mode-active')){
+        document.documentElement.style.removeProperty('--mobile-nav-clearance');
+        return;
+    }
+    const rect=nav.getBoundingClientRect();
+    const style=getComputedStyle(nav);
+    const bottom=parseFloat(style.bottom)||0;
+    document.documentElement.style.setProperty('--mobile-nav-clearance',Math.ceil(rect.height+bottom+18)+'px');
+    const active=q('.btn.active',nav);
+    if(!active)return;
+    const ar=active.getBoundingClientRect(),nr=nav.getBoundingClientRect();
+    const target=Math.max(0,nav.scrollLeft+(ar.left-nr.left)-(nav.clientWidth-ar.width)/2);
+    if(typeof nav.scrollTo==='function')nav.scrollTo({left:target,behavior:smooth?'smooth':'auto'});
+    else nav.scrollLeft=target;
+}
+const densityEnhance=enhance;
+enhance=function(){
+    densityEnhance();
+    requestAnimationFrame(()=>{
+        compactMobileCalendar();
+        syncMobileNavLayout(false);
+    });
+};
+const densitySwitchTab=switchTab;
+switchTab=function(id){
+    densitySwitchTab(id);
+    requestAnimationFrame(()=>syncMobileNavLayout(true));
+};
+window.addEventListener('resize',()=>requestAnimationFrame(()=>syncMobileNavLayout(false)),{passive:true});
+if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(()=>syncMobileNavLayout(false)),{passive:true});
+}
 
 restore();header();createPanel();applyScale();enhance();
 })();
