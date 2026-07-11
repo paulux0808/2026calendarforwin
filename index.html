@@ -304,7 +304,9 @@ body{height:100vh;height:100svh;height:var(--app-viewport-height,100dvh);min-hei
   .form-input,.form-textarea{padding:11px 12px;border-width:2px;border-radius:8px;font-size:14px;background:var(--surface)}
   .form-textarea{height:140px;min-height:120px;resize:vertical}
   .submit-btn{min-height:48px;padding:12px;border-radius:8px;font-size:16px}
+  .print-action{display:none!important}
 }
+.tiny-btn.mode-active{background:var(--accent);border-color:var(--accent);color:#fff}
 
 </style>
 </head>
@@ -367,8 +369,8 @@ body{height:100vh;height:100svh;height:var(--app-viewport-height,100dvh);min-hei
         <div class="header-right">
             <button class="tiny-btn" onclick="adjustScale(-1)" title="작게">A−</button>
             <button class="tiny-btn" onclick="adjustScale(1)" title="크게">A+</button>
-            <button class="tiny-btn" onclick="toggleDarkMode()" title="다크모드">🌙</button>
-            <button class="tiny-btn" onclick="toggleMobileMode()" title="모바일모드">📱</button>
+            <button class="tiny-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="다크모드로 전환" aria-pressed="false">🌙</button>
+            <button class="tiny-btn" id="viewModeBtn" onclick="toggleMobileMode()" title="모바일 화면으로 전환" aria-pressed="false">📱</button>
         </div>
     </div>
 </div>
@@ -1290,7 +1292,7 @@ window.cb_nuga = function(data) {
                 <button class="btn" onclick="goToday()">오늘</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
                 <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
-                <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
+                <button class="btn active print-action" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
             </div>
             
             <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
@@ -1435,7 +1437,7 @@ window.cb_nuga = function(data) {
                 <button class="btn" onclick="goToday()">오늘</button>
                 <div class="month-title">${y}년 ${m + 1}월</div>
                 <button class="btn" onclick="changeMonth(1)">다음 ▶</button>
-                <button class="btn active" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
+                <button class="btn active print-action" onclick="window.print()" style="margin-left:20px;">🖨️ 인쇄</button>
             </div>
 
             <div class="month-selector no-print" style="gap: 15px; margin-bottom: 15px; font-weight: 800; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
@@ -1894,7 +1896,43 @@ requestNote=function(){
     q('.super-request-note')?.remove();
 };
 
-restore();header();createPanel();applyScale();enhance();
+/* VIEW_MODE_CONTROL_V2: explicit, persistent desktop/mobile and light/dark switching */
+function updateModeControls(){
+    const dark=q('#darkModeBtn'),view=q('#viewModeBtn');
+    const darkOn=document.body.classList.contains('dark-mode');
+    if(dark){
+        dark.textContent=darkOn?'☀️':'🌙';
+        dark.title=darkOn?'라이트모드로 전환':'다크모드로 전환';
+        dark.setAttribute('aria-label',dark.title);
+        dark.setAttribute('aria-pressed',darkOn?'true':'false');
+        dark.classList.toggle('mode-active',darkOn);
+    }
+    if(view){
+        view.textContent=isMobileMode?'🖥️':'📱';
+        view.title=isMobileMode?'PC 화면으로 전환':'모바일 화면으로 전환';
+        view.setAttribute('aria-label',view.title);
+        view.setAttribute('aria-pressed',isMobileMode?'true':'false');
+        view.classList.toggle('mode-active',isMobileMode);
+    }
+}
+toggleDarkMode=function(){
+    document.body.classList.toggle('dark-mode');
+    updateModeControls();
+    save();
+};
+toggleMobileMode=function(){
+    mobileLocked=true;
+    isMobileMode=!isMobileMode;
+    document.body.classList.toggle('mobile-mode-active',isMobileMode);
+    document.body.dataset.viewMode=isMobileMode?'mobile':'desktop';
+    closePanel();
+    render();
+    updateModeControls();
+    syncMobileNavLayout();
+    save();
+};
+
+restore();header();createPanel();applyScale();updateModeControls();enhance();
 })();
 </script>
 </body>
