@@ -1,0 +1,16 @@
+name: Export current index for PC header comfort
+on:
+  pull_request:
+    branches: [ main ]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-index-pc-header-comfort
+          path: index.html
+          retention-days: 1
