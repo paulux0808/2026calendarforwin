@@ -1,0 +1,49 @@
+name: Apply mobile navigation comfort fix
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-mobile-nav-comfort-fix.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python .github/apply_mobile_nav_comfort_fix.py
+      - name: Validate JavaScript syntax
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+            .map(m => m[1]).filter(Boolean);
+          scripts.forEach((code, index) => {
+            try { new Function(code); }
+            catch (error) {
+              console.error(`Script ${index} syntax error:`, error.message);
+              process.exit(1);
+            }
+          });
+          console.log(`Validated ${scripts.length} script blocks`);
+          NODE
+      - name: Validate mobile navigation structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('index.html').read_text(encoding='utf-8')
+          assert 'grid-template-columns:repeat(3,minmax(0,1fr))' in text
+          for label in ['달력 일정', '월중 계획표', '학생 일정', '부서별 조회', '누가기록', '수정 요청']:
+              assert f'<span class="mobile-nav-label">{label}</span>' in text
+          print('Mobile navigation structure validated')
+          PY
+      - name: Remove temporary files and commit
+        run: |
+          rm -f .github/apply_mobile_nav_comfort_fix.py .github/workflows/apply-mobile-nav-comfort-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: prioritize readable two-row mobile navigation [skip ci]'
+          git push
