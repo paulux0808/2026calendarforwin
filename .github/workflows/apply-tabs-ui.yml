@@ -1,0 +1,52 @@
+name: Apply all-tab UI comfort update
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-tabs-ui.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply tab UI patch
+        run: python .github/apply_tabs_ui.py
+      - name: Validate JavaScript and integration contracts
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+            .map(m => m[1]).filter(Boolean);
+          scripts.forEach((code, index) => {
+            try { new Function(code); }
+            catch (error) {
+              console.error(`Script ${index} syntax error:`, error.message);
+              process.exit(1);
+            }
+          });
+          const required = [
+            'TAB_UI_COMFORT_V1', 'tab-calendar', 'tab-plan', 'tab-student',
+            'tab-dept', 'tab-nuga', 'tab-request',
+            "const SHEET_ID = '10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg';",
+            "const STUDENT_SCHEDULE_GID = '1112677469';",
+            'AKfycbzk1DN0iDS7EdZvKq-iomzgxmiCzOwCUZwWZkN4fjvkzOZPdF1d3P9d1xt6Ii8VNnmmPQ'
+          ];
+          required.forEach(marker => {
+            if (!html.includes(marker)) {
+              console.error('Missing required marker:', marker);
+              process.exit(1);
+            }
+          });
+          console.log(`Validated ${scripts.length} script blocks and all tab markers`);
+          NODE
+      - name: Remove temporary files and commit
+        run: |
+          rm -f .github/apply_tabs_ui.py .github/workflows/apply-tabs-ui.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: improve usability and consistency across all tabs [skip ci]'
+          git push
