@@ -1,0 +1,42 @@
+name: Apply tighter spacing pass
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-ui-density-v2.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply spacing patch
+        run: python .github/apply_ui_density_v2.py
+      - name: Validate HTML and preserved integrations
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).filter(Boolean);
+          scripts.forEach((code,index)=>{try{new Function(code)}catch(error){console.error(`Script ${index}:`,error.message);process.exit(1)}});
+          const required=[
+            'UI_DENSITY_V2',
+            'MOBILE_SHELL_STABILITY_V2',
+            '10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg',
+            'AKfycbzk1DN0iDS7EdZvKq-iomzgxmiCzOwCUZwWZkN4fjvkzOZPdF1d3P9d1xt6Ii8VNnmmPQ',
+            '.container{padding:0!important}',
+            '.limit-wrapper{width:calc(100% - 4px)}',
+            '.m-plan-card{margin-bottom:2px}'
+          ];
+          required.forEach(marker=>{if(!html.includes(marker)){console.error('Missing marker:',marker);process.exit(1)}});
+          console.log(`Validated ${scripts.length} scripts and tighter spacing markers`);
+          NODE
+      - name: Remove temporary files and commit
+        run: |
+          rm -f .github/apply_ui_density_v2.py .github/workflows/apply-ui-density-v2.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: tighten remaining interface whitespace [skip ci]'
+          git push
