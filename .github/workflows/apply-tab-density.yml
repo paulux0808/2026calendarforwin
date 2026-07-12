@@ -1,0 +1,50 @@
+name: Apply compact tab spacing update
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-tab-density.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply compact spacing patch
+        run: python .github/apply_tab_density.py
+      - name: Validate final file
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m => m[1]).filter(Boolean);
+          scripts.forEach((code, index) => {
+            try { new Function(code); }
+            catch (error) {
+              console.error(`Script ${index} syntax error:`, error.message);
+              process.exit(1);
+            }
+          });
+          const required = [
+            'TAB_UI_DENSITY_V1',
+            '.tab-toolbar{gap:10px',
+            '.tab-options{gap:8px',
+            '.option-toggle{min-height:44px'
+          ];
+          required.forEach(marker => {
+            if (!html.includes(marker)) {
+              console.error('Missing marker:', marker);
+              process.exit(1);
+            }
+          });
+          console.log(`Validated ${scripts.length} script blocks and compact spacing markers`);
+          NODE
+      - name: Remove temporary files and commit
+        run: |
+          rm -f .github/apply_tab_density.py .github/workflows/apply-tab-density.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: reduce redundant boxes and vertical whitespace [skip ci]'
+          git push
