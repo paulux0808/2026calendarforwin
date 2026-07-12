@@ -351,6 +351,74 @@ body.mobile-mode-active #topControls{display:none!important}
 @media(max-width:1050px){.tab-toolbar{grid-template-columns:1fr}.tab-toolbar-actions{justify-content:stretch}.tab-month-nav{width:100%;grid-template-columns:auto auto minmax(120px,1fr) auto auto}.dept-select-label{width:100%}.dept-select{flex:1}}
 @media(max-width:850px){.dept-picker{display:none}.tab-calendar .tab-month-nav{grid-template-columns:1fr 1fr 1fr}.tab-toolbar{padding:12px;gap:12px}.tab-heading-icon{width:42px;height:42px;flex-basis:42px}.tab-heading h2{font-size:18px}.tab-heading p{font-size:12px}.tab-month-nav{grid-template-columns:1fr 1fr 1fr}.tab-month-title{grid-column:1/-1;grid-row:1;min-width:0;padding:3px 0}.tab-nav-btn,.tab-today-btn{grid-row:2}.tab-print-btn{display:none!important}.tab-options{align-items:flex-start}.option-section{width:100%;align-items:flex-start;flex-direction:column}.option-section+.option-section{padding:10px 0 0;border-left:0;border-top:2px solid var(--border-heavy)}.option-group{width:100%}.option-toggle{flex:1 1 140px;justify-content:flex-start;min-height:44px}.dept-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.dept-pick{min-height:46px}.request-grid{grid-template-columns:1fr}.tab-request .request-form{padding:18px 14px}.request-actions .submit-btn{width:100%}.nuga-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.grade-switch{width:100%}}
 @media print{.tab-toolbar,.tab-options,.dept-picker,.nuga-filter-grid{display:none!important}.tab-page{padding:0}.tab-request .request-form{border:0}}
+
+
+/* TAB_UI_DENSITY_V1: remove redundant boxes and vertical whitespace */
+.container{padding:8px 0}
+.header-wrapper{padding:6px 16px}
+.header{gap:5px}
+.header-top-row{gap:8px}
+#topControls{gap:4px;padding:3px}
+#topControls .btn{min-height:40px;padding:6px 8px}
+.search-input{padding-top:7px;padding-bottom:7px}
+.tab-page{padding-bottom:2px}
+.tab-toolbar{gap:10px;margin-bottom:6px;padding:5px 0 7px;background:transparent;border:0;border-bottom:2px solid var(--border-heavy);border-radius:0}
+.tab-heading{gap:8px}
+.tab-heading-icon{width:38px;height:38px;flex-basis:38px;border-radius:8px;font-size:20px}
+.tab-heading h2{font-size:18px;margin-bottom:1px}
+.tab-heading p{font-size:12px;line-height:1.3}
+.tab-toolbar-actions{min-height:0}
+.tab-month-nav{gap:4px}
+.tab-month-nav .btn{min-height:36px;padding:6px 10px}
+.tab-month-title{font-size:17px}
+.tab-options{gap:8px;margin-bottom:7px;padding:3px 0 6px;background:transparent;border:0;border-bottom:1px solid var(--border-heavy);border-radius:0}
+.option-section{gap:7px}
+.option-section+.option-section{padding-left:10px}
+.option-group{gap:5px}
+.option-toggle{min-height:34px;padding:5px 9px;font-size:12.5px;border-radius:7px}
+.option-toggle input{width:16px;height:16px}
+.dept-picker{gap:5px;margin-bottom:8px}
+.dept-pick{min-height:36px;padding:6px 9px;border-radius:7px}
+.dept-month-title{font-size:17px;margin:10px 0 6px;padding-bottom:3px;border-bottom-width:3px}
+.dept-card{padding:10px;margin-bottom:0;border-radius:9px}
+.dept-card-action{margin-top:7px;padding-top:6px}
+.m-plan-card{padding:9px 10px;margin-bottom:6px}
+.m-plan-date{margin-bottom:6px;padding-bottom:4px}
+.m-plan-meta{padding:6px 8px}
+.nuga-filter-grid{gap:6px;margin-bottom:8px}
+.nuga-filter-card{min-height:50px;padding:7px 10px;border-radius:8px}
+.nuga-filter-card strong{font-size:18px}
+.tab-empty{min-height:120px;margin-top:6px;padding:18px}
+.tab-empty-icon{font-size:27px}
+.tab-request .request-form{padding:16px 18px;margin:0 auto}
+.request-grid{gap:10px}
+.form-group{margin-bottom:12px}
+.request-content-group{margin-bottom:12px}
+.form-label{margin-bottom:5px}
+.form-help{margin-top:4px}
+.request-actions .submit-btn{min-height:44px;padding:10px 20px}
+.table-container{border-radius:6px}
+@media(min-width:851px) and (max-width:1199px){#topControls .btn{min-height:42px}}
+@media(max-width:850px){
+  .container{padding:6px 0}
+  .header-wrapper{padding-bottom:5px}
+  .header{gap:5px;padding-top:1px;padding-bottom:1px}
+  .header-top-row{gap:6px}
+  .tab-toolbar{gap:7px;margin-bottom:5px;padding:2px 0 6px}
+  .tab-heading p{display:none}
+  .tab-heading-icon{width:36px;height:36px;flex-basis:36px;font-size:19px}
+  .tab-heading h2{font-size:17px}
+  .tab-month-nav .btn{min-height:44px;padding:7px 8px}
+  .tab-options{margin-bottom:6px;padding:2px 0 6px}
+  .option-toggle{min-height:44px;padding:7px 9px}
+  .option-section+.option-section{padding-top:7px}
+  .m-plan-card{padding:8px 9px;margin-bottom:5px}
+  .nuga-filter-card{min-height:54px}
+  .tab-request .request-form{padding:12px 10px}
+  .request-grid{gap:0}
+  .form-group{margin-bottom:11px}
+  .tab-empty{min-height:105px;padding:15px}
+}
 </style>
 </head>
 <body>
