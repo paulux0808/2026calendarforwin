@@ -780,15 +780,20 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
 @media print{
   body.print-table-one-page .page{page:tablePage!important}
   body.print-table-one-page{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body.print-table-one-page .print-title{font-size:14px!important;line-height:1.1!important;font-weight:700!important;margin:0 0 2mm!important}
+  body.print-table-one-page .print-title{
+    font-size:14px!important;
+    line-height:1.08!important;
+    font-weight:700!important;
+    margin:0 0 2mm!important;
+  }
   body.print-table-one-page .table-wrap{overflow:visible!important}
   body.print-table-one-page .plan-table,
   body.print-table-one-page .student-table{
     width:100%!important;
     min-width:0!important;
     table-layout:fixed!important;
-    font-size:9.2pt!important;
-    line-height:1.12!important;
+    font-size:var(--print-table-font,10pt)!important;
+    line-height:1.14!important;
     page-break-inside:avoid!important;
     break-inside:avoid!important;
   }
@@ -796,18 +801,29 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-table-one-page .plan-table td,
   body.print-table-one-page .student-table th,
   body.print-table-one-page .student-table td{
-    /* 인쇄 셀 안쪽 여백은 상하좌우 모두 3px 이하 */
     padding:1px 2px!important;
-    line-height:1.12!important;
+    line-height:1.14!important;
     vertical-align:middle!important;
   }
   body.print-table-one-page .plan-table th,
-  body.print-table-one-page .student-table th{font-size:9.2pt!important;font-weight:700!important}
+  body.print-table-one-page .student-table th{
+    font-size:var(--print-header-font,var(--print-table-font,10pt))!important;
+    font-weight:700!important;
+  }
   body.print-table-one-page .plan-table tr,
-  body.print-table-one-page .student-table tr{page-break-inside:avoid!important;break-inside:avoid!important}
+  body.print-table-one-page .student-table tr{
+    page-break-inside:avoid!important;
+    break-inside:avoid!important;
+  }
+  body.print-table-one-page .plan-table tbody tr,
+  body.print-table-one-page .student-table tbody tr{
+    height:var(--print-table-row-h,auto)!important;
+  }
   body.print-table-one-page .plan-table .today-row,
   body.print-table-one-page .student-table .today-row{outline:0!important;box-shadow:none!important}
-  body.print-table-one-page .event-row{
+
+  /* 가로 배열: 일정들을 한 행 안에서 이어 붙인다. */
+  body.print-table-one-page.print-horizontal .event-row{
     display:inline-grid!important;
     grid-template-columns:auto minmax(0,1fr)!important;
     width:auto!important;
@@ -816,9 +832,23 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     gap:2px!important;
     align-items:start!important;
     white-space:normal!important;
-    font-size:8.8pt!important;
+    font-size:var(--print-event-font,10pt)!important;
     line-height:1.12!important;
     vertical-align:top!important;
+  }
+
+  /* 세로 배열: 각 일정은 별도 줄. 한 장에 들어가는 최대 글자 크기를 JS가 계산한다. */
+  body.print-table-one-page.print-vertical .event-row{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 0 1px!important;
+    gap:3px!important;
+    align-items:start!important;
+    white-space:normal!important;
+    font-size:var(--print-event-font,10pt)!important;
+    line-height:1.12!important;
   }
   body.print-table-one-page .event-row:not(.has-dept){grid-template-columns:minmax(0,1fr)!important}
   body.print-table-one-page .event-row span{white-space:normal!important}
@@ -835,7 +865,7 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     width:auto!important;
     min-width:0!important;
     max-width:none!important;
-    font-size:7.8pt!important;
+    font-size:var(--print-tag-font,8.5pt)!important;
     line-height:1!important;
     padding:0 2px!important;
     white-space:nowrap!important;
@@ -860,14 +890,39 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-table-one-page .student-table .event-row{max-width:100%!important}
   body.print-table-one-page .plan-table .event-row span:last-child,
   body.print-table-one-page .student-table .event-row span:last-child{text-overflow:clip!important}
-  /* 행 높이를 강제로 늘리지 않는다. 내용이 적은 날은 얇게, 일정이 많은 날만 자연스럽게 확장 */
-  body.print-table-one-page .plan-table tbody tr,
-  body.print-table-one-page .student-table tbody tr{height:auto!important;min-height:0!important}
-  body.print-table-one-page .plan-table tbody td,
-  body.print-table-one-page .student-table tbody td{height:auto!important}
   body.print-table-one-page .weekend-sat{background:#e7f5ff!important}
   body.print-table-one-page .weekend-sun{background:#ffe3e3!important}
 }
+
+/* 인쇄 직전 실제 높이를 재기 위한 숨은 복제본. @media print와 같은 규칙을 사용한다. */
+.print-measure{
+  position:absolute!important;
+  left:-100000px!important;
+  top:0!important;
+  width:196mm!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  background:#fff!important;
+  color:#000!important;
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif!important;
+}
+.print-measure .print-title{display:block!important;text-align:center!important;font-size:14px!important;line-height:1.08!important;font-weight:700!important;margin:0 0 2mm!important}
+.print-measure .table-wrap{border:0!important;overflow:visible!important}
+.print-measure table{border-collapse:collapse!important;width:100%!important;min-width:0!important;table-layout:fixed!important;background:#fff!important;font-size:var(--measure-font,10pt)!important;line-height:1.14!important}
+.print-measure th{position:static!important;background:#eee!important;color:#000!important;font-size:var(--measure-font,10pt)!important;font-weight:700!important}
+.print-measure th,.print-measure td{border:1px solid #000!important;color:#000!important;padding:1px 2px!important;line-height:1.14!important;vertical-align:middle!important}
+.print-measure tbody tr{height:var(--measure-row-h,auto)!important}
+.print-measure .event-row{font-size:var(--measure-font,10pt)!important;line-height:1.12!important;align-items:start!important;white-space:normal!important}
+.print-measure.horizontal .event-row{display:inline-grid!important;grid-template-columns:auto minmax(0,1fr)!important;width:auto!important;max-width:100%!important;margin:0 4px 0 0!important;gap:2px!important;vertical-align:top!important}
+.print-measure.vertical .event-row{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;width:100%!important;max-width:100%!important;margin:0 0 1px!important;gap:3px!important}
+.print-measure .event-row:not(.has-dept){grid-template-columns:minmax(0,1fr)!important}
+.print-measure .event-row span{white-space:normal!important}
+.print-measure .event-row span:last-child{min-width:0!important;overflow:hidden!important;overflow-wrap:anywhere!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;line-clamp:2!important}
+.print-measure .dept-tag{width:auto!important;min-width:0!important;max-width:none!important;font-size:calc(var(--measure-font,10pt) * .85)!important;line-height:1!important;padding:0 2px!important;white-space:nowrap!important;color:#171a1f!important}
+.print-measure .plan-table th:nth-child(1),.print-measure .plan-table td:nth-child(1),.print-measure .student-table th:nth-child(1),.print-measure .student-table td:nth-child(1){width:6mm!important}
+.print-measure .plan-table th:nth-child(2),.print-measure .plan-table td:nth-child(2),.print-measure .student-table th:nth-child(2),.print-measure .student-table td:nth-child(2){width:6mm!important}
+.print-measure .plan-table th:nth-last-child(2),.print-measure .plan-table td:nth-last-child(2),.print-measure .plan-table th:last-child,.print-measure .plan-table td:last-child{width:18mm!important}
+
 
 </style>
 </head>
@@ -2699,6 +2754,91 @@ function closeMobileMenu(){
    ========================= */
 
 
+function mmToPx(mm){
+  return mm * 96 / 25.4;
+}
+
+function buildPrintMeasure(table, horizontal, fontPt=10, rowHeightMm=0){
+  const box = document.createElement("div");
+  box.className = `print-measure ${horizontal ? "horizontal" : "vertical"}`;
+  box.style.setProperty("--measure-font", `${fontPt}pt`);
+  box.style.setProperty("--measure-row-h", rowHeightMm > 0 ? `${rowHeightMm}mm` : "auto");
+
+  const title = $(".print-title")?.cloneNode(true);
+  if(title) box.appendChild(title);
+
+  const wrap = document.createElement("div");
+  wrap.className = "table-wrap";
+  wrap.appendChild(table.cloneNode(true));
+  box.appendChild(wrap);
+  document.body.appendChild(box);
+  return box;
+}
+
+function measurePrintTable(table, horizontal, fontPt, rowHeightMm=0){
+  const box = buildPrintMeasure(table, horizontal, fontPt, rowHeightMm);
+  const height = box.getBoundingClientRect().height;
+  box.remove();
+  return height;
+}
+
+function prepareOnePageTablePrint(){
+  const table = state.tab === "plan" ? $(".plan-table") : $(".student-table");
+  if(!table) return;
+
+  const horizontal = state.tab === "plan" ? state.plan.horizontal : state.student.horizontal;
+  document.body.classList.toggle("print-horizontal", horizontal);
+  document.body.classList.toggle("print-vertical", !horizontal);
+
+  // A4 세로 297mm - 위/아래 7mm 여백 = 283mm.
+  // 브라우저 반올림과 프린터 비인쇄 영역을 고려해 279.5mm까지만 사용한다.
+  const targetPx = mmToPx(279.5);
+  let fontPt = 10;
+
+  if(!horizontal){
+    // 세로 배열은 10pt부터 시작해서 한 페이지에 들어가는 최대 글자 크기를 찾는다.
+    // 내용이 많은 달에는 10pt보다 작아질 수 있다.
+    let low = 6.2;
+    let high = 10;
+
+    if(measurePrintTable(table, false, 10, 0) <= targetPx){
+      fontPt = 10;
+    }else{
+      for(let i=0;i<10;i++){
+        const mid = (low + high) / 2;
+        if(measurePrintTable(table, false, mid, 0) <= targetPx) low = mid;
+        else high = mid;
+      }
+      fontPt = Math.floor(low * 10) / 10;
+    }
+  }
+
+  document.documentElement.style.setProperty("--print-table-font", `${fontPt}pt`);
+  document.documentElement.style.setProperty("--print-header-font", `${fontPt}pt`);
+  document.documentElement.style.setProperty("--print-event-font", `${fontPt}pt`);
+  document.documentElement.style.setProperty("--print-tag-font", `${Math.max(6.8, fontPt * .85).toFixed(1)}pt`);
+
+  // 선택된 글자 크기에서 남는 세로 공간은 모든 날짜 행이 나눠 갖게 한다.
+  // 내용이 많은 행은 필요한 만큼 더 커지고, 짧은 행만 기본 높이까지 늘어난다.
+  let lowH = 0;
+  let highH = 12;
+  if(measurePrintTable(table, horizontal, fontPt, highH) <= targetPx){
+    lowH = highH;
+  }else{
+    for(let i=0;i<10;i++){
+      const mid = (lowH + highH) / 2;
+      if(measurePrintTable(table, horizontal, fontPt, mid) <= targetPx) lowH = mid;
+      else highH = mid;
+    }
+  }
+
+  if(lowH > 0.15){
+    document.documentElement.style.setProperty("--print-table-row-h", `${(Math.floor(lowH * 20) / 20).toFixed(2)}mm`);
+  }else{
+    document.documentElement.style.removeProperty("--print-table-row-h");
+  }
+}
+
 function printCurrentView(){
   const onePageTable = state.tab === "plan" || state.tab === "student";
   const calendarPrint = state.tab === "calendar";
@@ -2706,8 +2846,9 @@ function printCurrentView(){
   document.body.classList.toggle("print-table-one-page", onePageTable);
   document.body.classList.toggle("print-calendar", calendarPrint);
 
-  // 월중/학생 인쇄는 강제 행높이를 쓰지 않는다.
-  // 일정이 적은 행의 불필요한 위아래 여백을 없애고, 내용이 많은 행만 자연스럽게 높아지게 한다.
+  if(onePageTable){
+    prepareOnePageTablePrint();
+  }
 
   if(calendarPrint){
     const calendar = $(".calendar");
@@ -2720,12 +2861,10 @@ function printCurrentView(){
         const n = Number(row);
         if(Number.isFinite(n) && n > maxRow) maxRow = n;
       });
-      // gridRowStart가 auto인 경우 실제 셀 수와 첫 셀 column offset으로 행 수 추정
       const first = cells[0];
       const firstCol = first ? Number(getComputedStyle(first).gridColumnStart) || 1 : 1;
       const estimatedRows = Math.ceil(((firstCol - 1) + cells.length) / columns);
       const bodyRows = Math.max(maxRow - 1, estimatedRows, 1);
-      // A4 가로 6mm 여백 기준. 제목/요일헤더/간격을 제외하고 남은 높이를 주차에 배분.
       const rowHeight = clamp(29, 39, 176 / bodyRows);
       document.documentElement.style.setProperty("--print-cal-row-h", `${rowHeight.toFixed(2)}mm`);
     }
@@ -2734,6 +2873,13 @@ function printCurrentView(){
   const cleanup = ()=>{
     document.body.classList.remove("print-table-one-page");
     document.body.classList.remove("print-calendar");
+    document.body.classList.remove("print-horizontal");
+    document.body.classList.remove("print-vertical");
+    document.documentElement.style.removeProperty("--print-table-font");
+    document.documentElement.style.removeProperty("--print-header-font");
+    document.documentElement.style.removeProperty("--print-event-font");
+    document.documentElement.style.removeProperty("--print-tag-font");
+    document.documentElement.style.removeProperty("--print-table-row-h");
     document.documentElement.style.removeProperty("--print-cal-row-h");
   };
   window.addEventListener("afterprint", cleanup, { once:true });
