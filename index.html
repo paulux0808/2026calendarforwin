@@ -277,7 +277,7 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 14%,transparent)}
   .search-input:disabled{opacity:.45;cursor:not-allowed}
   .search-clear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;background:transparent;color:var(--muted);font-size:17px;cursor:pointer}
-  .search-meta{min-width:28px;font-size:11px;font-weight:600;color:var(--muted);text-align:right}
+  .search-meta{min-width:28px;font-size:11.5px;font-weight:600;color:var(--muted);text-align:right}
   .sync{min-height:28px;padding:3px 7px;border:0;background:transparent;font-size:11px;font-weight:500}
   .header-actions{display:flex;gap:4px;align-items:center;grid-column:auto}
   .utility-btn,.icon-btn,.btn{min-height:32px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);padding:4px 8px;font-size:12.5px;font-weight:600;box-shadow:none}
@@ -319,20 +319,20 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   tr.today-row{outline:0;box-shadow:inset 3px 0 var(--accent)}
 
   /* 달력: 데이터 중심 */
-  .calendar{min-width:760px;gap:4px;grid-auto-rows:186px}
+  .calendar{min-width:760px;gap:4px;grid-template-rows:28px;grid-auto-rows:186px}
   .cal-head{padding:5px;border:0;border-bottom:1px solid var(--border-soft);border-radius:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600}
   .cal-cell{height:186px;min-height:186px;padding:7px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface);transition:border-color .12s ease,background-color .12s ease;transform:none;overflow:hidden;display:flex;flex-direction:column}
   .cal-cell:hover,.cal-cell:focus-visible{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 2.5%,var(--surface));box-shadow:none;transform:none}
   .cal-cell.today{border:1px solid var(--border-soft);background:var(--surface);color:var(--text)}
   .cal-cell.other{opacity:.62;background:var(--bg)}
-  .cal-date{min-height:26px;margin-bottom:5px;justify-content:flex-start;font-size:12.5px;font-weight:600}
+  .cal-date{min-height:27px;margin-bottom:5px;justify-content:flex-start;font-size:13.5px;font-weight:650}
   .cal-cell.today .cal-date>span:first-child{min-width:25px;height:25px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--accent);color:#fff!important}
   .event-list{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
-  .event{grid-template-columns:62px minmax(0,1fr);gap:6px;font-size:11.5px;font-weight:400;line-height:1.25;align-items:start}
+  .event{grid-template-columns:66px minmax(0,1fr);gap:7px;font-size:12.5px;font-weight:400;line-height:1.3;align-items:start}
   .event-row{font-weight:400;grid-template-columns:minmax(0,1fr)}
-  .event-row.has-dept{grid-template-columns:62px minmax(0,1fr);gap:8px}
+  .event-row.has-dept{grid-template-columns:66px minmax(0,1fr);gap:8px}
   .event:hover .event-text{color:var(--accent);text-decoration:none}
-  .dept-tag{width:62px;max-width:62px;padding:1px 4px;border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd);border-radius:4px;background:var(--dept-color,var(--tag-color,#e9ecef))!important;color:#171a1f!important;font-size:11px;font-weight:600;filter:none;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dept-tag{width:66px;max-width:66px;padding:2px 4px;border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd);border-radius:4px;background:var(--dept-color,var(--tag-color,#e9ecef))!important;color:#171a1f!important;font-size:11.5px;font-weight:600;filter:none;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dept-tag.neutral{--dept-color:#e9ecef}
   .dept-tag.clickable:hover{transform:none;border-color:var(--accent)}
   .weekend-group-label{margin-top:4px;padding-top:5px;border-top:1px solid var(--border-soft);font-size:10.5px;font-weight:600;color:var(--muted)}
@@ -742,19 +742,19 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-calendar .page{page:calendarPage!important}
   body.print-calendar{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   body.print-calendar .calendar-print-title{display:block!important;font-size:14px!important;font-weight:700!important;margin:0 0 3mm!important;text-align:center!important}
-  body.print-calendar .calendar{min-width:0!important;width:100%!important;gap:1.2mm!important;grid-auto-rows:30.5mm!important}
-  body.print-calendar .cal-head{border:1px solid var(--border-soft)!important;background:var(--surface-2)!important;color:var(--text)!important;padding:1mm!important;font-size:7pt!important;line-height:1!important}
+  body.print-calendar .calendar{min-width:0!important;width:100%!important;gap:1.2mm!important;grid-template-rows:5.5mm!important;grid-auto-rows:var(--print-cal-row-h,34mm)!important}
+  body.print-calendar .cal-head{border:1px solid var(--border-soft)!important;background:var(--surface-2)!important;color:var(--text)!important;padding:1mm!important;font-size:7.6pt!important;line-height:1.05!important}
   body.print-calendar .cal-head.sun{color:#e03131!important}
   body.print-calendar .cal-head.sat{color:#1c7ed6!important}
-  body.print-calendar .cal-cell{height:30.5mm!important;min-height:30.5mm!important;border:1px solid var(--border-soft)!important;background:var(--surface)!important;color:var(--text)!important;padding:1.1mm!important;overflow:hidden!important}
-  body.print-calendar .cal-date{min-height:0!important;margin:0 0 .7mm!important;font-size:7pt!important;line-height:1!important}
+  body.print-calendar .cal-cell{height:var(--print-cal-row-h,34mm)!important;min-height:var(--print-cal-row-h,34mm)!important;border:1px solid var(--border-soft)!important;background:var(--surface)!important;color:var(--text)!important;padding:1.1mm!important;overflow:hidden!important}
+  body.print-calendar .cal-date{min-height:0!important;margin:0 0 .7mm!important;font-size:7.6pt!important;line-height:1.05!important}
   body.print-calendar .cal-cell.other{opacity:.55!important;background:var(--bg)!important}
   body.print-calendar .cal-cell.weekend-sat-cell{background:color-mix(in srgb,#4dabf7 3%,#fff)!important}
   body.print-calendar .cal-cell.weekend-sun-cell{background:color-mix(in srgb,#ff6b6b 3%,#fff)!important}
   body.print-calendar .cal-cell.today{border:1px solid var(--border-soft)!important;background:var(--surface)!important}
   body.print-calendar .cal-cell.today .cal-date>span:first-child{background:transparent!important;color:inherit!important;min-width:auto!important;height:auto!important;border-radius:0!important}
   body.print-calendar .event-list{overflow:visible!important;gap:.45mm!important}
-  body.print-calendar .event{font-size:6.3pt!important;line-height:1.03!important;grid-template-columns:13.5mm minmax(0,1fr)!important;gap:.8mm!important;min-width:0!important;align-items:center!important}
+  body.print-calendar .event{font-size:7.1pt!important;line-height:1.08!important;grid-template-columns:15mm minmax(0,1fr)!important;gap:.9mm!important;min-width:0!important;align-items:center!important}
   body.print-calendar .event-text{
     white-space:normal!important;
     overflow:hidden!important;
@@ -768,24 +768,24 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     -webkit-line-clamp:2!important;
     line-clamp:2!important;
   }
-  body.print-calendar .dept-tag{width:13.5mm!important;max-width:13.5mm!important;min-width:13.5mm!important;background:var(--dept-color,var(--tag-color,#e9ecef))!important;color:#171a1f!important;border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd)!important;font-size:5.8pt!important;line-height:1!important;padding:.25mm .5mm!important;text-align:center!important;overflow:hidden!important;text-overflow:clip!important}
-  body.print-calendar .calendar.col-7 .event{font-size:5.6pt!important;grid-template-columns:11.5mm minmax(0,1fr)!important;gap:.5mm!important}
-  body.print-calendar .calendar.col-7 .dept-tag{width:11.5mm!important;max-width:11.5mm!important;min-width:11.5mm!important;font-size:5.2pt!important;padding:.2mm .35mm!important}
+  body.print-calendar .dept-tag{width:15mm!important;max-width:15mm!important;min-width:15mm!important;background:var(--dept-color,var(--tag-color,#e9ecef))!important;color:#171a1f!important;border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd)!important;font-size:6.4pt!important;line-height:1!important;padding:.25mm .5mm!important;text-align:center!important;overflow:hidden!important;text-overflow:clip!important}
+  body.print-calendar .calendar.col-7 .event{font-size:6.4pt!important;grid-template-columns:13mm minmax(0,1fr)!important;gap:.6mm!important}
+  body.print-calendar .calendar.col-7 .dept-tag{width:13mm!important;max-width:13mm!important;min-width:13mm!important;font-size:5.9pt!important;padding:.25mm .4mm!important}
 }
 
-@page tablePage{size:A4 portrait;margin:5mm}
+@page tablePage{size:A4 portrait;margin:3mm}
 @media print{
   body.print-table-one-page .page{page:tablePage!important}
   body.print-table-one-page{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body.print-table-one-page .print-title{font-size:13px!important;font-weight:700!important;margin:0 0 2mm!important}
+  body.print-table-one-page .print-title{font-size:14px!important;line-height:1.05!important;font-weight:700!important;margin:0 0 1.2mm!important}
   body.print-table-one-page .table-wrap{overflow:visible!important}
   body.print-table-one-page .plan-table,
   body.print-table-one-page .student-table{
     width:100%!important;
     min-width:0!important;
     table-layout:fixed!important;
-    font-size:5.7pt!important;
-    line-height:1!important;
+    font-size:8.8pt!important;
+    line-height:1.18!important;
     page-break-inside:avoid!important;
     break-inside:avoid!important;
   }
@@ -793,12 +793,13 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-table-one-page .plan-table td,
   body.print-table-one-page .student-table th,
   body.print-table-one-page .student-table td{
-    padding:.26mm .55mm!important;
-    line-height:1!important;
+    /* 인쇄 셀 안쪽 여백은 상하좌우 모두 3px 이하 */
+    padding:1px 2px!important;
+    line-height:1.18!important;
     vertical-align:middle!important;
   }
   body.print-table-one-page .plan-table th,
-  body.print-table-one-page .student-table th{font-size:5.9pt!important;font-weight:700!important}
+  body.print-table-one-page .student-table th{font-size:8.9pt!important;font-weight:700!important}
   body.print-table-one-page .plan-table tr,
   body.print-table-one-page .student-table tr{page-break-inside:avoid!important;break-inside:avoid!important}
   body.print-table-one-page .plan-table .today-row,
@@ -808,12 +809,12 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     grid-template-columns:auto minmax(0,1fr)!important;
     width:auto!important;
     max-width:100%!important;
-    margin:0 1.3mm .25mm 0!important;
-    gap:.7mm!important;
+    margin:0 4px 0 0!important;
+    gap:2px!important;
     align-items:start!important;
     white-space:normal!important;
-    font-size:5.45pt!important;
-    line-height:1.08!important;
+    font-size:8.4pt!important;
+    line-height:1.16!important;
     vertical-align:top!important;
   }
   body.print-table-one-page .event-row:not(.has-dept){grid-template-columns:minmax(0,1fr)!important}
@@ -831,9 +832,9 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     width:auto!important;
     min-width:0!important;
     max-width:none!important;
-    font-size:5.05pt!important;
-    line-height:1!important;
-    padding:.15mm .55mm!important;
+    font-size:7.5pt!important;
+    line-height:1.05!important;
+    padding:0 2px!important;
     white-space:nowrap!important;
     background:var(--dept-color,var(--tag-color,#e9ecef))!important;
     color:#171a1f!important;
@@ -843,15 +844,21 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-table-one-page .plan-table th:nth-child(1),
   body.print-table-one-page .plan-table td:nth-child(1),
   body.print-table-one-page .student-table th:nth-child(1),
-  body.print-table-one-page .student-table td:nth-child(1){width:7mm!important}
+  body.print-table-one-page .student-table td:nth-child(1){width:6mm!important}
   body.print-table-one-page .plan-table th:nth-child(2),
   body.print-table-one-page .plan-table td:nth-child(2),
   body.print-table-one-page .student-table th:nth-child(2),
-  body.print-table-one-page .student-table td:nth-child(2){width:7mm!important}
+  body.print-table-one-page .student-table td:nth-child(2){width:6mm!important}
+  body.print-table-one-page .plan-table th:nth-last-child(2),
+  body.print-table-one-page .plan-table td:nth-last-child(2),
+  body.print-table-one-page .plan-table th:last-child,
+  body.print-table-one-page .plan-table td:last-child{width:18mm!important}
   body.print-table-one-page .plan-table .event-row,
   body.print-table-one-page .student-table .event-row{max-width:100%!important}
   body.print-table-one-page .plan-table .event-row span:last-child,
   body.print-table-one-page .student-table .event-row span:last-child{text-overflow:clip!important}
+  body.print-table-one-page .plan-table tbody tr,
+  body.print-table-one-page .student-table tbody tr{height:var(--print-table-row-h,7.2mm)!important;min-height:var(--print-table-row-h,7.2mm)!important}
   body.print-table-one-page .weekend-sat{background:#e7f5ff!important}
   body.print-table-one-page .weekend-sun{background:#ffe3e3!important}
 }
@@ -2689,11 +2696,46 @@ function closeMobileMenu(){
 function printCurrentView(){
   const onePageTable = state.tab === "plan" || state.tab === "student";
   const calendarPrint = state.tab === "calendar";
+
   document.body.classList.toggle("print-table-one-page", onePageTable);
   document.body.classList.toggle("print-calendar", calendarPrint);
+
+  // 인쇄 기본값은 용지를 최대한 채우도록 현재 표시 행 수에 맞춰 높이를 계산한다.
+  if(onePageTable){
+    const table = state.tab === "plan" ? $(".plan-table") : $(".student-table");
+    const rowCount = table ? table.querySelectorAll("tbody tr").length : 31;
+    // A4 세로 3mm 여백 기준. 작은 셀 패딩 + 큰 글자를 유지하면서 한 장을 채운다.
+    const rowHeight = clamp(7.0, 10.4, 277 / Math.max(rowCount, 1));
+    document.documentElement.style.setProperty("--print-table-row-h", `${rowHeight.toFixed(2)}mm`);
+  }
+
+  if(calendarPrint){
+    const calendar = $(".calendar");
+    if(calendar){
+      const columns = calendar.classList.contains("col-7") ? 7 : 5;
+      const cells = calendar.querySelectorAll(".cal-cell");
+      let maxRow = 1;
+      cells.forEach(cell=>{
+        const row = getComputedStyle(cell).gridRowStart;
+        const n = Number(row);
+        if(Number.isFinite(n) && n > maxRow) maxRow = n;
+      });
+      // gridRowStart가 auto인 경우 실제 셀 수와 첫 셀 column offset으로 행 수 추정
+      const first = cells[0];
+      const firstCol = first ? Number(getComputedStyle(first).gridColumnStart) || 1 : 1;
+      const estimatedRows = Math.ceil(((firstCol - 1) + cells.length) / columns);
+      const bodyRows = Math.max(maxRow - 1, estimatedRows, 1);
+      // A4 가로 6mm 여백 기준. 제목/요일헤더/간격을 제외하고 남은 높이를 주차에 배분.
+      const rowHeight = clamp(29, 39, 176 / bodyRows);
+      document.documentElement.style.setProperty("--print-cal-row-h", `${rowHeight.toFixed(2)}mm`);
+    }
+  }
+
   const cleanup = ()=>{
     document.body.classList.remove("print-table-one-page");
     document.body.classList.remove("print-calendar");
+    document.documentElement.style.removeProperty("--print-table-row-h");
+    document.documentElement.style.removeProperty("--print-cal-row-h");
   };
   window.addEventListener("afterprint", cleanup, { once:true });
   window.print();
