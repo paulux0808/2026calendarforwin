@@ -4,17 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>학사관리 시스템</title>
+<!-- Pretendard 웹폰트 CDN 추가 -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <style>
 :root{
   --bg:#f6f7f9;--surface:#fff;--surface-2:#eef1f4;--border:#8b929a;--border-soft:#d9dde2;
   --text:#171a1f;--muted:#5f6770;--accent:#228be6;--accent-soft:#e7f5ff;
   --danger:#c92a2a;--warning:#e67700;--today:#fcc419;--shadow:0 12px 30px rgba(0,0,0,.12);
-  --font:14px;--cell-h:126px;--gap:6px;--header-h:0px;
-}
-body.dark{
-  --bg:#1c1f24;--surface:#282c32;--surface-2:#343941;--border:#59616b;--border-soft:#444b54;
-  --text:#f1f3f5;--muted:#b7bec7;--accent:#74c0fc;--accent-soft:#173b58;
-  --today:#ffd43b;--shadow:0 12px 30px rgba(0,0,0,.35);
+  --font:14px;--cell-h:126px;--gap:6px;--toolbar-h:44px;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -28,11 +25,11 @@ button{cursor:pointer}
 .hidden{display:none!important}
 .no-print{}
 .app-header{
-  flex:0 0 auto;background:var(--surface);border-bottom:2px solid var(--border);padding:max(6px,env(safe-area-inset-top)) 10px 6px;
+  flex:0 0 auto;background:var(--surface);border-bottom:2px solid var(--border);padding:max(6px,env(safe-area-inset-top)) 12px 6px;
   z-index:100;box-shadow:0 1px 0 rgba(0,0,0,.03)
 }
-.topbar{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:10px;align-items:center}
-.brand{font-weight:950;font-size:18px;white-space:nowrap}
+.topbar{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:12px;align-items:center}
+.brand{font-weight:950;font-size:18px;white-space:nowrap;display:flex;align-items:center;gap:6px}
 .search-wrap{display:flex;align-items:center;gap:7px;min-width:0}
 .search-input{
   width:100%;min-width:0;border:2px solid var(--border);border-radius:9px;padding:8px 11px;
@@ -46,106 +43,133 @@ button{cursor:pointer}
 .header-actions{display:flex;gap:5px;align-items:center}
 .icon-btn,.btn{
   border:2px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;font-weight:850;
-  min-height:36px;padding:6px 10px
+  min-height:36px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  transition:background-color .15s ease, border-color .15s ease;
 }
 .icon-btn{min-width:38px;padding:5px 8px}
-.icon-btn:hover,.btn:hover{background:var(--surface-2)}
+.icon-btn:hover,.btn:hover{background:var(--surface-2);border-color:var(--accent)}
 .nav{
   margin-top:6px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:3px;
   background:var(--surface-2);border:1px solid var(--border);border-radius:10px
 }
 .nav-btn{
-  border:0;border-radius:7px;background:transparent;color:var(--muted);min-height:40px;font-weight:900;padding:6px 7px
+  border:0;border-radius:7px;background:transparent;color:var(--muted);min-height:40px;font-weight:900;padding:6px 7px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .15s ease;
 }
 .nav-btn:hover{background:var(--surface);color:var(--text)}
 .nav-btn.active{background:var(--border);color:#fff}
 .nav-btn.request{color:var(--danger)}.nav-btn.request.active{background:var(--danger);color:#fff}
-.app-main{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 0 8px}
-.page{width:calc(100% - 8px);margin:0 auto}
+.app-main{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:2px 0 16px}
+/* PC 대화면 최적화 */
+.page{width:100%;max-width:1440px;margin:0 auto;padding:0 12px}
 .toolbar{
   position:sticky;top:0;z-index:50;background:var(--bg);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;
-  align-items:center;padding:4px 0;border-bottom:2px solid var(--border)
+  align-items:center;padding:6px 0;border-bottom:2px solid var(--border)
 }
 .toolbar-title{display:flex;align-items:center;gap:8px;font-weight:950;font-size:17px}
 .toolbar-sub{font-size:11.5px;color:var(--muted);font-weight:750;margin-top:2px}
 .month-nav{display:grid;grid-template-columns:auto auto minmax(110px,auto) auto auto;gap:4px;align-items:center}
 .month-nav.no-print-btn{grid-template-columns:auto auto minmax(110px,auto) auto}
-.month-title{text-align:center;font-size:16px;font-weight:950;white-space:nowrap}
+.month-title{text-align:center;font-size:16px;font-weight:950;white-space:nowrap;padding:0 8px}
 .options{
-  display:flex;gap:9px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);padding:5px 0;margin-bottom:3px
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);padding:6px 0;margin-bottom:6px
 }
 .options-title{font-size:11.5px;font-weight:900;color:var(--muted)}
 .option{
-  display:inline-flex;align-items:center;gap:6px;border:2px solid var(--border);border-radius:7px;padding:5px 8px;
-  min-height:34px;background:var(--surface);font-weight:850
+  display:inline-flex;align-items:center;gap:6px;border:2px solid var(--border);border-radius:7px;padding:5px 9px;
+  min-height:34px;background:var(--surface);font-weight:850;cursor:pointer;user-select:none;transition:all .15s ease
 }
-.option input{width:16px;height:16px;accent-color:var(--accent)}
-.option.on{border-color:var(--accent);background:var(--accent-soft)}
-.inline-info{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:800;padding:2px 0}
+.option:hover{border-color:var(--accent)}
+.option input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.option.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.inline-info{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--muted);font-weight:800;padding:4px 0}
 .legend{display:flex;gap:4px;flex-wrap:wrap}
 .chip,.dept-tag{
-  display:inline-block;color:#111;border:1px solid rgba(0,0,0,.15);border-radius:4px;padding:1px 5px;font-size:10px;font-weight:950;white-space:nowrap
+  display:inline-block;color:#111;border:1px solid rgba(0,0,0,.15);border-radius:4px;padding:1px 6px;font-size:10.5px;font-weight:950;white-space:nowrap
 }
-.calendar-wrap,.table-wrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+.dept-tag.clickable{cursor:pointer;transition:transform .1s}
+.dept-tag.clickable:hover{transform:scale(1.05)}
+.calendar-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .calendar{
-  min-width:700px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:minmax(var(--cell-h),auto);gap:var(--gap)
+  min-width:700px;display:grid;grid-auto-rows:minmax(var(--cell-h),auto);gap:var(--gap)
 }
+.calendar.col-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.calendar.col-7{grid-template-columns:repeat(7,minmax(0,1fr))}
 .cal-head{background:var(--surface-2);border:2px solid var(--border);border-radius:6px;text-align:center;padding:7px;font-weight:950}
+.cal-head.sun{color:#e03131}.cal-head.sat{color:#1c7ed6}
 .cal-cell{
-  background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:6px;min-width:0;outline:none
+  background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:7px;min-width:0;outline:none;
+  cursor:pointer;transition:border-color .15s ease, box-shadow .15s ease, transform .1s ease
 }
-.cal-cell:hover,.cal-cell:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.cal-cell:hover,.cal-cell:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);transform:translateY(-1px)}
 .cal-cell.today{border:3px solid var(--today);background:#fff9db;color:#171a1f}
-body.dark .cal-cell.today{background:#3b3000;color:#fff}
-.cal-cell.other{opacity:.34;background:var(--bg)}
-.cal-date{font-weight:950;margin-bottom:5px}
+.cal-cell.other{opacity:.38;background:var(--bg)}
+.cal-cell.weekend-sat-cell{background:rgba(77,171,247,0.06)}
+.cal-cell.weekend-sun-cell{background:rgba(255,107,107,0.06)}
+.cal-date{font-weight:950;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
 .event-list{display:flex;flex-direction:column;gap:4px}
 .event{display:grid;grid-template-columns:auto 1fr;gap:5px;align-items:start;cursor:pointer;font-size:calc(var(--font) - 2px);font-weight:700;line-height:1.35}
-.event:hover .event-text{text-decoration:underline}
+.event:hover .event-text{text-decoration:underline;color:var(--accent)}
+.event.weekend-event{border-top:1px dashed var(--border-soft);padding-top:3px;margin-top:2px}
 mark{background:#ffe066;color:#111;padding:0 2px;border-radius:3px}
-.table-wrap{border:2px solid var(--border);border-radius:7px;background:var(--surface)}
+
+/* 테이블 sticky 및 PC 호버 스타일 */
+.table-wrap{border:2px solid var(--border);border-radius:7px;background:var(--surface);overflow-x:auto;position:relative}
 table{border-collapse:collapse;width:100%;min-width:650px;table-layout:fixed;background:var(--surface)}
-th{position:sticky;top:0;z-index:5;background:var(--surface-2);border-bottom:2px solid var(--border);padding:6px;font-weight:950}
-td{border-bottom:1px solid var(--border-soft);border-right:1px solid var(--border-soft);padding:5px;text-align:center;vertical-align:top}
-tr.weekend-sun{background:#ff6b6b;color:#111}tr.weekend-sat{background:#4dabf7;color:#111}
+th{
+  position:sticky;top:0;z-index:10;background:var(--surface-2);border-bottom:2px solid var(--border);padding:8px 6px;font-weight:950;
+  box-shadow:0 1px 0 var(--border);
+}
+td{border-bottom:1px solid var(--border-soft);border-right:1px solid var(--border-soft);padding:6px;text-align:center;vertical-align:top}
+tbody tr{cursor:pointer;transition:background-color .12s ease}
+tbody tr:hover{background-color:var(--surface-2)}
+tr.weekend-sun{background:rgba(255,107,107,0.22);color:#111}
+tr.weekend-sun:hover{background:rgba(255,107,107,0.35)!important}
+tr.weekend-sat{background:rgba(77,171,247,0.22);color:#111}
+tr.weekend-sat:hover{background:rgba(77,171,247,0.35)!important}
 tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
-.event-row{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start;text-align:left;font-weight:750;line-height:1.35;cursor:pointer}
-.event-row.horizontal{display:inline-flex;align-items:center;width:auto;margin-right:6px}
+.event-row{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start;text-align:left;font-weight:750;line-height:1.35}
+.event-row.horizontal{display:inline-flex;align-items:center;width:auto;margin-right:8px}
+
 .mobile-card{
-  background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:9px;margin-bottom:4px
+  background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px
 }
 .mobile-card.today{border:3px solid var(--today)}
 .mobile-date{font-weight:950;border-bottom:1px solid var(--border-soft);padding-bottom:4px;margin-bottom:6px}
 .mobile-meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--bg);border-radius:6px;padding:5px 7px;font-size:12px;color:var(--muted);font-weight:750}
-.section-title{font-size:17px;font-weight:950;border-bottom:3px solid var(--border);padding-bottom:3px;margin:8px 0 5px}
-.dept-picker,.nuga-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:5px;margin:4px 0}
+.section-title{font-size:17px;font-weight:950;border-bottom:3px solid var(--border);padding-bottom:4px;margin:12px 0 8px}
+.dept-picker,.nuga-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:6px;margin:6px 0}
 .dept-pick,.nuga-filter{
-  border:2px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);min-height:40px;padding:6px 8px;font-weight:900
+  border:2px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);min-height:40px;padding:6px 8px;font-weight:900;
+  transition:all .15s ease;
 }
-.dept-pick.active{box-shadow:inset 0 0 0 2px var(--dept-color);background:var(--surface-2)}
-.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
-.dept-card{background:var(--surface);border:2px solid var(--border);border-left:7px solid var(--dept-color);border-radius:9px;padding:10px;cursor:pointer}
-.dept-card:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(0,0,0,.08)}
+.dept-pick:hover,.nuga-filter:hover{border-color:var(--accent)}
+.dept-pick.active{box-shadow:inset 0 0 0 2px var(--dept-color);background:var(--surface-2);border-color:var(--dept-color)}
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px}
+.dept-card{background:var(--surface);border:2px solid var(--border);border-left:7px solid var(--dept-color);border-radius:9px;padding:12px;cursor:pointer;transition:all .15s ease}
+.dept-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.09);border-color:var(--accent)}
 .grade-switch{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:3px;border:2px solid var(--border);border-radius:9px;background:var(--surface-2)}
-.grade-btn{border:0;border-radius:6px;background:transparent;color:var(--muted);min-height:36px;font-weight:900}
+.grade-btn{border:0;border-radius:6px;background:transparent;color:var(--muted);min-height:36px;font-weight:900;transition:all .15s ease}
+.grade-btn:hover{color:var(--text)}
 .grade-btn.active{background:var(--accent);color:#fff}
 .nuga-filter{border-left:7px solid var(--cat);display:flex;justify-content:space-between;align-items:center;text-align:left}
-.nuga-filter strong{font-size:18px}.nuga-filter small{font-size:10px;color:var(--muted)}
+.nuga-filter strong{font-size:17px}.nuga-filter small{font-size:11px;color:var(--muted)}
 .nuga-filter.active{box-shadow:inset 0 0 0 2px var(--cat);background:var(--surface-2)}
-.empty{min-height:110px;border:2px dashed var(--border);border-radius:10px;background:var(--surface);display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:800;padding:18px}
-.request-form{max-width:820px;margin:4px auto;background:var(--surface);border:2px solid var(--border);border-radius:11px;padding:15px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.form-group{margin-bottom:10px}.form-label{display:block;font-weight:900;margin-bottom:4px}
+.empty{min-height:120px;border:2px dashed var(--border);border-radius:10px;background:var(--surface);display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:800;padding:20px}
+.request-form{max-width:820px;margin:8px auto;background:var(--surface);border:2px solid var(--border);border-radius:11px;padding:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{margin-bottom:12px}.form-label{display:block;font-weight:900;margin-bottom:5px}
 .form-input,.form-textarea{width:100%;border:2px solid var(--border);border-radius:8px;padding:11px;background:var(--bg);color:var(--text);outline:none}
 .form-input:focus,.form-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
 .form-textarea{min-height:150px;resize:vertical}
 .form-help{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11.5px;margin-top:4px}
-.submit{min-width:190px;background:var(--border);color:#fff;border:0;border-radius:8px;padding:12px 20px;font-size:16px;font-weight:950}
+.submit{min-width:190px;background:var(--accent);color:#fff;border:0;border-radius:8px;padding:12px 20px;font-size:16px;font-weight:950;transition:opacity .15s ease}
+.submit:hover{opacity:.9}
 .form-actions{text-align:right}
 .required{font-size:10px;background:#ffe3e3;color:#c92a2a;border-radius:4px;padding:2px 4px}
 .banner{
   display:none;position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:5000;width:min(900px,94vw);
-  background:#fff5f5;color:#c92a2a;border:2px solid #c92a2a;border-radius:10px;padding:10px 12px;font-weight:850;box-shadow:var(--shadow)
+  background:#fff5f5;color:#c92a2a;border:2px solid #c92a2a;border-radius:10px;padding:10px 14px;font-weight:850;box-shadow:var(--shadow)
 }
 .banner-actions{display:flex;gap:5px;justify-content:flex-end;margin-top:7px}
 .loading{position:fixed;inset:0;z-index:6000;background:var(--bg);display:grid;place-items:center}
@@ -160,49 +184,57 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
 .modal-head{padding:15px 17px;border-bottom:2px solid var(--border);font-size:19px;font-weight:950;background:var(--surface-2)}
 .modal-body{padding:18px;white-space:pre-wrap;line-height:1.65;overflow:auto;max-height:65vh}
 .modal-foot{padding:10px 14px;border-top:2px solid var(--border);display:flex;justify-content:flex-end;gap:6px;background:var(--surface-2)}
+
+/* 상세 패널 & 백드롭 (PC 바깥 클릭 닫기 지원) */
+.detail-backdrop{
+  display:none;position:fixed;inset:0;z-index:3400;background:rgba(0,0,0,.25);backdrop-filter:blur(1px)
+}
+.detail-backdrop.open{display:block}
 .detail{
-  position:fixed;top:0;right:0;z-index:3500;width:min(390px,92vw);height:100dvh;background:var(--surface);
+  position:fixed;top:0;right:0;z-index:3500;width:min(420px,92vw);height:100dvh;background:var(--surface);
   border-left:3px solid var(--border);box-shadow:-12px 0 35px rgba(0,0,0,.24);transform:translateX(105%);visibility:hidden;
-  transition:transform .18s ease,visibility .18s;display:grid;grid-template-rows:auto 1fr auto
+  transition:transform .2s ease,visibility .2s;display:grid;grid-template-rows:auto 1fr auto
 }
 .detail.open{transform:none;visibility:visible}
-.detail-head,.detail-foot{padding:12px 14px;border-bottom:2px solid var(--border)}
-.detail-foot{border-top:2px solid var(--border);border-bottom:0;display:flex;justify-content:space-between}
-.detail-body{overflow:auto;padding:12px 14px}
-.detail-event{display:grid;grid-template-columns:auto 1fr;gap:6px;border-bottom:1px solid var(--border-soft);padding:8px 0}
-.detail-event.selected{background:var(--accent-soft);margin:0 -6px;padding:8px 6px;border-radius:6px}
-.detail-section{margin-bottom:15px}.detail-section h3{font-size:12px;color:var(--muted);margin:0 0 5px}
+.detail-head,.detail-foot{padding:12px 16px;border-bottom:2px solid var(--border);background:var(--surface-2)}
+.detail-foot{border-top:2px solid var(--border);border-bottom:0;display:flex;justify-content:space-between;background:var(--surface)}
+.detail-body{overflow-y:auto;padding:14px 16px}
+.detail-event{display:grid;grid-template-columns:auto 1fr;gap:8px;border-bottom:1px solid var(--border-soft);padding:9px 0}
+.detail-event.selected{background:var(--accent-soft);margin:0 -6px;padding:9px 6px;border-radius:6px}
+.detail-section{margin-bottom:18px}.detail-section h3{font-size:12.5px;color:var(--muted);margin:0 0 7px;font-weight:900}
+
 .mobile-fab,.mobile-menu,.mobile-backdrop{display:none}
 .print-title{display:none}
+
 @media(max-width:1100px){
   .topbar{grid-template-columns:auto 1fr}.header-actions{grid-column:1/-1;justify-content:flex-end}
   .nav{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:850px){
   .app-header{padding-left:max(6px,env(safe-area-inset-left));padding-right:max(6px,env(safe-area-inset-right))}
-  .topbar{grid-template-columns:1fr}.brand{text-align:center}.search-wrap{width:100%}.header-actions{justify-content:center}
+  .topbar{grid-template-columns:1fr}.brand{justify-content:center}.search-wrap{width:100%}.header-actions{justify-content:center}
   .nav{display:none}
-  .page{width:calc(100% - 4px)}
+  .page{width:100%;padding:0 6px}
   .toolbar{grid-template-columns:1fr}
   .toolbar-title .toolbar-sub{display:none}
   .month-nav,.month-nav.no-print-btn{grid-template-columns:auto auto minmax(90px,1fr) auto}
   .month-nav .print-button{display:none}
   .options{align-items:flex-start}
-  .calendar{min-width:0;grid-template-columns:1fr;grid-auto-rows:auto}
+  .calendar{min-width:0;grid-template-columns:1fr!important;grid-auto-rows:auto}
   .cal-head{display:none}.cal-cell{min-height:64px}.cal-cell.other{display:none}
   .cal-cell:not(:has(.event)){min-height:54px}
   .dept-picker{display:none}
   .dept-grid{grid-template-columns:1fr}
-  .form-grid{grid-template-columns:1fr}.request-form{padding:10px}.form-actions .submit{width:100%}
-  .detail{display:none!important}
+  .form-grid{grid-template-columns:1fr}.request-form{padding:12px}.form-actions .submit{width:100%}
+  .detail{display:none!important}.detail-backdrop{display:none!important}
   .mobile-fab{
-    display:flex;position:fixed;right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:2300;
-    width:64px;height:64px;border:3px solid var(--border);border-radius:50%;background:var(--accent);color:#fff;align-items:center;justify-content:center;
+    display:flex;position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:2300;
+    width:60px;height:60px;border:3px solid var(--border);border-radius:50%;background:var(--accent);color:#fff;align-items:center;justify-content:center;
     font-weight:950;box-shadow:var(--shadow)
   }
   .mobile-backdrop.open{display:block;position:fixed;inset:0;z-index:2200;background:rgba(0,0,0,.35)}
   .mobile-menu.open{
-    display:block;position:fixed;right:max(10px,env(safe-area-inset-right));bottom:84px;z-index:2250;width:min(356px,calc(100vw - 20px));
+    display:block;position:fixed;right:max(10px,env(safe-area-inset-right));bottom:80px;z-index:2250;width:min(356px,calc(100vw - 20px));
     background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:9px;box-shadow:var(--shadow)
   }
   .mobile-menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
@@ -210,17 +242,620 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   .mobile-menu .nav-btn.active{background:var(--border);color:#fff;border-color:var(--border)}
   .app-main{padding-bottom:82px}
 }
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+
+/* =========================================================
+   PC UI 시스템 (851px 이상)
+   ========================================================= */
+@media (min-width:851px){
+  :root{
+    --border:#c9cfd6;
+    --border-soft:#e7eaee;
+    --toolbar-h-desktop:52px;
+  }
+
+  body{font-weight:400}
+  .page{max-width:1680px;padding:0 20px}
+
+  /* 한 줄 상단 바 */
+  .app-header{padding:0 20px;border-bottom:1px solid var(--border-soft);box-shadow:none;background:var(--surface)}
+  .topbar{max-width:1680px;height:52px;margin:0 auto;display:grid;grid-template-columns:auto auto minmax(260px,1fr) auto;gap:18px;align-items:center}
+  .brand{font-size:15px;font-weight:700;letter-spacing:-.2px}
+  .nav{margin:0;padding:0;display:flex;gap:18px;background:transparent;border:0;border-radius:0;white-space:nowrap}
+  .nav-btn{position:relative;min-height:52px;padding:0;border:0;border-radius:0;background:transparent;color:var(--muted);font-size:13px;font-weight:600}
+  .nav-btn:hover{background:transparent;color:var(--text)}
+  .nav-btn.active{background:transparent;color:var(--accent)}
+  .nav-btn.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--accent)}
+  .nav-btn.request{color:var(--muted)}
+  .nav-btn.request.active{background:transparent!important;color:var(--danger)!important}
+  .nav-btn.request.active::after{background:var(--danger)}
+
+  .search-wrap{min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+  .search-box{position:relative;min-width:220px;width:min(100%,520px)}
+  .search-input{width:100%;height:34px;border:1px solid var(--border);border-radius:7px;padding:6px 32px 6px 10px;background:var(--bg);font-size:13px;font-weight:400}
+  .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 14%,transparent)}
+  .search-input:disabled{opacity:.45;cursor:not-allowed}
+  .search-clear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;background:transparent;color:var(--muted);font-size:17px;cursor:pointer}
+  .search-meta{min-width:28px;font-size:11px;font-weight:600;color:var(--muted);text-align:right}
+  .sync{min-height:28px;padding:3px 7px;border:0;background:transparent;font-size:11px;font-weight:500}
+  .header-actions{display:flex;gap:4px;align-items:center;grid-column:auto}
+  .utility-btn,.icon-btn,.btn{min-height:32px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);padding:4px 8px;font-size:12.5px;font-weight:600;box-shadow:none}
+  .utility-btn:hover,.icon-btn:hover,.btn:hover{background:var(--surface-2);border-color:var(--border)}
+
+  /* 모든 화면에서 동일한 sticky 컨트롤 줄 */
+  .toolbar{position:sticky;top:0;z-index:120;min-height:var(--toolbar-h-desktop);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:7px 0;background:color-mix(in srgb,var(--bg) 96%,transparent);border-bottom:1px solid var(--border-soft);backdrop-filter:blur(10px)}
+  .toolbar-title{font-size:16px;font-weight:700;white-space:nowrap}
+  .toolbar-sub{display:none}
+  .toolbar-options{min-width:0;display:flex;align-items:center;overflow:hidden}
+  .toolbar-actions{display:flex;align-items:center;justify-content:flex-end}
+  .options{margin:0;padding:0;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;border:0;overflow-x:auto;scrollbar-width:none}
+  .options::-webkit-scrollbar,.dept-quick::-webkit-scrollbar{display:none}
+  .options-title{display:none}
+  .option{min-height:30px;padding:3px 4px;display:inline-flex;align-items:center;gap:5px;border:0;border-radius:5px;background:transparent;color:var(--muted);font-size:12px;font-weight:500;white-space:nowrap}
+  .option:hover{border:0;background:var(--surface-2);color:var(--text)}
+  .option.on{border:0;background:transparent;color:var(--accent);font-weight:600}
+  .option input{width:14px;height:14px;margin:0}
+
+  .month-nav,.month-nav.no-print-btn{display:flex;align-items:center;gap:3px}
+  .month-title{min-width:106px;padding:0 6px;text-align:center;font-size:14px;font-weight:650}
+  .month-nav .btn{height:30px;min-height:30px;padding:3px 7px}
+  .month-nav .month-arrow{min-width:28px;font-size:17px}
+  .month-nav .today-button{margin-left:3px}
+  .month-nav .print-button{margin-left:8px}
+
+  /* sticky 테이블 헤더는 toolbar 아래 */
+  .table-wrap{border:1px solid var(--border-soft);border-radius:6px;overflow:visible;background:var(--surface)}
+  th{position:sticky;top:var(--toolbar-h-desktop);z-index:30;padding:7px;background:var(--surface-2);border-bottom:1px solid var(--border);font-weight:600;box-shadow:none}
+  td{padding:7px;border-right:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);font-weight:400}
+  tbody tr{cursor:default}
+  .plan-table tbody tr,.student-table tbody tr{cursor:pointer}
+  .plan-table td{padding-top:9px;padding-bottom:9px}
+  .plan-table tbody tr:hover,.student-table tbody tr:hover{background:color-mix(in srgb,var(--accent) 4%,var(--surface))}
+  tr.weekend-sun{background:color-mix(in srgb,#ff6b6b 4%,var(--surface));color:var(--text)}
+  tr.weekend-sat{background:color-mix(in srgb,#4dabf7 4%,var(--surface));color:var(--text)}
+  tr.weekend-sun:hover{background:color-mix(in srgb,#ff6b6b 7%,var(--surface))!important}
+  tr.weekend-sat:hover{background:color-mix(in srgb,#4dabf7 7%,var(--surface))!important}
+  tr.today-row{outline:0;box-shadow:inset 3px 0 var(--accent)}
+
+  /* 달력: 데이터 중심 */
+  .calendar{min-width:760px;gap:4px;grid-auto-rows:186px}
+  .cal-head{padding:5px;border:0;border-bottom:1px solid var(--border-soft);border-radius:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600}
+  .cal-cell{height:186px;min-height:186px;padding:7px;border:1px solid var(--border-soft);border-radius:6px;background:var(--surface);transition:border-color .12s ease,background-color .12s ease;transform:none;overflow:hidden;display:flex;flex-direction:column}
+  .cal-cell:hover,.cal-cell:focus-visible{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 2.5%,var(--surface));box-shadow:none;transform:none}
+  .cal-cell.today{border:1px solid var(--border-soft);background:var(--surface);color:var(--text)}
+  .cal-cell.other{opacity:.62;background:var(--bg)}
+  .cal-date{min-height:26px;margin-bottom:5px;justify-content:flex-start;font-size:12.5px;font-weight:600}
+  .cal-cell.today .cal-date>span:first-child{min-width:25px;height:25px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--accent);color:#fff!important}
+  .event-list{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+  .event{grid-template-columns:62px minmax(0,1fr);gap:6px;font-size:11.5px;font-weight:400;line-height:1.25;align-items:start}
+  .event-row{font-weight:400;grid-template-columns:minmax(0,1fr)}
+  .event-row.has-dept{grid-template-columns:62px minmax(0,1fr);gap:8px}
+  .event:hover .event-text{color:var(--accent);text-decoration:none}
+  .dept-tag{width:62px;max-width:62px;padding:1px 4px;border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd);border-radius:4px;background:var(--dept-color,var(--tag-color,#e9ecef))!important;color:#171a1f!important;font-size:11px;font-weight:600;filter:none;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dept-tag.neutral{--dept-color:#e9ecef}
+  .dept-tag.clickable:hover{transform:none;border-color:var(--accent)}
+  .weekend-group-label{margin-top:4px;padding-top:5px;border-top:1px solid var(--border-soft);font-size:10.5px;font-weight:600;color:var(--muted)}
+  .event.weekend-event{border-top:0;padding-top:0;margin-top:0}
+  .cal-cell.weekend-sat-cell{background:color-mix(in srgb,#4dabf7 3%,var(--surface))}
+  .cal-cell.weekend-sun-cell{background:color-mix(in srgb,#ff6b6b 3%,var(--surface))}
+  .inline-info,.legend{display:none}
+
+  /* 부서조회: 카드 본문은 흰색, 부서 태그만 색상 */
+  .dept-quick{display:flex;gap:3px;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .seg-btn{min-height:29px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--muted);padding:3px 7px;font-size:11.5px;font-weight:500;white-space:nowrap;cursor:pointer}
+  .seg-btn:hover{background:var(--surface-2);color:var(--text)}
+  .seg-btn.active{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,var(--border-soft));font-weight:600}
+  .seg-btn.dept-quick-btn{background:var(--dept-color);color:#171a1f;border-color:color-mix(in srgb,var(--dept-color) 58%,#adb5bd);font-weight:600}
+  .seg-btn.dept-quick-btn:hover{background:color-mix(in srgb,var(--dept-color) 90%,#fff);color:#111}
+  .seg-btn.dept-quick-btn.active{background:var(--dept-color);color:#111;border-color:#495057;box-shadow:inset 0 0 0 1px #495057}
+  .section-title{display:flex;align-items:center;gap:7px;margin:14px 0 7px;padding:0 0 5px;border-bottom:1px solid var(--border-soft);font-size:14px;font-weight:650}
+  .section-count{font-size:11px;font-weight:500;color:var(--muted)}
+  .dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px}
+  .dept-card{min-height:76px;padding:10px 12px;border:1px solid var(--border-soft);border-radius:7px;background:var(--surface);color:var(--text);cursor:pointer;box-shadow:none;transition:border-color .12s ease,box-shadow .12s ease,transform .12s ease}
+  .dept-card:hover,.dept-card:focus-visible{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 3px 10px rgba(0,0,0,.07);outline:none}
+  .dept-card-date{font-size:12px;font-weight:650;color:var(--muted)}
+  .dept-card-content{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:start;margin-top:6px}
+  .dept-card-text{min-width:0;font-size:13px;line-height:1.42;color:var(--text)}
+
+  /* 누가기록 compact segmented filters */
+  .nuga-toolbar-filters{display:flex;align-items:center;gap:12px;min-width:0;overflow-x:auto}
+  .segment-group{display:flex;align-items:center;gap:3px;white-space:nowrap}
+  .seg-count{margin-left:4px;color:inherit;font-size:10px;font-weight:600;opacity:.72}
+  .seg-btn.nuga-cat{background:var(--surface);color:var(--text);border-color:var(--border-soft);font-weight:500}
+  .seg-btn.nuga-cat:hover{background:var(--surface-2);color:var(--text)}
+  .seg-btn.nuga-cat.active{background:var(--surface);color:var(--text);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .nuga-cat-tag{display:inline-block;padding:1px 5px;border:1px solid color-mix(in srgb,var(--cat) 55%,#adb5bd);border-radius:4px;background:var(--cat);color:#171a1f;font-weight:600}
+  .nuga-filters{display:none}
+  .grade-switch{border:0;background:transparent;padding:0}
+
+  /* 우측 상세: backdrop 없는 비모달 */
+  .detail-backdrop{display:none!important}
+  .detail{width:min(430px,36vw);border-left:1px solid var(--border);box-shadow:-10px 0 28px rgba(0,0,0,.13);grid-template-rows:auto 1fr;background:var(--surface)}
+  .detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border-soft);background:var(--surface)}
+  .detail-title{font-size:17px;font-weight:700}
+  .detail-sub{margin-top:2px;font-size:11px;font-weight:500;color:var(--muted)}
+  .detail-head-actions{display:flex;gap:4px}
+  .detail-body{padding:12px 16px}
+  .detail-section{margin-bottom:18px}
+  .detail-section h3{margin:0 0 6px;font-size:11.5px;font-weight:600;color:var(--muted)}
+  .detail-event{grid-template-columns:auto 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px;line-height:1.4}
+  .detail-event.selected{margin:0 -6px;padding:8px 6px;background:var(--accent-soft);border-radius:5px}
+  .detail-meta{display:grid;gap:5px;padding:8px 0;font-size:12.5px}
+  .detail-meta>div{display:grid;grid-template-columns:76px 1fr;gap:8px}
+  .detail-meta strong{font-weight:600;color:var(--muted)}
+  .detail-empty{padding:5px 0;color:var(--muted);font-size:12px}
+
+  .modal-box{border:1px solid var(--border);border-radius:10px}
+  .modal-head{padding:12px 14px;border-bottom:1px solid var(--border-soft);font-size:16px;font-weight:700;background:var(--surface)}
+  .modal-foot{padding:8px 12px;border-top:1px solid var(--border-soft);background:var(--surface)}
+  .empty{font-weight:500}
+  .request-form{border:1px solid var(--border-soft);box-shadow:none}
+  .form-input,.form-textarea{border:1px solid var(--border)}
+  .form-label{font-weight:600}
+  .submit{font-weight:650}
+
+  .toast{position:fixed;left:50%;bottom:24px;z-index:7000;transform:translate(-50%,12px);opacity:0;pointer-events:none;padding:7px 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);box-shadow:0 4px 16px rgba(0,0,0,.12);font-size:12px;font-weight:600;transition:.15s ease}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+}
+
+@media (min-width:851px) and (max-width:1100px){
+  .topbar{grid-template-columns:auto auto minmax(170px,1fr) auto;gap:10px}
+  .nav{gap:10px}
+  .nav-btn{font-size:12px}
+  .sync{display:none}
+  .search-box{min-width:170px}
+}
+
+
+/* =========================================================
+   모바일 UI 시스템 (850px 이하)
+   - PC 개선판의 정보 구조/색상 규칙을 그대로 축소
+   - 상단 검색 + sticky 화면 컨트롤 + bottom-sheet 메뉴
+   ========================================================= */
+@media (max-width:850px){
+  :root{
+    --border:#c9cfd6;
+    --border-soft:#e7eaee;
+    --mobile-toolbar-bg:rgba(246,247,249,.96);
+  }
+
+  html,body{height:100%;overflow:hidden}
+  body{font-size:14px;font-weight:400;background:var(--bg)}
+
+  /* 상단: 브랜드/유틸 1행 + 검색 1행 */
+  .app-header{
+    flex:0 0 auto;
+    padding:7px 10px 8px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--surface);
+    box-shadow:none;
+    z-index:500;
+  }
+  .topbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:7px 8px;
+    align-items:center;
+  }
+  .brand{
+    justify-content:flex-start;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:-.2px;
+  }
+  #topNav{display:none!important}
+  .header-actions{grid-column:2;grid-row:1;display:flex;gap:4px;justify-content:flex-end}
+  .utility-btn,.icon-btn,.btn{
+    min-height:32px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:var(--surface);
+    color:var(--text);
+    padding:4px 8px;
+    font-size:12px;
+    font-weight:600;
+    box-shadow:none;
+  }
+  .search-wrap{
+    grid-column:1/-1;
+    grid-row:2;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:6px;
+    align-items:center;
+    min-width:0;
+  }
+  .search-box{position:relative;min-width:0;width:100%}
+  .search-input{
+    width:100%;height:36px;
+    padding:7px 34px 7px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--bg);
+    font-size:13px;
+    outline:none;
+  }
+  .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 13%,transparent)}
+  .search-clear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;background:transparent;color:var(--muted);font-size:18px}
+  .search-meta{min-width:30px;font-size:11px;font-weight:600;color:var(--muted);text-align:right}
+  .sync{display:none}
+
+  .app-main{padding:0 0 calc(68px + env(safe-area-inset-bottom));overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+  .page{width:100%;padding:0 9px}
+
+  /* 각 화면의 컨트롤은 모바일에서도 상단 고정 */
+  .toolbar{
+    position:sticky;
+    top:0;
+    z-index:180;
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    gap:6px 8px;
+    align-items:center;
+    min-height:48px;
+    padding:7px 0 6px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--mobile-toolbar-bg);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+  .toolbar-title{font-size:15px;font-weight:700;white-space:nowrap}
+  .toolbar-title>span:first-child:empty{display:none}
+  .toolbar-sub{display:none}
+  .toolbar-actions{grid-column:2;grid-row:1;display:flex;justify-content:flex-end;min-width:0}
+  .toolbar-options{grid-column:1/-1;grid-row:2;min-width:0;overflow:hidden}
+  .options,.dept-quick,.nuga-toolbar-filters,.segment-group{
+    display:flex;
+    align-items:center;
+    flex-wrap:nowrap;
+    gap:4px;
+    min-width:0;
+    overflow-x:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .options::-webkit-scrollbar,.dept-quick::-webkit-scrollbar,.nuga-toolbar-filters::-webkit-scrollbar,.segment-group::-webkit-scrollbar{display:none}
+  .options{margin:0;padding:0;border:0}
+  .options-title{display:none}
+  .option{
+    flex:0 0 auto;
+    min-height:30px;
+    padding:3px 5px;
+    border:0;
+    border-radius:6px;
+    background:transparent;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .option.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .option input{width:14px;height:14px;margin:0}
+
+  .month-nav,.month-nav.no-print-btn{display:flex;align-items:center;justify-content:flex-end;gap:3px;min-width:0}
+  .month-title{min-width:88px;padding:0 3px;font-size:13px;font-weight:650;text-align:center;white-space:nowrap}
+  .month-nav .btn{height:30px;min-height:30px;padding:3px 7px}
+  .month-nav .month-arrow{min-width:28px;font-size:17px}
+  .month-nav .print-button{display:none!important}
+  .month-nav .today-button{margin-left:2px}
+
+  /* 달력은 모바일에서 날짜별 compact card */
+  .calendar-wrap{width:100%;overflow:visible}
+  .calendar{min-width:0!important;display:grid;grid-template-columns:1fr!important;grid-auto-rows:auto!important;gap:6px!important;padding:7px 0 2px}
+  .cal-head{display:none!important}
+  .cal-cell{
+    height:auto!important;
+    min-height:70px!important;
+    padding:9px 10px!important;
+    border:1px solid var(--border-soft)!important;
+    border-radius:8px!important;
+    background:var(--surface)!important;
+    opacity:1!important;
+    overflow:visible!important;
+    display:block!important;
+    box-shadow:none!important;
+  }
+  .cal-cell.other{display:none!important}
+  .cal-cell.today{border-color:var(--border-soft)!important;background:var(--surface)!important}
+  .cal-date{
+    min-height:24px!important;
+    margin:0 0 6px!important;
+    padding-bottom:5px;
+    border-bottom:1px solid var(--border-soft);
+    display:flex;
+    justify-content:flex-start!important;
+    gap:5px;
+    font-size:13px!important;
+    font-weight:650!important;
+  }
+  .cal-cell.today .cal-date>span:first-child{
+    min-width:24px;height:24px;
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:50%;background:var(--accent);color:#fff!important;
+  }
+  .event-list{display:flex;flex-direction:column;gap:5px;overflow:visible!important}
+  .event{
+    display:grid;
+    grid-template-columns:64px minmax(0,1fr)!important;
+    gap:7px!important;
+    align-items:start;
+    font-size:12.5px!important;
+    line-height:1.35!important;
+    font-weight:400!important;
+  }
+  .event-text{min-width:0;overflow-wrap:anywhere}
+  .dept-tag{
+    width:64px!important;min-width:64px!important;max-width:64px!important;
+    padding:2px 4px!important;
+    border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd)!important;
+    border-radius:4px!important;
+    background:var(--dept-color,var(--tag-color,#e9ecef))!important;
+    color:#171a1f!important;
+    font-size:11px!important;
+    font-weight:600!important;
+    text-align:center;
+  }
+  .weekend-group-label{margin:6px 0 1px;padding-top:6px;border-top:1px solid var(--border-soft);font-size:11px;font-weight:600;color:var(--muted)}
+  .cal-cell.weekend-sat-cell{background:color-mix(in srgb,#4dabf7 2.5%,var(--surface))!important}
+  .cal-cell.weekend-sun-cell{background:color-mix(in srgb,#ff6b6b 2.5%,var(--surface))!important}
+  .inline-info,.legend{display:none!important}
+
+  /* 월중/학생 일정 모바일 카드 */
+  .mobile-only{display:block!important}
+  .desktop-only{display:none!important}
+  .mobile-card{
+    margin:7px 0;
+    padding:9px 10px;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    background:var(--surface);
+    box-shadow:none;
+  }
+  .mobile-card.today{border:1px solid var(--border-soft);box-shadow:inset 3px 0 var(--accent)}
+  .mobile-date{margin:0 0 7px;padding:0 0 5px;border-bottom:1px solid var(--border-soft);font-size:12.5px;font-weight:650}
+  .mobile-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px!important;padding:6px 7px;border-radius:6px;background:var(--bg);color:var(--muted);font-size:11.5px;font-weight:500}
+  .event-row{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;font-size:12.5px;font-weight:400;line-height:1.4}
+  .event-row.has-dept{grid-template-columns:64px minmax(0,1fr)}
+
+  /* 부서조회 / 누가기록 */
+  .seg-btn{
+    flex:0 0 auto;
+    min-height:30px;
+    padding:3px 7px;
+    border:1px solid var(--border-soft);
+    border-radius:6px;
+    background:var(--surface);
+    color:var(--text);
+    font-size:11.5px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .seg-btn.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--text)}
+  .seg-btn.dept-quick-btn{background:var(--dept-color);border-color:color-mix(in srgb,var(--dept-color) 58%,#adb5bd);color:#171a1f;font-weight:600}
+  .seg-btn.dept-quick-btn.active{border-color:#495057;box-shadow:inset 0 0 0 1px #495057}
+  .nuga-toolbar-filters{gap:8px}
+  .nuga-cat-tag{display:inline-block;padding:1px 5px;border:1px solid color-mix(in srgb,var(--cat) 55%,#adb5bd);border-radius:4px;background:var(--cat);color:#171a1f;font-weight:600}
+  .seg-count{margin-left:3px;font-size:10px;font-weight:600;color:var(--muted)}
+  .nuga-filters,.dept-picker{display:none!important}
+  .section-title{display:flex;align-items:center;gap:6px;margin:13px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--border-soft);font-size:14px;font-weight:650}
+  .section-count{font-size:11px;color:var(--muted);font-weight:500}
+  .dept-grid{display:grid;grid-template-columns:1fr;gap:7px}
+  .dept-card{min-height:0;padding:9px 10px;border:1px solid var(--border-soft);border-left:0;border-radius:8px;background:var(--surface);box-shadow:none}
+  .dept-card-date{font-size:11.5px;font-weight:600;color:var(--muted)}
+  .dept-card-content{display:grid;grid-template-columns:64px minmax(0,1fr);gap:7px;align-items:start;margin-top:6px}
+  .dept-card-text{font-size:12.5px;line-height:1.4}
+
+  /* 폼 */
+  .request-form{max-width:none;margin:8px 0;padding:12px;border:1px solid var(--border-soft);border-radius:9px;background:var(--surface)}
+  .form-grid{grid-template-columns:1fr;gap:0}
+  .form-group{margin-bottom:12px}
+  .form-label{font-size:12.5px;font-weight:600}
+  .form-input,.form-textarea{border:1px solid var(--border);border-radius:7px;padding:10px;background:var(--bg);font-size:14px}
+  .form-textarea{min-height:180px}
+  .form-actions{text-align:stretch}.form-actions .submit{width:100%;min-width:0;padding:11px;font-size:14px;font-weight:650}
+
+  /* 메뉴: 큰 FAB 대신 작은 버튼 + bottom sheet */
+  .mobile-fab{
+    display:flex;
+    position:fixed;
+    right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    z-index:2300;
+    width:50px;height:50px;
+    border:1px solid var(--border);
+    border-radius:50%;
+    background:var(--surface);
+    color:var(--text);
+    align-items:center;justify-content:center;
+    font-size:0;
+    font-weight:600;
+    box-shadow:0 5px 18px rgba(0,0,0,.16);
+  }
+  .mobile-fab::before{content:"☰";font-size:20px;line-height:1}
+  .mobile-fab span{display:none}
+  .mobile-backdrop.open{display:block;position:fixed;inset:0;z-index:2200;background:rgba(0,0,0,.28);backdrop-filter:blur(1px)}
+  .mobile-menu.open{
+    display:block;
+    position:fixed;
+    left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));
+    z-index:2250;
+    width:auto;
+    padding:10px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--surface);
+    box-shadow:0 12px 35px rgba(0,0,0,.20);
+  }
+  .mobile-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+  .mobile-menu .nav-btn{
+    min-height:42px;
+    padding:7px 8px;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    background:var(--surface);
+    color:var(--text);
+    font-size:12.5px;
+    font-weight:600;
+    text-align:left;
+  }
+  .mobile-menu .nav-btn.active{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,var(--border-soft))}
+  .mobile-menu .nav-btn.request.active{background:#fff5f5;color:var(--danger);border-color:#ffc9c9}
+
+  /* 상세/공지 모달은 모바일 bottom sheet */
+  .detail,.detail-backdrop{display:none!important}
+  .modal{align-items:flex-end;padding:0;background:rgba(0,0,0,.32);backdrop-filter:blur(1px)}
+  .modal-box{width:100%;max-height:86dvh;border:0;border-top:1px solid var(--border);border-radius:14px 14px 0 0;background:var(--surface);box-shadow:0 -10px 30px rgba(0,0,0,.18)}
+  .modal-head{padding:13px 14px;border-bottom:1px solid var(--border-soft);background:var(--surface);font-size:16px;font-weight:700}
+  .modal-body{padding:14px;max-height:66dvh;overflow:auto;font-size:13px;line-height:1.65}
+  .modal-foot{padding:9px 12px calc(9px + env(safe-area-inset-bottom));border-top:1px solid var(--border-soft);background:var(--surface);gap:5px}
+
+  .empty{min-height:100px;border:1px dashed var(--border);border-radius:8px;font-weight:500}
+  .toast{bottom:calc(72px + env(safe-area-inset-bottom))}
+}
+
+/* PC 및 A4 인쇄 스타일 최적화 */
 @media print{
   @page{size:A4 portrait;margin:8mm}
   html,body{height:auto!important;overflow:visible!important;background:#fff!important;color:#000!important}
-  .app-header,.banner,.loading,.modal,.detail,.mobile-fab,.mobile-menu,.mobile-backdrop,.toolbar,.options,.mobile-only,.no-print{display:none!important}
-  .app-main{overflow:visible!important;padding:0}.page{width:100%}.print-title{display:block;text-align:center;font-size:20px;font-weight:950;margin-bottom:7px}
-  .desktop-only{display:block!important}.table-wrap{border:0;overflow:visible}.plan-table{min-height:265mm}
-  table{min-width:0!important;background:#fff!important}th{position:static!important;background:#eee!important;color:#000!important}
-  th,td{border:1px solid #000!important;color:#000!important;padding:2px!important}
-  .event-row{font-size:12px}.dept-tag{font-size:10px;background:transparent!important}.weekend-sat{background:#4dabf7!important}.weekend-sun{background:#ff6b6b!important}
+  .app-header,.banner,.loading,.modal,.detail,.detail-backdrop,.mobile-fab,.mobile-menu,.mobile-backdrop,.toolbar,.options,.mobile-only,.no-print{display:none!important}
+  .app-main{overflow:visible!important;padding:0!important}.page{width:100%!important;max-width:100%!important;padding:0!important;margin:0!important}
+  .print-title{display:block!important;text-align:center;font-size:20px;font-weight:950;margin-bottom:8px}
+  .desktop-only{display:block!important}.table-wrap{border:0!important;overflow:visible!important}
+  .plan-table{min-height:auto!important}
+  table{min-width:0!important;width:100%!important;background:#fff!important}
+  th{position:static!important;background:#eee!important;color:#000!important}
+  th,td{border:1px solid #000!important;color:#000!important;padding:3px 4px!important}
+  tr{break-inside:avoid!important;page-break-inside:avoid!important}
+  .event-row{font-size:12px}.dept-tag{font-size:10px;background:transparent!important;border:1px solid #777!important}
+  .weekend-sat{background:#e7f5ff!important}.weekend-sun{background:#ffe3e3!important}
+  /* 달력 인쇄 */
+  .calendar-wrap{overflow:visible!important}
+  .calendar{min-width:0!important;grid-template-columns:repeat(5,1fr)!important;gap:2px!important}
+  .calendar.col-7{grid-template-columns:repeat(7,1fr)!important}
+  .cal-head{border:1px solid #000!important;background:#eee!important;color:#000!important;padding:4px!important}
+  .cal-cell{border:1px solid #000!important;min-height:85px!important;padding:4px!important;break-inside:avoid!important}
 }
+
+@page calendarPage{size:A4 landscape;margin:6mm}
+@media print{
+  body.print-calendar .page{page:calendarPage!important}
+  body.print-calendar{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body.print-calendar .calendar-print-title{display:block!important;font-size:14px!important;font-weight:700!important;margin:0 0 3mm!important;text-align:center!important}
+  body.print-calendar .calendar{min-width:0!important;width:100%!important;gap:1.2mm!important;grid-auto-rows:30.5mm!important}
+  body.print-calendar .cal-head{border:1px solid var(--border-soft)!important;background:var(--surface-2)!important;color:var(--text)!important;padding:1mm!important;font-size:7pt!important;line-height:1!important}
+  body.print-calendar .cal-head.sun{color:#e03131!important}
+  body.print-calendar .cal-head.sat{color:#1c7ed6!important}
+  body.print-calendar .cal-cell{height:30.5mm!important;min-height:30.5mm!important;border:1px solid var(--border-soft)!important;background:var(--surface)!important;color:var(--text)!important;padding:1.1mm!important;overflow:hidden!important}
+  body.print-calendar .cal-date{min-height:0!important;margin:0 0 .7mm!important;font-size:7pt!important;line-height:1!important}
+  body.print-calendar .cal-cell.other{opacity:.55!important;background:var(--bg)!important}
+  body.print-calendar .cal-cell.weekend-sat-cell{background:color-mix(in srgb,#4dabf7 3%,#fff)!important}
+  body.print-calendar .cal-cell.weekend-sun-cell{background:color-mix(in srgb,#ff6b6b 3%,#fff)!important}
+  body.print-calendar .cal-cell.today{border:1px solid var(--border-soft)!important;background:var(--surface)!important}
+  body.print-calendar .cal-cell.today .cal-date>span:first-child{background:transparent!important;color:inherit!important;min-width:auto!important;height:auto!important;border-radius:0!important}
+  body.print-calendar .event-list{overflow:visible!important;gap:.45mm!important}
+  body.print-calendar .event{font-size:6.3pt!important;line-height:1.03!important;grid-template-columns:13.5mm minmax(0,1fr)!important;gap:.8mm!important;min-width:0!important;align-items:center!important}
+  body.print-calendar .event-text{
+    white-space:normal!important;
+    overflow:hidden!important;
+    text-overflow:clip!important;
+    letter-spacing:-.12pt!important;
+    min-width:0!important;
+    line-height:1.08!important;
+    overflow-wrap:anywhere!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:2!important;
+    line-clamp:2!important;
+  }
+  body.print-calendar .dept-tag{width:13.5mm!important;max-width:13.5mm!important;min-width:13.5mm!important;background:var(--dept-color,var(--tag-color,#e9ecef))!important;color:#171a1f!important;border:1px solid color-mix(in srgb,var(--dept-color,var(--tag-color,#e9ecef)) 55%,#adb5bd)!important;font-size:5.8pt!important;line-height:1!important;padding:.25mm .5mm!important;text-align:center!important;overflow:hidden!important;text-overflow:clip!important}
+  body.print-calendar .calendar.col-7 .event{font-size:5.6pt!important;grid-template-columns:11.5mm minmax(0,1fr)!important;gap:.5mm!important}
+  body.print-calendar .calendar.col-7 .dept-tag{width:11.5mm!important;max-width:11.5mm!important;min-width:11.5mm!important;font-size:5.2pt!important;padding:.2mm .35mm!important}
+}
+
+@page tablePage{size:A4 portrait;margin:5mm}
+@media print{
+  body.print-table-one-page .page{page:tablePage!important}
+  body.print-table-one-page{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body.print-table-one-page .print-title{font-size:13px!important;font-weight:700!important;margin:0 0 2mm!important}
+  body.print-table-one-page .table-wrap{overflow:visible!important}
+  body.print-table-one-page .plan-table,
+  body.print-table-one-page .student-table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:5.7pt!important;
+    line-height:1!important;
+    page-break-inside:avoid!important;
+    break-inside:avoid!important;
+  }
+  body.print-table-one-page .plan-table th,
+  body.print-table-one-page .plan-table td,
+  body.print-table-one-page .student-table th,
+  body.print-table-one-page .student-table td{
+    padding:.26mm .55mm!important;
+    line-height:1!important;
+    vertical-align:middle!important;
+  }
+  body.print-table-one-page .plan-table th,
+  body.print-table-one-page .student-table th{font-size:5.9pt!important;font-weight:700!important}
+  body.print-table-one-page .plan-table tr,
+  body.print-table-one-page .student-table tr{page-break-inside:avoid!important;break-inside:avoid!important}
+  body.print-table-one-page .plan-table .today-row,
+  body.print-table-one-page .student-table .today-row{outline:0!important;box-shadow:none!important}
+  body.print-table-one-page .event-row{
+    display:inline-grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    width:auto!important;
+    max-width:100%!important;
+    margin:0 1.3mm .25mm 0!important;
+    gap:.7mm!important;
+    align-items:start!important;
+    white-space:normal!important;
+    font-size:5.45pt!important;
+    line-height:1.08!important;
+    vertical-align:top!important;
+  }
+  body.print-table-one-page .event-row:not(.has-dept){grid-template-columns:minmax(0,1fr)!important}
+  body.print-table-one-page .event-row span{white-space:normal!important}
+  body.print-table-one-page .event-row span:last-child{
+    min-width:0!important;
+    overflow:hidden!important;
+    overflow-wrap:anywhere!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:2!important;
+    line-clamp:2!important;
+  }
+  body.print-table-one-page .dept-tag{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    font-size:5.05pt!important;
+    line-height:1!important;
+    padding:.15mm .55mm!important;
+    white-space:nowrap!important;
+    background:var(--dept-color,var(--tag-color,#e9ecef))!important;
+    color:#171a1f!important;
+  }
+  body.print-table-one-page .plan-table td,
+  body.print-table-one-page .student-table td{overflow:hidden!important}
+  body.print-table-one-page .plan-table th:nth-child(1),
+  body.print-table-one-page .plan-table td:nth-child(1),
+  body.print-table-one-page .student-table th:nth-child(1),
+  body.print-table-one-page .student-table td:nth-child(1){width:7mm!important}
+  body.print-table-one-page .plan-table th:nth-child(2),
+  body.print-table-one-page .plan-table td:nth-child(2),
+  body.print-table-one-page .student-table th:nth-child(2),
+  body.print-table-one-page .student-table td:nth-child(2){width:7mm!important}
+  body.print-table-one-page .plan-table .event-row,
+  body.print-table-one-page .student-table .event-row{max-width:100%!important}
+  body.print-table-one-page .plan-table .event-row span:last-child,
+  body.print-table-one-page .student-table .event-row span:last-child{text-overflow:clip!important}
+  body.print-table-one-page .weekend-sat{background:#e7f5ff!important}
+  body.print-table-one-page .weekend-sun{background:#ffe3e3!important}
+}
+
 </style>
 </head>
 <body>
@@ -242,15 +877,15 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
 
 <header class="app-header">
   <div class="topbar">
-    <div class="brand">학사관리 시스템</div>
+    <div class="brand">학사관리</div>
+    <nav id="topNav" class="nav" aria-label="주요 업무 메뉴"></nav>
 
     <div class="search-wrap">
-      <input
-        id="searchInput"
-        class="search-input"
-        placeholder="행사 내용 또는 부서 검색 (공백=AND)"
-      >
-      <span id="searchMeta" class="search-meta">AND 검색</span>
+      <div class="search-box">
+        <input id="searchInput" class="search-input" placeholder="일정 또는 부서 검색" aria-label="현재 화면 검색">
+        <button id="searchClearBtn" class="search-clear hidden" type="button" aria-label="검색어 지우기">×</button>
+      </div>
+      <span id="searchMeta" class="search-meta" aria-live="polite"></span>
       <span id="syncStatus" class="sync loading">
         <span class="sync-dot"></span>
         <span id="syncText">동기화 중</span>
@@ -258,19 +893,18 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     </div>
 
     <div class="header-actions">
-      <button id="refreshBtn" class="icon-btn" title="데이터 새로고침">↻</button>
-      <button id="scaleDownBtn" class="icon-btn" title="작게">A−</button>
-      <button id="scaleResetBtn" class="icon-btn" title="보통 크기">A</button>
-      <button id="scaleUpBtn" class="icon-btn" title="크게">A+</button>
-      <button id="darkBtn" class="icon-btn" title="다크모드">🌙</button>
-      <button id="viewBtn" class="icon-btn" title="화면 모드">📱</button>
+      <button id="noticeBtn" class="utility-btn hidden" type="button">공지</button>
+      <button id="refreshBtn" class="utility-btn" type="button">새로고침</button>
+      <button id="scaleDownBtn" class="hidden" type="button" tabindex="-1">A−</button>
+      <button id="scaleResetBtn" class="hidden" type="button" tabindex="-1">A</button>
+      <button id="scaleUpBtn" class="hidden" type="button" tabindex="-1">A+</button>
+      <button id="viewBtn" class="hidden" type="button" tabindex="-1">뷰</button>
     </div>
   </div>
-
-  <nav id="topNav" class="nav" aria-label="주요 업무 메뉴"></nav>
 </header>
 
 <main id="appMain" class="app-main"></main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <div id="mobileBackdrop" class="mobile-backdrop"></div>
 
@@ -286,9 +920,10 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   ☰<br><span style="font-size:11px">메뉴</span>
 </button>
 
+<!-- 공지 모달 -->
 <div id="noticeModal" class="modal" role="dialog" aria-modal="true">
   <div class="modal-box">
-    <div class="modal-head">📢 공지사항</div>
+    <div class="modal-head">학사 공지사항</div>
     <div id="noticeBody" class="modal-body"></div>
     <div class="modal-foot">
       <button class="btn" data-close-modal="noticeModal">확인</button>
@@ -296,9 +931,10 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   </div>
 </div>
 
+<!-- 모바일 전용 이벤트 모달 -->
 <div id="eventModal" class="modal" role="dialog" aria-modal="true">
   <div class="modal-box">
-    <div id="eventModalTitle" class="modal-head">📌 일정 상세</div>
+    <div id="eventModalTitle" class="modal-head">일정 상세</div>
     <div id="eventModalBody" class="modal-body"></div>
     <div class="modal-foot">
       <button id="eventDeptBtn" class="btn">부서별로 보기</button>
@@ -307,36 +943,31 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   </div>
 </div>
 
-<aside id="detailPanel" class="detail">
+<!-- PC 우측 상세 패널: 비모달 master-detail -->
+<div id="detailBackdrop" class="detail-backdrop" aria-hidden="true"></div>
+<aside id="detailPanel" class="detail" aria-label="일정 상세" aria-live="polite">
   <div class="detail-head">
-    <div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
-      <div>
-        <div id="detailTitle" style="font-size:19px;font-weight:950"></div>
-        <div id="detailSub" style="font-size:11.5px;color:var(--muted);font-weight:800;margin-top:2px"></div>
-      </div>
-      <button id="detailCloseBtn" class="icon-btn">×</button>
+    <div class="detail-title-wrap">
+      <div id="detailTitle" class="detail-title"></div>
+      <div id="detailSub" class="detail-sub"></div>
     </div>
-
-    <div style="display:flex;gap:4px;margin-top:8px">
-      <button id="detailPrevBtn" class="btn">◀ 전날</button>
-      <button id="detailTodayBtn" class="btn">오늘</button>
-      <button id="detailNextBtn" class="btn">다음날 ▶</button>
+    <div class="detail-head-actions">
+      <button id="detailCopyBtn" class="utility-btn" type="button">복사</button>
+      <button id="detailCloseBtn" class="icon-btn" type="button" aria-label="상세 패널 닫기">×</button>
     </div>
   </div>
-
   <div id="detailBody" class="detail-body"></div>
-
-  <div class="detail-foot">
-    <button id="detailCopyBtn" class="btn">내용 복사</button>
-    <button id="detailDoneBtn" class="btn">확인</button>
-  </div>
+  <button id="detailDoneBtn" class="hidden" type="button" tabindex="-1">닫기</button>
+  <button id="detailPrevBtn" class="hidden" type="button" tabindex="-1">이전</button>
+  <button id="detailTodayBtn" class="hidden" type="button" tabindex="-1">오늘</button>
+  <button id="detailNextBtn" class="hidden" type="button" tabindex="-1">다음</button>
 </aside>
 
 <script>
 "use strict";
 
 /* =========================
-   1. 변경 불가 외부 계약
+   1. 설정 및 상수
    ========================= */
 
 const CONFIG = Object.freeze({
@@ -385,25 +1016,16 @@ const NUGA_COLORS = {
 
 const DOW = ["일","월","화","수","목","금","토"];
 
-const STORAGE_KEY = "academic-calendar-clean-v1";
+const STORAGE_KEY = "academic-calendar-clean-v2";
 
 /* =========================
-   2. 단일 상태
+   2. 상태 관리
    ========================= */
 
 const state = {
   tab: "calendar",
-
-  viewDate: new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    1
-  ),
-
+  viewDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   mobile: window.innerWidth <= 850,
-
-  dark: false,
-
   scale: 0,
 
   search: {
@@ -412,7 +1034,8 @@ const state = {
   },
 
   calendar: {
-    yearly:false
+    yearly:false,
+    showWeekends:false // 주말(토/일) 컬럼 포함 여부
   },
 
   plan: {
@@ -463,17 +1086,12 @@ const data = {
 };
 
 /* =========================
-   3. 공통 유틸
+   3. 공통 유틸리티
    ========================= */
 
-const $ = (selector,root=document) =>
-  root.querySelector(selector);
-
-const $$ = (selector,root=document) =>
-  [...root.querySelectorAll(selector)];
-
-const clamp = (min,max,value) =>
-  Math.max(min,Math.min(max,value));
+const $ = (selector,root=document) => root.querySelector(selector);
+const $$ = (selector,root=document) => [...root.querySelectorAll(selector)];
+const clamp = (min,max,value) => Math.max(min,Math.min(max,value));
 
 function escapeHTML(value){
   return String(value ?? "")
@@ -485,10 +1103,7 @@ function escapeHTML(value){
 }
 
 function normalizeQuery(query){
-  return String(query || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g," ");
+  return String(query || "").trim().toLowerCase().replace(/\s+/g," ");
 }
 
 function getDateKey(date){
@@ -504,352 +1119,128 @@ function dateFromKey(key){
 }
 
 function getCellText(cell){
-  if(cell == null){
-    return "";
-  }
-
-  if(
-    typeof cell === "string" ||
-    typeof cell === "number"
-  ){
-    return String(cell).trim();
-  }
-
-  if(
-    cell.f != null &&
-    String(cell.f).trim() !== ""
-  ){
-    return String(cell.f).trim();
-  }
-
-  if(cell.v != null){
-    return String(cell.v).trim();
-  }
-
+  if(cell == null) return "";
+  if(typeof cell === "string" || typeof cell === "number") return String(cell).trim();
+  if(cell.f != null && String(cell.f).trim() !== "") return String(cell.f).trim();
+  if(cell.v != null) return String(cell.v).trim();
   return "";
 }
 
 function parseGDate(value){
-  if(!value){
-    return null;
-  }
-
+  if(!value) return null;
   if(value instanceof Date){
-    return Number.isNaN(value.getTime())
-      ? null
-      : new Date(
-          value.getFullYear(),
-          value.getMonth(),
-          value.getDate()
-        );
+    return Number.isNaN(value.getTime()) ? null : new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
-
-  if(
-    typeof value === "number" &&
-    Number.isFinite(value)
-  ){
-    const utc = new Date(
-      Math.round(
-        (value - 25569) *
-        86400 *
-        1000
-      )
-    );
-
+  if(typeof value === "number" && Number.isFinite(value)){
+    const utc = new Date(Math.round((value - 25569) * 86400 * 1000));
     if(!Number.isNaN(utc.getTime())){
-      return new Date(
-        utc.getUTCFullYear(),
-        utc.getUTCMonth(),
-        utc.getUTCDate()
-      );
+      return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
     }
   }
-
   const raw = String(value).trim();
+  if(!raw || raw === "null" || raw === "undefined") return null;
 
-  if(
-    !raw ||
-    raw === "null" ||
-    raw === "undefined"
-  ){
-    return null;
-  }
+  let match = raw.match(/Date\s*\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/);
+  if(match) return new Date(+match[1], +match[2], +match[3]);
 
-  let match = raw.match(
-    /Date\s*\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/
-  );
-
-  if(match){
-    return new Date(
-      +match[1],
-      +match[2],
-      +match[3]
-    );
-  }
-
-  match = raw.match(
-    /(\d{4})\D+(\d{1,2})\D+(\d{1,2})/
-  );
-
-  if(match){
-    return new Date(
-      +match[1],
-      +match[2]-1,
-      +match[3]
-    );
-  }
+  match = raw.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  if(match) return new Date(+match[1], +match[2]-1, +match[3]);
 
   return null;
 }
 
 function highlight(text){
   const safe = escapeHTML(text);
+  if(!state.search.tokens.length) return safe;
 
-  if(!state.search.tokens.length){
-    return safe;
-  }
+  const tokens = [...new Set(state.search.tokens)]
+    .sort((a,b)=>b.length-a.length)
+    .map(token=>token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
-  const tokens = [
-    ...new Set(state.search.tokens)
-  ]
-  .sort((a,b)=>b.length-a.length)
-  .map(token=>
-    token.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
-    )
-  );
-
-  return safe.replace(
-    new RegExp(
-      `(${tokens.join("|")})`,
-      "ig"
-    ),
-    "<mark>$1</mark>"
-  );
+  return safe.replace(new RegExp(`(${tokens.join("|")})`, "ig"), "<mark>$1</mark>");
 }
 
 function matches(dept,text){
-  if(!state.search.tokens.length){
-    return true;
-  }
-
-  const hay =
-    `${dept} ${text}`.toLowerCase();
-
-  return state.search.tokens.every(
-    token=>hay.includes(token)
-  );
+  if(!state.search.tokens.length) return true;
+  const hay = `${dept} ${text}`.toLowerCase();
+  return state.search.tokens.every(token=>hay.includes(token));
 }
 
 function matchesStudent(text){
-  if(!state.search.tokens.length){
-    return true;
-  }
-
-  const hay =
-    String(text || "").toLowerCase();
-
-  return state.search.tokens.every(
-    token=>hay.includes(token)
-  );
+  if(!state.search.tokens.length) return true;
+  const hay = String(text || "").toLowerCase();
+  return state.search.tokens.every(token=>hay.includes(token));
 }
 
 function stripLeadingDeptTag(text){
-  return String(text || "")
-    .replace(/^\s*[-•]\s*/,"")
-    .replace(/^\s*\[[^\]]+\]\s*/,"")
-    .trim();
+  return String(text || "").replace(/^\s*[-•]\s*/,"").replace(/^\s*\[[^\]]+\]\s*/,"").trim();
 }
 
 function parsePeriods(cell){
-  if(cell == null){
-    return {
-      periods:"",
-      hours:0
-    };
-  }
-
+  if(cell == null) return { periods:"", hours:0 };
   let raw = "";
-
-  for(
-    const candidate of [
-      cell?.f,
-      cell?.v,
-      cell
-    ]
-  ){
-    if(candidate == null){
-      continue;
-    }
-
-    const value =
-      String(candidate).trim();
-
-    if(
-      value &&
-      ![
-        "null",
-        "undefined",
-        "[object Object]"
-      ].includes(value)
-    ){
-      raw = value;
-      break;
+  for(const candidate of [cell?.f, cell?.v, cell]){
+    if(candidate == null) continue;
+    const value = String(candidate).trim();
+    if(value && !["null","undefined","[object Object]"].includes(value)){
+      raw = value; break;
     }
   }
+  if(!raw) return { periods:"", hours:0 };
 
-  if(!raw){
-    return {
-      periods:"",
-      hours:0
-    };
-  }
-
-  const display = raw
-    .replace(/[\[\]]/g,"")
-    .replace(/\s+/g,"")
-    .replace(/교시/g,"");
-
-  const tokens = display
-    .replace(/[，、\/|.]+/g,",")
-    .split(",")
-    .filter(Boolean);
-
+  const display = raw.replace(/[\[\]]/g,"").replace(/\s+/g,"").replace(/교시/g,"");
+  const tokens = display.replace(/[，、\/|.]+/g,",").split(",").filter(Boolean);
   let hours = 0;
-
   for(const token of tokens){
-    const range = token.match(
-      /^(\d+)[~\-–—](\d+)$/
-    );
-
-    hours += range
-      ? Math.abs(
-          +range[2] -
-          +range[1]
-        ) + 1
-      : /^\d+$/.test(token)
-        ? 1
-        : 0;
+    const range = token.match(/^(\d+)[~\-–—](\d+)$/);
+    hours += range ? Math.abs(+range[2] - +range[1]) + 1 : /^\d+$/.test(token) ? 1 : 0;
   }
-
-  return {
-    periods:display || raw,
-    hours
-  };
+  return { periods:display || raw, hours };
 }
 
 function normalizeHeader(value){
-  return String(value ?? "")
-    .replace(/\s+/g,"")
-    .trim();
+  return String(value ?? "").replace(/\s+/g,"").trim();
 }
 
 function normalizeCategory(value){
-  return String(value ?? "")
-    .replace(/\(.*$/,"")
-    .trim();
+  return String(value ?? "").replace(/\(.*$/,"").trim();
 }
 
 function isCheckedGrade(value){
-  return [
-    "1","o","○","◯","v",
-    "✓","✔","true","y"
-  ].includes(
-    String(value ?? "")
-      .trim()
-      .toLowerCase()
-  );
+  return ["1","o","○","◯","v","✓","✔","true","y"].includes(String(value ?? "").trim().toLowerCase());
 }
 
 function parseLooseDate(cell){
-  if(
-    cell &&
-    typeof cell === "object"
-  ){
-    const rawDate =
-      parseGDate(cell.v);
-
-    if(rawDate){
-      return rawDate;
-    }
+  if(cell && typeof cell === "object"){
+    const rawDate = parseGDate(cell.v);
+    if(rawDate) return rawDate;
   }
-
-  return parseGDate(
-    getCellText(cell)
-  );
+  return parseGDate(getCellText(cell));
 }
 
 function currentScheduleYear(){
-  const date =
-    data.schedule.find(
-      item=>item.date instanceof Date
-    )?.date;
-
-  return date
-    ? date.getFullYear()
-    : state.viewDate.getFullYear();
+  const date = data.schedule.find(item=>item.date instanceof Date)?.date;
+  return date ? date.getFullYear() : state.viewDate.getFullYear();
 }
 
 function parseStudentDateCell(cell){
-  if(
-    cell &&
-    typeof cell === "object"
-  ){
-    const rawDate =
-      parseGDate(cell.v);
-
-    if(rawDate){
-      return rawDate;
-    }
+  if(cell && typeof cell === "object"){
+    const rawDate = parseGDate(cell.v);
+    if(rawDate) return rawDate;
   }
-
-  const text =
-    getCellText(cell);
-
-  const parsed =
-    parseGDate(text);
-
-  if(parsed){
-    return parsed;
-  }
-
-  const md = text.match(
-    /(\d{1,2})\s*[-./]\s*(\d{1,2})/
-  );
-
-  return md
-    ? new Date(
-        currentScheduleYear(),
-        +md[1]-1,
-        +md[2]
-      )
-    : null;
+  const text = getCellText(cell);
+  const parsed = parseGDate(text);
+  if(parsed) return parsed;
+  const md = text.match(/(\d{1,2})\s*[-./]\s*(\d{1,2})/);
+  return md ? new Date(currentScheduleYear(), +md[1]-1, +md[2]) : null;
 }
 
 function studentFallbackContent(text){
-  const raw =
-    String(text || "").trim();
-
-  let match = raw.match(
-    /^\s*\d{4}\D+\d{1,2}\D+\d{1,2}\s*[월화수목금토일]?\s*(.*)$/
-  );
-
-  if(match){
-    return stripLeadingDeptTag(
-      match[1]
-    );
-  }
-
-  match = raw.match(
-    /^\s*\d{1,2}\s*[-./]\s*\d{1,2}\s*[월화수목금토일]?\s*(.*)$/
-  );
-
-  return match
-    ? stripLeadingDeptTag(
-        match[1]
-      )
-    : "";
+  const raw = String(text || "").trim();
+  let match = raw.match(/^\s*\d{4}\D+\d{1,2}\D+\d{1,2}\s*[월화수목금토일]?\s*(.*)$/);
+  if(match) return stripLeadingDeptTag(match[1]);
+  match = raw.match(/^\s*\d{1,2}\s*[-./]\s*(\d{1,2})\s*[월화수목금토일]?\s*(.*)$/);
+  return match ? stripLeadingDeptTag(match[1]) : "";
 }
 
 /* =========================
@@ -857,593 +1248,180 @@ function studentFallbackContent(text){
    ========================= */
 
 const adapters = {
-
   schedule(raw){
     const result = [];
+    for(const row of raw?.table?.rows || []){
+      if(!row?.c?.[0]) continue;
+      const date = parseGDate(row.c[0].v);
+      const content = row.c[2]?.v != null ? String(row.c[2].v).trim() : "";
+      if(!date || !content || content === "null") continue;
 
-    for(
-      const row of
-      raw?.table?.rows || []
-    ){
-      if(!row?.c?.[0]){
-        continue;
-      }
-
-      const date =
-        parseGDate(
-          row.c[0].v
-        );
-
-      const content =
-        row.c[2]?.v != null
-          ? String(
-              row.c[2].v
-            ).trim()
-          : "";
-
-      if(
-        !date ||
-        !content ||
-        content === "null"
-      ){
-        continue;
-      }
-
-      const events = content
-        .split("\n")
-        .filter(
-          line=>
-            line.trim() &&
-            line !== "null"
-        )
+      const events = content.split("\n")
+        .filter(line=>line.trim() && line !== "null")
         .map(line=>{
-
-          const match =
-            line.match(
-              /^\[([^\]]+)\]/
-            );
-
-          let dept =
-            match
-              ? match[1].trim()
-              : "기타";
-
-          let text =
-            match
-              ? line
-                  .replace(
-                    match[0],
-                    ""
-                  )
-                  .trim()
-              : line.trim();
-
-          if(
-            !FIXED_DEPTS.includes(
-              dept
-            )
-          ){
+          const match = line.match(/^\[([^\]]+)\]/);
+          let dept = match ? match[1].trim() : "기타";
+          let text = match ? line.replace(match[0], "").trim() : line.trim();
+          if(!FIXED_DEPTS.includes(dept)){
             dept = "기타";
             text = line.trim();
           }
-
-          return {
-            dept,
-            text
-          };
+          return { dept, text };
         });
 
-      result.push({
-        date,
-        events
-      });
+      result.push({ date, events });
     }
-
-    return result.sort(
-      (a,b)=>a.date-b.date
-    );
+    return result.sort((a,b)=>a.date-b.date);
   },
 
   student(raw){
     const result = [];
-
-    for(
-      const row of
-      raw?.table?.rows || []
-    ){
-      if(!row?.c?.[0]){
-        continue;
-      }
-
-      const date =
-        parseStudentDateCell(
-          row.c[0]
-        );
-
-      if(!date){
-        continue;
-      }
+    for(const row of raw?.table?.rows || []){
+      if(!row?.c?.[0]) continue;
+      const date = parseStudentDateCell(row.c[0]);
+      if(!date) continue;
 
       const primary = [];
-
-      for(
-        let i=2;
-        i<row.c.length;
-        i++
-      ){
-        const text =
-          getCellText(
-            row.c[i]
-          );
-
-        if(
-          text &&
-          text !== "null"
-        ){
-          primary.push(text);
-        }
+      for(let i=2; i<row.c.length; i++){
+        const text = getCellText(row.c[i]);
+        if(text && text !== "null") primary.push(text);
       }
 
       const secondary = [];
-
-      for(
-        let i=1;
-        i<row.c.length;
-        i++
-      ){
-        const text =
-          getCellText(
-            row.c[i]
-          );
-
-        if(
-          !text ||
-          text === "null" ||
-          /^[월화수목금토일]$/.test(
-            text
-          )
-        ){
-          continue;
-        }
-
+      for(let i=1; i<row.c.length; i++){
+        const text = getCellText(row.c[i]);
+        if(!text || text === "null" || /^[월화수목금토일]$/.test(text)) continue;
         secondary.push(text);
       }
 
-      let content =
-        primary
-          .join("\n")
-          .trim() ||
-        secondary
-          .join("\n")
-          .trim() ||
-        studentFallbackContent(
-          getCellText(
-            row.c[0]
-          )
-        );
+      let content = primary.join("\n").trim() || secondary.join("\n").trim() || studentFallbackContent(getCellText(row.c[0]));
+      if(!content || content === "null") continue;
 
-      if(
-        !content ||
-        content === "null"
-      ){
-        continue;
-      }
-
-      const events =
-        content
-          .split("\n")
-          .map(
-            stripLeadingDeptTag
-          )
-          .filter(Boolean);
-
+      const events = content.split("\n").map(stripLeadingDeptTag).filter(Boolean);
       if(events.length){
-        result.push({
-          date,
-          events
-        });
+        result.push({ date, events });
       }
     }
-
-    return result.sort(
-      (a,b)=>a.date-b.date
-    );
+    return result.sort((a,b)=>a.date-b.date);
   },
 
   supervisor(raw){
     const result = {};
-
-    for(
-      const row of
-      raw?.table?.rows || []
-    ){
-      if(!row?.c?.[0]){
-        continue;
-      }
-
-      const date =
-        parseGDate(
-          row.c[0].v
-        );
-
-      const name =
-        row.c[2]?.v != null
-          ? String(
-              row.c[2].v
-            ).trim()
-          : "";
-
-      if(
-        date &&
-        name &&
-        name !== "null"
-      ){
-        result[
-          getDateKey(date)
-        ] = name;
+    for(const row of raw?.table?.rows || []){
+      if(!row?.c?.[0]) continue;
+      const date = parseGDate(row.c[0].v);
+      const name = row.c[2]?.v != null ? String(row.c[2].v).trim() : "";
+      if(date && name && name !== "null"){
+        result[getDateKey(date)] = name;
       }
     }
-
     return result;
   },
 
   prayer(raw){
     const result = {};
-
-    (
-      raw?.table?.rows || []
-    ).forEach((row,index)=>{
-
-      if(
-        index < 1 ||
-        !row?.c?.[0]
-      ){
-        return;
-      }
-
-      const date =
-        parseGDate(
-          row.c[0].v
-        );
-
-      if(!date){
-        return;
-      }
-
-      const name =
-        row.c[2]?.v != null
-          ? String(
-              row.c[2].v
-            ).trim()
-          : "";
-
-      const bible =
-        row.c[3]?.v != null
-          ? String(
-              row.c[3].v
-            ).trim()
-          : "";
-
-      const hymn =
-        row.c[4]?.v != null
-          ? String(
-              row.c[4].v
-            ).trim()
-          : "";
-
-      if(
-        name &&
-        name !== "null"
-      ){
-        result[
-          getDateKey(date)
-        ] = {
-          name,
-          hymn,
-          bible
-        };
+    (raw?.table?.rows || []).forEach((row,index)=>{
+      if(index < 1 || !row?.c?.[0]) return;
+      const date = parseGDate(row.c[0].v);
+      if(!date) return;
+      const name = row.c[2]?.v != null ? String(row.c[2].v).trim() : "";
+      const bible = row.c[3]?.v != null ? String(row.c[3].v).trim() : "";
+      const hymn = row.c[4]?.v != null ? String(row.c[4].v).trim() : "";
+      if(name && name !== "null"){
+        result[getDateKey(date)] = { name, hymn, bible };
       }
     });
-
     return result;
   },
 
   notice(raw){
     const result = [];
+    const today = new Date();
+    today.setHours(0,0,0,0);
 
-    const today =
-      new Date();
-
-    today.setHours(
-      0,0,0,0
-    );
-
-    for(
-      const row of
-      raw?.table?.rows || []
-    ){
-      if(
-        !row?.c ||
-        row.c.length < 3
-      ){
-        continue;
-      }
-
-      const start =
-        parseGDate(
-          row.c[0]?.v
-        );
-
-      const end =
-        parseGDate(
-          row.c[1]?.v
-        );
-
-      const content =
-        row.c[2]?.v != null
-          ? String(
-              row.c[2].v
-            ).trim()
-          : "";
-
-      if(
-        !content ||
-        content === "null"
-      ){
-        continue;
-      }
+    for(const row of raw?.table?.rows || []){
+      if(!row?.c || row.c.length < 3) continue;
+      const start = parseGDate(row.c[0]?.v);
+      const end = parseGDate(row.c[1]?.v);
+      const content = row.c[2]?.v != null ? String(row.c[2].v).trim() : "";
+      if(!content || content === "null") continue;
 
       let visible = true;
-
-      if(
-        start &&
-        end
-      ){
-        start.setHours(
-          0,0,0,0
-        );
-
-        end.setHours(
-          0,0,0,0
-        );
-
-        visible =
-          today >= start &&
-          today <= end;
+      if(start && end){
+        start.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        visible = today >= start && today <= end;
       }
-
       if(visible){
         result.push(content);
       }
     }
-
     return result;
   },
 
   nuga(raw){
     const result = [];
+    const cols = Array.isArray(raw?.table?.cols) ? raw.table.cols : [];
+    const columnMap = Object.create(null);
 
-    const cols =
-      Array.isArray(
-        raw?.table?.cols
-      )
-        ? raw.table.cols
-        : [];
+    cols.forEach((column,index)=>{
+      [column?.label, column?.id, column?.pattern].forEach(key=>{
+        const normalized = normalizeHeader(key);
+        if(normalized) columnMap[normalized] = index;
+      });
+    });
 
-    const columnMap =
-      Object.create(null);
-
-    cols.forEach(
-      (column,index)=>{
-
-        [
-          column?.label,
-          column?.id,
-          column?.pattern
-        ].forEach(key=>{
-
-          const normalized =
-            normalizeHeader(key);
-
-          if(normalized){
-            columnMap[
-              normalized
-            ] = index;
-          }
-        });
-      }
-    );
-
-    const pick = (
-      names,
-      fallback
-    ) => {
-
-      for(
-        const name of names
-      ){
-        const normalized =
-          normalizeHeader(name);
-
-        if(
-          Object.prototype
-            .hasOwnProperty
-            .call(
-              columnMap,
-              normalized
-            )
-        ){
-          return columnMap[
-            normalized
-          ];
+    const pick = (names, fallback) => {
+      for(const name of names){
+        const normalized = normalizeHeader(name);
+        if(Object.prototype.hasOwnProperty.call(columnMap, normalized)){
+          return columnMap[normalized];
         }
       }
-
       return fallback;
     };
 
     const index = {
-      category:
-        pick(
-          ["영역"],
-          1
-        ),
-
-      date:
-        pick(
-          ["일자","날짜"],
-          2
-        ),
-
-      periods:
-        pick(
-          ["교시텍스트","교시"],
-          3
-        ),
-
-      g1:
-        pick(
-          ["1학년","1"],
-          4
-        ),
-
-      g2:
-        pick(
-          ["2학년","2"],
-          5
-        ),
-
-      g3:
-        pick(
-          ["3학년","3"],
-          6
-        ),
-
-      content:
-        pick(
-          ["활동내용","내용"],
-          7
-        ),
-
-      remark:
-        pick(
-          ["비고"],
-          8
-        )
+      category: pick(["영역"], 1),
+      date: pick(["일자","날짜"], 2),
+      periods: pick(["교시텍스트","교시"], 3),
+      g1: pick(["1학년","1"], 4),
+      g2: pick(["2학년","2"], 5),
+      g3: pick(["3학년","3"], 6),
+      content: pick(["활동내용","내용"], 7),
+      remark: pick(["비고"], 8)
     };
 
-    for(
-      const row of
-      raw?.table?.rows || []
-    ){
-      if(!row?.c){
-        continue;
-      }
+    for(const row of raw?.table?.rows || []){
+      if(!row?.c) continue;
+      const rawCategory = normalizeCategory(getCellText(row.c[index.category]));
+      const date = parseLooseDate(row.c[index.date]);
+      if(!rawCategory || !date) continue;
 
-      const rawCategory =
-        normalizeCategory(
-          getCellText(
-            row.c[
-              index.category
-            ]
-          )
-        );
-
-      const date =
-        parseLooseDate(
-          row.c[
-            index.date
-          ]
-        );
-
-      if(
-        !rawCategory ||
-        !date
-      ){
-        continue;
-      }
-
-      const {
-        periods,
-        hours
-      } = parsePeriods(
-        row.c[
-          index.periods
-        ]
-      );
-
-      const autoVol =
-        rawCategory === "자율" ||
-        rawCategory === "봉사";
+      const { periods, hours } = parsePeriods(row.c[index.periods]);
+      const autoVol = rawCategory === "자율" || rawCategory === "봉사";
 
       result.push({
         displayCategory:{
-          1:
-            autoVol
-              ? "자율자치"
-              : rawCategory,
-
-          2:
-            autoVol
-              ? "자율자치"
-              : rawCategory,
-
-          3:
-            rawCategory
+          1: autoVol ? "자율자치" : rawCategory,
+          2: autoVol ? "자율자치" : rawCategory,
+          3: rawCategory
         },
-
         date,
-
-        dateKey:
-          getDateKey(date),
-
-        dayOfWeek:
-          DOW[
-            date.getDay()
-          ],
-
+        dateKey: getDateKey(date),
+        dayOfWeek: DOW[date.getDay()],
         periods,
         hours,
-
         grades:[
-          isCheckedGrade(
-            getCellText(
-              row.c[index.g1]
-            )
-          ),
-
-          isCheckedGrade(
-            getCellText(
-              row.c[index.g2]
-            )
-          ),
-
-          isCheckedGrade(
-            getCellText(
-              row.c[index.g3]
-            )
-          )
+          isCheckedGrade(getCellText(row.c[index.g1])),
+          isCheckedGrade(getCellText(row.c[index.g2])),
+          isCheckedGrade(getCellText(row.c[index.g3]))
         ],
-
-        content:
-          getCellText(
-            row.c[
-              index.content
-            ]
-          ),
-
-        remark:
-          getCellText(
-            row.c[
-              index.remark
-            ]
-          )
+        content: getCellText(row.c[index.content]),
+        remark: getCellText(row.c[index.remark])
       });
     }
-
-    return result.sort(
-      (a,b)=>a.date-b.date
-    );
+    return result.sort((a,b)=>a.date-b.date);
   }
 };
 
@@ -1452,1144 +1430,465 @@ const adapters = {
    ========================= */
 
 function setSync(kind,text){
-  const element =
-    $("#syncStatus");
-
-  element.className =
-    `sync ${kind}`;
-
-  $("#syncText").textContent =
-    text;
+  const element = $("#syncStatus");
+  element.className = `sync ${kind}`;
+  $("#syncText").textContent = text;
 }
 
 function showError(message){
-  $("#errorText").textContent =
-    message;
-
-  $("#errorBanner").style.display =
-    "block";
-
-  setSync(
-    "warn",
-    "일부 데이터 실패"
-  );
+  $("#errorText").textContent = message;
+  $("#errorBanner").style.display = "block";
+  setSync("warn", "일부 데이터 실패");
 }
 
 function hideError(){
-  $("#errorBanner").style.display =
-    "none";
+  $("#errorBanner").style.display = "none";
 }
 
-function loadSheet(
-  sheet,
-  generation
-){
-  return new Promise(
-    resolve=>{
+function loadSheet(sheet, generation){
+  return new Promise(resolve=>{
+    const callback = `__sheet_${sheet.key}_${generation}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    let done = false;
 
-      const callback =
-        `__sheet_${sheet.key}_${generation}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const cleanup = ()=>{
+      if(done) return;
+      done = true;
+      script.remove();
+      try{ delete window[callback]; }catch{}
+    };
 
-      const script =
-        document.createElement(
-          "script"
-        );
+    const finish = (error, value)=>{
+      cleanup();
+      resolve({ key:sheet.key, label:sheet.label, err:error, value });
+    };
 
-      let done = false;
+    window[callback] = raw=>{
+      try{
+        finish(null, adapters[sheet.key](raw));
+      }catch(error){
+        finish(error, null);
+      }
+    };
 
-      const cleanup = ()=>{
-        if(done){
-          return;
-        }
+    script.onerror = ()=>{
+      finish(new Error(`${sheet.label} 로딩 실패`), null);
+    };
 
-        done = true;
-
-        script.remove();
-
-        try{
-          delete window[
-            callback
-          ];
-        }catch{}
-      };
-
-      const finish = (
-        error,
-        value
-      )=>{
-        cleanup();
-
-        resolve({
-          key:sheet.key,
-          label:sheet.label,
-          err:error,
-          value
-        });
-      };
-
-      window[callback] = raw=>{
-        try{
-          finish(
-            null,
-            adapters[
-              sheet.key
-            ](raw)
-          );
-        }catch(error){
-          finish(
-            error,
-            null
-          );
-        }
-      };
-
-      script.onerror = ()=>{
-        finish(
-          new Error(
-            `${sheet.label} 로딩 실패`
-          ),
-          null
-        );
-      };
-
-      script.src =
-        `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq` +
-        `?tqx=out:json;responseHandler:${callback}` +
-        `&gid=${sheet.gid}` +
-        `&_=${Date.now()}`;
-
-      document.body.appendChild(
-        script
-      );
-    }
-  );
+    script.src = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${callback}&gid=${sheet.gid}&_=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 async function reloadAll(){
+  const generation = ++state.load.generation;
+  const initialLoad = !state.load.lastRefresh;
+  if(state.load.timer) clearTimeout(state.load.timer);
 
-  const generation =
-    ++state.load.generation;
-
-  if(state.load.timer){
-    clearTimeout(
-      state.load.timer
-    );
-  }
-
-  $("#loading").style.display =
-    "grid";
-
+  if(initialLoad) $("#loading").style.display = "grid";
   hideError();
-
-  setSync(
-    "loading",
-    "동기화 중"
-  );
-
+  setSync("loading", "동기화 중");
   state.load.errors = {};
 
-  const timeout =
-    new Promise(
-      resolve=>{
+  const timeout = new Promise(resolve=>{
+    state.load.timer = setTimeout(()=>resolve("timeout"), 12000);
+  });
+  const work = Promise.all(CONFIG.SHEETS.map(sheet=>loadSheet(sheet, generation)));
+  const winner = await Promise.race([work, timeout]);
+  if(generation !== state.load.generation) return;
 
-        state.load.timer =
-          setTimeout(
-            ()=>resolve(
-              "timeout"
-            ),
-            12000
-          );
-      }
-    );
-
-  const work =
-    Promise.all(
-      CONFIG.SHEETS.map(
-        sheet=>
-          loadSheet(
-            sheet,
-            generation
-          )
-      )
-    );
-
-  const winner =
-    await Promise.race([
-      work,
-      timeout
-    ]);
-
-  if(
-    generation !==
-    state.load.generation
-  ){
+  if(winner === "timeout"){
+    $("#loading").style.display = "none";
+    showError("데이터 로딩이 12초 이상 지연되고 있습니다. 재시도해 주세요.");
     return;
   }
 
-  if(
-    winner === "timeout"
-  ){
-    $("#loading").style.display =
-      "none";
-
-    showError(
-      "일부 시트 로딩이 12초 이상 지연되고 있습니다. 재시도해 주세요."
-    );
-
-    return;
-  }
-
-  for(
-    const item of winner
-  ){
-    if(item.err){
-      state.load.errors[
-        item.key
-      ] = item.err;
-
-      continue;
-    }
-
-    data[
-      item.key
-    ] = item.value;
+  for(const item of winner){
+    if(item.err){ state.load.errors[item.key] = item.err; continue; }
+    data[item.key] = item.value;
   }
 
   rebuildIndexes();
+  if(initialLoad) alignViewDate();
+  state.load.lastRefresh = Date.now();
+  $("#loading").style.display = "none";
 
-  alignViewDate();
-
-  state.load.lastRefresh =
-    Date.now();
-
-  $("#loading").style.display =
-    "none";
-
-  const failures =
-    Object.keys(
-      state.load.errors
-    );
-
+  const failures = Object.keys(state.load.errors);
   if(failures.length){
-
-    showError(
-      CONFIG.SHEETS
-        .filter(
-          sheet=>
-            failures.includes(
-              sheet.key
-            )
-        )
-        .map(
-          sheet=>sheet.label
-        )
-        .join(", ") +
-      " 데이터를 불러오지 못했습니다."
-    );
-
+    showError(CONFIG.SHEETS.filter(sheet=>failures.includes(sheet.key)).map(sheet=>sheet.label).join(", ") + " 데이터를 불러오지 못했습니다.");
   }else{
-
-    const now =
-      new Date();
-
-    setSync(
-      "ok",
-      `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 갱신`
-    );
+    const now = new Date();
+    setSync("ok", `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 갱신`);
   }
 
-  render();
-
+  render({preserveScroll:!initialLoad,focusToday:initialLoad});
   showNotices();
 }
 
 /* =========================
-   6. 인덱스
+   6. 인덱스 생성
    ========================= */
 
 function rebuildIndexes(){
-
-  data.eventsById =
-    Object.create(null);
-
-  data.daysByKey =
-    Object.create(null);
-
-  data.deptIndex =
-    Object.create(null);
+  data.eventsById = Object.create(null);
+  data.daysByKey = Object.create(null);
+  data.deptIndex = Object.create(null);
 
   let id = 0;
+  for(const day of data.schedule){
+    const key = getDateKey(day.date);
+    data.daysByKey[key] ??= { dateKey:key, date:day.date, eventIds:[] };
 
-  for(
-    const day of
-    data.schedule
-  ){
-    const key =
-      getDateKey(
-        day.date
-      );
-
-    data.daysByKey[
-      key
-    ] ??= {
-      dateKey:key,
-      date:day.date,
-      eventIds:[]
-    };
-
-    for(
-      const event of
-      day.events
-    ){
-      data.eventsById[
-        id
-      ] = {
-        id,
-        dateKey:key,
-        dept:event.dept,
-        text:event.text
-      };
-
-      data.daysByKey[
-        key
-      ].eventIds.push(
-        id
-      );
-
-      (
-        data.deptIndex[
-          event.dept
-        ] ??= []
-      ).push(id);
-
+    for(const event of day.events){
+      data.eventsById[id] = { id, dateKey:key, dept:event.dept, text:event.text };
+      data.daysByKey[key].eventIds.push(id);
+      (data.deptIndex[event.dept] ??= []).push(id);
       id++;
     }
   }
 
-  Object.values(
-    data.deptIndex
-  ).forEach(ids=>{
-
-    ids.sort(
-      (a,b)=>
-        data.eventsById[
-          a
-        ].dateKey.localeCompare(
-          data.eventsById[
-            b
-          ].dateKey
-        ) ||
-        a-b
-    );
+  Object.values(data.deptIndex).forEach(ids=>{
+    ids.sort((a,b)=> data.eventsById[a].dateKey.localeCompare(data.eventsById[b].dateKey) || a-b );
   });
 
-  data.studentEventsById =
-    Object.create(null);
-
-  data.studentDaysByKey =
-    Object.create(null);
+  data.studentEventsById = Object.create(null);
+  data.studentDaysByKey = Object.create(null);
 
   let studentId = 0;
+  for(const day of data.student){
+    const key = getDateKey(day.date);
+    data.studentDaysByKey[key] ??= { dateKey:key, date:day.date, eventIds:[] };
 
-  for(
-    const day of
-    data.student
-  ){
-    const key =
-      getDateKey(
-        day.date
-      );
-
-    data.studentDaysByKey[
-      key
-    ] ??= {
-      dateKey:key,
-      date:day.date,
-      eventIds:[]
-    };
-
-    for(
-      const text of
-      day.events
-    ){
-      data.studentEventsById[
-        studentId
-      ] = {
-        id:studentId,
-        dateKey:key,
-        text
-      };
-
-      data.studentDaysByKey[
-        key
-      ].eventIds.push(
-        studentId++
-      );
+    for(const text of day.events){
+      data.studentEventsById[studentId] = { id:studentId, dateKey:key, text };
+      data.studentDaysByKey[key].eventIds.push(studentId++);
     }
   }
 }
 
 function alignViewDate(){
+  const source = data.schedule.length ? data.schedule : data.student;
+  if(!source.length) return;
 
-  const source =
-    data.schedule.length
-      ? data.schedule
-      : data.student;
-
-  if(!source.length){
-    return;
-  }
-
-  const dates =
-    source
-      .map(
-        item=>item.date
-      )
-      .sort(
-        (a,b)=>a-b
-      );
-
-  const today =
-    new Date();
-
-  const sameMonth =
-    dates.some(
-      date=>
-        date.getFullYear() ===
-          today.getFullYear() &&
-        date.getMonth() ===
-          today.getMonth()
-    );
-
-  const chosen =
-    sameMonth
-      ? today
-      : (
-          dates.find(
-            date=>date>=today
-          ) ||
-          dates[
-            dates.length-1
-          ]
-        );
-
-  state.viewDate =
-    new Date(
-      chosen.getFullYear(),
-      chosen.getMonth(),
-      1
-    );
+  const dates = source.map(item=>item.date).sort((a,b)=>a-b);
+  const today = new Date();
+  const sameMonth = dates.some(date=>date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth());
+  const chosen = sameMonth ? today : (dates.find(date=>date>=today) || dates[dates.length-1]);
+  state.viewDate = new Date(chosen.getFullYear(), chosen.getMonth(), 1);
 }
 
 /* =========================
-   7. 저장 설정
+   7. 환경설정 저장/복원
    ========================= */
 
 function savePrefs(){
   try{
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        tab:state.tab,
-
-        y:
-          state.viewDate
-            .getFullYear(),
-
-        m:
-          state.viewDate
-            .getMonth(),
-
-        mobile:
-          state.mobile,
-
-        dark:
-          state.dark,
-
-        scale:
-          state.scale,
-
-        calendar:
-          state.calendar,
-
-        plan:
-          state.plan,
-
-        student:
-          state.student,
-
-        nuga:
-          state.nuga,
-
-        dept:
-          state.dept
-      })
-    );
-
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      tab: state.tab,
+      y: state.viewDate.getFullYear(),
+      m: state.viewDate.getMonth(),
+      mobile: state.mobile,
+      scale: state.scale,
+      calendar: state.calendar,
+      plan: state.plan,
+      student: state.student,
+      nuga: state.nuga,
+      dept: state.dept
+    }));
   }catch{}
 }
 
 function restorePrefs(){
   try{
-
-    const prefs =
-      JSON.parse(
-        localStorage.getItem(
-          STORAGE_KEY
-        ) || "{}"
-      );
-
-    if(
-      [
-        "calendar",
-        "plan",
-        "student",
-        "dept",
-        "nuga",
-        "request"
-      ].includes(
-        prefs.tab
-      )
-    ){
-      state.tab =
-        prefs.tab;
+    const prefs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if(["calendar","plan","student","dept","nuga","request"].includes(prefs.tab)){
+      state.tab = prefs.tab;
     }
-
-    if(
-      Number.isInteger(
-        prefs.y
-      ) &&
-      Number.isInteger(
-        prefs.m
-      )
-    ){
-      state.viewDate =
-        new Date(
-          prefs.y,
-          prefs.m,
-          1
-        );
+    if(Number.isInteger(prefs.y) && Number.isInteger(prefs.m)){
+      state.viewDate = new Date(prefs.y, prefs.m, 1);
     }
-
-    if(
-      typeof prefs.mobile ===
-      "boolean"
-    ){
-      state.mobile =
-        prefs.mobile;
-    }
-
-    if(
-      typeof prefs.dark ===
-      "boolean"
-    ){
-      state.dark =
-        prefs.dark;
-    }
-
-    if(
-      Number.isFinite(
-        prefs.scale
-      )
-    ){
-      state.scale =
-        clamp(
-          -2,
-          2,
-          prefs.scale
-        );
-    }
-
-    if(prefs.calendar){
-      Object.assign(
-        state.calendar,
-        prefs.calendar
-      );
-    }
-
-    if(prefs.plan){
-      Object.assign(
-        state.plan,
-        prefs.plan
-      );
-    }
-
-    if(prefs.student){
-      Object.assign(
-        state.student,
-        prefs.student
-      );
-    }
-
-    if(prefs.nuga){
-      Object.assign(
-        state.nuga,
-        prefs.nuga
-      );
-    }
-
-    if(
-      FIXED_DEPTS.includes(
-        prefs.dept
-      )
-    ){
-      state.dept =
-        prefs.dept;
-    }
-
+    if(Number.isFinite(prefs.scale)) state.scale = clamp(-2, 2, prefs.scale);
+    if(prefs.calendar) Object.assign(state.calendar, prefs.calendar);
+    if(prefs.plan) Object.assign(state.plan, prefs.plan);
+    if(prefs.student) Object.assign(state.student, prefs.student);
+    if(prefs.nuga) Object.assign(state.nuga, prefs.nuga);
+    if(FIXED_DEPTS.includes(prefs.dept)) state.dept = prefs.dept;
   }catch{}
 }
 
 function applyPrefs(){
-
-  document.body.classList.toggle(
-    "dark",
-    state.dark
-  );
-
-  document.documentElement
-    .style
-    .setProperty(
-      "--font",
-      `${14 + state.scale}px`
-    );
-
-  document.documentElement
-    .style
-    .setProperty(
-      "--cell-h",
-      `${126 + state.scale*15}px`
-    );
-
-  document.documentElement
-    .style
-    .setProperty(
-      "--gap",
-      `${6 + Math.max(0,state.scale)}px`
-    );
-
-  $("#darkBtn").textContent =
-    state.dark
-      ? "☀️"
-      : "🌙";
-
-  $("#viewBtn").textContent =
-    state.mobile
-      ? "🖥️"
-      : "📱";
+  document.documentElement.style.setProperty("--font", `${14 + state.scale}px`);
+  document.documentElement.style.setProperty("--cell-h", `${126 + state.scale*14}px`);
+  document.documentElement.style.setProperty("--gap", `${6 + Math.max(0,state.scale)}px`);
+  $("#viewBtn").textContent = state.mobile ? "🖥️" : "📱";
+  $("#viewBtn").title = state.mobile ? "PC 버전으로 보기" : "모바일 뷰 전환";
 }
 
 /* =========================
-   8. UI 생성 도우미
+   8. UI 도우미
    ========================= */
 
 const NAV_ITEMS = [
-  ["calendar","🗓️","달력 일정"],
-  ["plan","📋","월중 계획표"],
-  ["student","🎒","학생일정"],
-  ["dept","🏢","부서별 조회"],
-  ["nuga","📝","누가기록"],
-  ["request","✍️","수정/추가 요청"]
+  ["calendar","달력"],
+  ["plan","월중 계획"],
+  ["student","학생일정"],
+  ["dept","부서조회"],
+  ["nuga","누가기록"],
+  ["request","수정·추가 요청"]
 ];
 
 function navHTML(){
-
-  return NAV_ITEMS
-    .map(
-      ([id,icon,label])=>
-        `<button
-          class="nav-btn ${id==="request"?"request":""} ${state.tab===id?"active":""}"
-          data-tab="${id}"
-        >${icon} ${label}</button>`
-    )
-    .join("");
+  return NAV_ITEMS.map(([id,label])=>`
+    <button
+      class="nav-btn ${id==="request"?"request":""} ${state.tab===id?"active":""}"
+      data-tab="${id}"
+      type="button"
+      ${state.tab===id ? 'aria-current="page"' : ''}
+    >${label}</button>
+  `).join("");
 }
 
-function toolbar(
-  icon,
-  title,
-  subtitle,
-  actions=""
-){
+function toolbar(icon, title, subtitle, actions="", optionsHTML=""){
   return `
     <section class="toolbar no-print">
-
-      <div class="toolbar-title">
-        <span>${icon}</span>
-        <div>
-          ${title}
-          <div class="toolbar-sub">
-            ${subtitle}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        ${actions}
-      </div>
-
+      <div class="toolbar-title">${title}</div>
+      <div class="toolbar-options">${optionsHTML}</div>
+      <div class="toolbar-actions">${actions}</div>
     </section>
   `;
 }
 
-function monthNav(
-  title,
-  print=false
-){
+function monthNav(title, print=true){
   return `
     <div class="month-nav ${print?"":"no-print-btn"}">
-
-      <button
-        class="btn"
-        data-action="prev-month"
-      >
-        ◀ 이전
-      </button>
-
-      <button
-        class="btn"
-        data-action="today"
-      >
-        오늘
-      </button>
-
-      <div class="month-title">
-        ${title}
-      </div>
-
-      <button
-        class="btn"
-        data-action="next-month"
-      >
-        다음 ▶
-      </button>
-
-      ${
-        print
-          ? `
-            <button
-              class="btn print-button"
-              data-action="print"
-            >
-              🖨️ 인쇄
-            </button>
-          `
-          : ""
-      }
-
+      <button class="btn month-arrow" data-action="prev-month" type="button" aria-label="이전 달">‹</button>
+      <div class="month-title">${title}</div>
+      <button class="btn month-arrow" data-action="next-month" type="button" aria-label="다음 달">›</button>
+      <button class="btn today-button" data-action="today" type="button">오늘</button>
+      ${print ? `<button class="btn print-button" data-action="print" type="button">인쇄</button>` : ""}
     </div>
   `;
 }
 
-function option(
-  label,
-  checked,
-  key,
-  group
-){
+function option(label, checked, key, group){
   return `
-    <label
-      class="option ${checked?"on":""}"
-    >
-
-      <input
-        type="checkbox"
-        data-option-group="${group}"
-        data-option-key="${key}"
-        ${checked?"checked":""}
-      >
-
-      <span>
-        ${label}
-      </span>
-
+    <label class="option ${checked?"on":""}">
+      <input type="checkbox" data-option-group="${group}" data-option-key="${key}" ${checked?"checked":""}>
+      <span>${label}</span>
     </label>
   `;
 }
 
 function empty(message){
-  return `
-    <div class="empty">
-      ${message}
-    </div>
-  `;
+  return `<div class="empty">${message}</div>`;
 }
 
 function filteredEventIds(day){
-  return (
-    day?.eventIds || []
-  ).filter(
-    id=>
-      matches(
-        data.eventsById[id].dept,
-        data.eventsById[id].text
-      )
-  );
+  return (day?.eventIds || []).filter(id=>matches(data.eventsById[id].dept, data.eventsById[id].text));
 }
 
 /* =========================
-   9. 렌더러
+   9. 화면 렌더링
    ========================= */
 
-function render(){
+function searchPlaceholder(){
+  return {
+    calendar:"일정 또는 부서 검색",
+    plan:"월중 계획 검색",
+    student:"학생일정 검색",
+    dept:"선택한 부서 일정 검색",
+    nuga:"활동내용·영역·비고 검색",
+    request:"요청 화면에서는 검색하지 않습니다"
+  }[state.tab] || "검색";
+}
 
-  applyPrefs();
-
-  $("#topNav").innerHTML =
-    navHTML();
-
-  $("#mobileMenuGrid").innerHTML =
-    navHTML();
-
-  $("#appMain").innerHTML =
-    views[
-      state.tab
-    ]();
-
+function updateSearchChrome(){
+  const input = $("#searchInput");
+  input.placeholder = searchPlaceholder();
+  input.disabled = state.tab === "request";
+  $("#searchClearBtn").classList.toggle("hidden", !state.search.query || input.disabled);
   updateSearchMeta();
+}
 
+function render({preserveScroll=true, focusToday=false, toTop=false}={}){
+  applyPrefs();
+  const main = $("#appMain");
+  const previousScroll = main.scrollTop;
+  $("#topNav").innerHTML = navHTML();
+  $("#mobileMenuGrid").innerHTML = navHTML();
+  main.innerHTML = views[state.tab]();
+  updateSearchChrome();
   savePrefs();
 
-  requestAnimationFrame(
-    ()=>{
+  requestAnimationFrame(()=>{
+    if(focusToday){
       scrollToday();
-
-      if(
-        state.tab ===
-        "request"
-      ){
-        restoreRequestDraft();
-      }
+    }else if(toTop){
+      main.scrollTop = 0;
+    }else if(preserveScroll){
+      main.scrollTop = previousScroll;
     }
-  );
+    if(state.tab === "request") restoreRequestDraft();
+  });
 }
 
 const views = {
-  calendar:renderCalendar,
-  plan:renderPlan,
-  student:renderStudent,
-  dept:renderDept,
-  nuga:renderNuga,
-  request:renderRequest
+  calendar: renderCalendar,
+  plan: renderPlan,
+  student: renderStudent,
+  dept: renderDept,
+  nuga: renderNuga,
+  request: renderRequest
 };
 
 function renderCalendar(){
+  const year = state.viewDate.getFullYear();
+  const currentMonth = state.viewDate.getMonth();
+  const todayKey = getDateKey(new Date());
+  const showWeekends = state.calendar.showWeekends;
 
-  const year =
-    state.viewDate
-      .getFullYear();
-
-  const currentMonth =
-    state.viewDate
-      .getMonth();
-
-  const todayKey =
-    getDateKey(
-      new Date()
-    );
+  const calendarOptions = `
+    <div class="options calendar-options">
+      ${option("주말 포함", showWeekends, "showWeekends", "calendar")}
+      ${option("연간 보기", state.calendar.yearly, "yearly", "calendar")}
+    </div>
+  `;
 
   let output = `
     <div class="page">
-
-      ${
-        toolbar(
-          "🗓️",
-          "달력 일정",
-          "월별 일정을 확인하고 날짜를 눌러 상세 정보를 봅니다.",
-          monthNav(
-            `${year}년 ${
-              state.calendar.yearly
-                ? "전체"
-                : currentMonth+1+"월"
-            }`
-          )
-        )
-      }
-
-      <div class="options">
-
-        <span class="options-title">
-          보기 방식
-        </span>
-
-        ${
-          option(
-            "1년 전체 보기",
-            state.calendar.yearly,
-            "yearly",
-            "calendar"
-          )
-        }
-
-      </div>
+      ${toolbar(
+        "🗓️",
+        "달력 일정",
+        "월별 일정을 확인하고 날짜를 클릭해 상세 패널을 엽니다.",
+        monthNav(`${year}년 ${state.calendar.yearly ? "전체" : currentMonth+1+"월"}`, true),
+        calendarOptions
+      )}
+      <div class="print-title calendar-print-title">${year}학년도 ${state.calendar.yearly ? "연간" : (currentMonth+1)+"월"} 학사일정</div>
   `;
 
-  const start =
-    state.calendar.yearly
-      ? 0
-      : currentMonth;
+  const start = state.calendar.yearly ? 0 : currentMonth;
+  const end = state.calendar.yearly ? 11 : currentMonth;
 
-  const end =
-    state.calendar.yearly
-      ? 11
-      : currentMonth;
-
-  for(
-    let month=start;
-    month<=end;
-    month++
-  ){
-
-    if(
-      state.calendar.yearly
-    ){
-      output += `
-        <div class="section-title">
-          ${year}년 ${month+1}월
-        </div>
-      `;
+  for(let month=start; month<=end; month++){
+    if(state.calendar.yearly){
+      output += `<div class="section-title">${year}년 ${month+1}월</div>`;
     }
 
-    const monthly =
-      Object.values(
-        data.eventsById
-      )
-      .filter(event=>{
-
-        const date =
-          dateFromKey(
-            event.dateKey
-          );
-
-        return (
-          date.getFullYear() === year &&
-          date.getMonth() === month &&
-          matches(
-            event.dept,
-            event.text
-          )
-        );
-      });
-
-    output += `
-      <div class="inline-info">
-
-        <span>
-          표시 일정 ${monthly.length}건
-        </span>
-
-        <div class="legend">
-          ${
-            [
-              ...new Set(
-                monthly.map(
-                  event=>event.dept
-                )
-              )
-            ]
-            .map(
-              dept=>`
-                <span
-                  class="chip"
-                  style="background:${DEPT_COLORS[dept]}"
-                >
-                  ${escapeHTML(dept)}
-                </span>
-              `
-            )
-            .join("")
-          }
-        </div>
-
-      </div>
-    `;
+    const dayHeaders = showWeekends
+      ? ["월","화","수","목","금","토","일"]
+      : ["월","화","수","목","금"];
 
     output += `
       <div class="calendar-wrap">
-        <div class="calendar">
-
-          ${
-            [
-              "월",
-              "화",
-              "수",
-              "목",
-              "금"
-            ]
-            .map(
-              day=>`
-                <div class="cal-head">
-                  ${day}
-                </div>
-              `
-            )
-            .join("")
-          }
+        <div class="calendar ${showWeekends ? "col-7" : "col-5"}">
+          ${dayHeaders.map(day=>`
+            <div class="cal-head ${day==='일'?'sun':day==='토'?'sat':''}">${day}</div>
+          `).join("")}
     `;
 
-    const first =
-      new Date(
-        year,
-        month,
-        1
-      );
+    const lastDay = new Date(year, month+1, 0).getDate();
 
-    const last =
-      new Date(
-        year,
-        month+1,
-        0
-      );
-
-    const cursor =
-      new Date(first);
-
-    let diff =
-      cursor.getDay()-1;
-
-    if(diff === -1){
-      diff = 6;
+    // 현재 월의 실제 날짜만 렌더링한다.
+    // 주말 미포함이면 월 초가 토/일인 경우 다음 월요일부터 시작한다.
+    let firstVisibleDay = 1;
+    if(!showWeekends){
+      while(firstVisibleDay <= lastDay){
+        const dow = new Date(year, month, firstVisibleDay).getDay();
+        if(dow !== 0 && dow !== 6) break;
+        firstVisibleDay++;
+      }
     }
 
-    cursor.setDate(
-      cursor.getDate()-diff
-    );
+    let firstRendered = true;
 
-    for(
-      let i=0;
-      i<42;
-      i++
-    ){
+    for(let dayNumber=firstVisibleDay; dayNumber<=lastDay; dayNumber++){
+      const cursor = new Date(year, month, dayNumber);
+      const dow = cursor.getDay();
+      const isWeekend = dow === 0 || dow === 6;
 
-      const weekend =
-        cursor.getDay() === 0 ||
-        cursor.getDay() === 6;
+      if(!showWeekends && isWeekend) continue;
 
-      if(
-        !state.mobile &&
-        weekend
-      ){
-        cursor.setDate(
-          cursor.getDate()+1
-        );
+      const key = getDateKey(cursor);
+      const day = data.daysByKey[key];
+      const ids = filteredEventIds(day);
 
+      if(state.mobile && state.search.tokens.length && !ids.length){
         continue;
       }
 
-      const key =
-        getDateKey(cursor);
+      let weekendEventsMarkup = "";
+      if(!showWeekends && dow === 5){
+        const sat = new Date(cursor); sat.setDate(sat.getDate()+1);
+        const sun = new Date(cursor); sun.setDate(sun.getDate()+2);
+        const satInMonth = sat.getFullYear() === year && sat.getMonth() === month;
+        const sunInMonth = sun.getFullYear() === year && sun.getMonth() === month;
+        const satIds = satInMonth ? filteredEventIds(data.daysByKey[getDateKey(sat)]) : [];
+        const sunIds = sunInMonth ? filteredEventIds(data.daysByKey[getDateKey(sun)]) : [];
 
-      const day =
-        data.daysByKey[key];
-
-      const ids =
-        filteredEventIds(day);
-
-      if(
-        state.mobile &&
-        state.search.tokens.length &&
-        !ids.length
-      ){
-        cursor.setDate(
-          cursor.getDate()+1
-        );
-
-        if(cursor > last){
-          break;
+        if(satIds.length || sunIds.length){
+          weekendEventsMarkup += `<div class="weekend-group-label">주말 일정</div>`;
         }
 
-        continue;
+        satIds.forEach(id=>{
+          const ev = data.eventsById[id];
+          weekendEventsMarkup += `
+            <div class="event weekend-event" data-event-id="${id}" title="토요일(${sat.getDate()}일) 일정">
+              <span class="dept-tag" style="--dept-color:#e7f5ff">토(${sat.getDate()}일)</span>
+              <span class="event-text">${highlight(ev.text)}</span>
+            </div>
+          `;
+        });
+        sunIds.forEach(id=>{
+          const ev = data.eventsById[id];
+          weekendEventsMarkup += `
+            <div class="event weekend-event" data-event-id="${id}" title="일요일(${sun.getDate()}일) 일정">
+              <span class="dept-tag" style="--dept-color:#fff0f0">일(${sun.getDate()}일)</span>
+              <span class="event-text">${highlight(ev.text)}</span>
+            </div>
+          `;
+        });
       }
 
-      const other =
-        cursor.getMonth() !==
-        month;
+      const events = ids.map(id=>{
+        const event = data.eventsById[id];
+        return `
+          <div class="event" data-event-id="${id}">
+            <span class="dept-tag" style="--dept-color:${DEPT_COLORS[event.dept]}">
+              ${highlight(event.dept)}
+            </span>
+            <span class="event-text">${highlight(event.text)}</span>
+          </div>
+        `;
+      }).join("") + weekendEventsMarkup;
 
-      if(
-        state.mobile &&
-        other
-      ){
-        cursor.setDate(
-          cursor.getDate()+1
-        );
-
-        continue;
+      // 이전 달 filler를 만들지 않고 첫 실제 날짜를 해당 요일 열에 바로 배치한다.
+      let firstCellStyle = "";
+      if(firstRendered && !state.mobile){
+        const mondayBasedColumn = dow === 0 ? 7 : dow;
+        const column = showWeekends ? mondayBasedColumn : Math.min(mondayBasedColumn, 5);
+        firstCellStyle = `grid-column:${column}`;
       }
-
-      const events =
-        ids
-          .map(id=>{
-
-            const event =
-              data.eventsById[id];
-
-            return `
-              <div
-                class="event"
-                data-event-id="${id}"
-              >
-
-                <span
-                  class="dept-tag"
-                  style="background:${DEPT_COLORS[event.dept]}"
-                >
-                  ${highlight(event.dept)}
-                </span>
-
-                <span class="event-text">
-                  ${highlight(event.text)}
-                </span>
-
-              </div>
-            `;
-          })
-          .join("");
+      firstRendered = false;
 
       output += `
         <div
-          class="cal-cell
-            ${other?"other":""}
-            ${key===todayKey?"today":""}
-          "
+          class="cal-cell ${key===todayKey?"today":""} ${dow===6?"weekend-sat-cell":dow===0?"weekend-sun-cell":""}"
           data-day="${key}"
           tabindex="0"
+          role="button"
+          aria-label="${year}년 ${month+1}월 ${dayNumber}일 일정 상세"
+          ${key===todayKey ? 'aria-current="date"' : ''}
+          ${firstCellStyle ? `style="${firstCellStyle}"` : ""}
         >
-
           <div class="cal-date">
-            ${cursor.getDate()}
-            ${
-              state.mobile
-                ? ` (${DOW[cursor.getDay()]})`
-                : ""
-            }
+            <span style="${dow===0?'color:#e03131':dow===6?'color:#1c7ed6':''}">
+              ${dayNumber}
+            </span>
+            ${state.mobile ? `<span style="font-size:11px;color:var(--muted)">(${DOW[dow]})</span>` : ""}
           </div>
-
-          <div class="event-list">
-            ${events}
-          </div>
-
+          <div class="event-list">${events}</div>
         </div>
       `;
-
-      cursor.setDate(
-        cursor.getDate()+1
-      );
-
-      if(
-        state.mobile &&
-        cursor > last
-      ){
-        break;
-      }
-
-      if(
-        !state.mobile &&
-        cursor > last &&
-        cursor.getDay() === 1
-      ){
-        break;
-      }
     }
 
     output += `
@@ -2598,752 +1897,213 @@ function renderCalendar(){
     `;
   }
 
-  output += `
-    </div>
-  `;
-
+  output += `</div>`;
   return output;
 }
 
-function planEvents(
-  key,
-  showDept,
-  horizontal,
-  student=false
-){
 
-  const day =
-    student
-      ? data.studentDaysByKey[key]
-      : data.daysByKey[key];
-
-  const ids =
-    (
-      day?.eventIds || []
-    )
-    .filter(id=>
-
-      student
-        ? matchesStudent(
-            data.studentEventsById[
-              id
-            ].text
-          )
-        : matches(
-            data.eventsById[
-              id
-            ].dept,
-
-            data.eventsById[
-              id
-            ].text
-          )
-    );
+function planEvents(key, showDept, horizontal, student=false){
+  const day = student ? data.studentDaysByKey[key] : data.daysByKey[key];
+  const ids = (day?.eventIds || []).filter(id=>
+    student ? matchesStudent(data.studentEventsById[id].text) : matches(data.eventsById[id].dept, data.eventsById[id].text)
+  );
 
   if(student){
-
-    return ids
-      .map(
-        (id,index)=>{
-
-          return `
-            <div
-              class="event-row ${horizontal?"horizontal":""}"
-              data-student-id="${id}"
-            >
-
-              <span>
-                ${
-                  highlight(
-                    data.studentEventsById[
-                      id
-                    ].text
-                  )
-                }
-              </span>
-
-            </div>
-
-            ${
-              horizontal &&
-              index < ids.length-1
-                ? "<span> | </span>"
-                : ""
-            }
-          `;
-        }
-      )
-      .join("");
+    return ids.map((id,index)=>`
+      <div class="event-row ${horizontal?"horizontal":""}" data-student-id="${id}">
+        <span>${highlight(data.studentEventsById[id].text)}</span>
+      </div>
+      ${horizontal && index < ids.length-1 ? "<span> | </span>" : ""}
+    `).join("");
   }
 
-  return ids
-    .map(
-      (id,index)=>{
-
-        const event =
-          data.eventsById[id];
-
-        return `
-          <div
-            class="event-row ${horizontal?"horizontal":""}"
-            data-event-id="${id}"
-          >
-
-            ${
-              showDept
-                ? `
-                  <span
-                    class="dept-tag"
-                    style="background:${DEPT_COLORS[event.dept]}"
-                  >
-                    ${highlight(event.dept)}
-                  </span>
-                `
-                : ""
-            }
-
-            <span>
-              ${highlight(event.text)}
-            </span>
-
-          </div>
-
-          ${
-            horizontal &&
-            index < ids.length-1
-              ? "<span> | </span>"
-              : ""
-          }
-        `;
-      }
-    )
-    .join("");
+  return ids.map((id,index)=>{
+    const event = data.eventsById[id];
+    return `
+      <div class="event-row ${horizontal?"horizontal":""} ${showDept && !horizontal?"has-dept":""}" data-event-id="${id}">
+        ${showDept ? `<span class="dept-tag" style="--dept-color:${DEPT_COLORS[event.dept]}">${highlight(event.dept)}</span>` : ""}
+        <span>${highlight(event.text)}</span>
+      </div>
+      ${horizontal && index < ids.length-1 ? "<span> | </span>" : ""}
+    `;
+  }).join("");
 }
 
 function renderPlan(){
-
-  const year =
-    state.viewDate
-      .getFullYear();
-
-  const month =
-    state.viewDate
-      .getMonth();
-
-  const lastDay =
-    new Date(
-      year,
-      month+1,
-      0
-    ).getDate();
-
-  const todayKey =
-    getDateKey(
-      new Date()
-    );
-
-  const options =
-    state.plan;
+  const year = state.viewDate.getFullYear();
+  const month = state.viewDate.getMonth();
+  const lastDay = new Date(year, month+1, 0).getDate();
+  const todayKey = getDateKey(new Date());
+  const options = state.plan;
 
   let output = `
     <div class="page">
+      ${toolbar(
+        "",
+        "월중 계획표",
+        "",
+        monthNav(`${year}년 ${month+1}월`, true),
+        `<div class="options">
+          ${option("부서명", options.showDept, "showDept", "plan")}
+          ${option("경건회", options.showPrayer, "showPrayer", "plan")}
+          ${option("자습감독", options.showSupervisor, "showSupervisor", "plan")}
+          ${option("주말 제외", options.excludeWeekends, "excludeWeekends", "plan")}
+          ${option("가로 배열", options.horizontal, "horizontal", "plan")}
+        </div>`
+      )}
 
-      ${
-        toolbar(
-          "📋",
-          "월중 계획표",
-          "월간 운영 계획을 확인하고 PC에서 인쇄합니다.",
-          monthNav(
-            `${year}년 ${month+1}월`,
-            true
-          )
-        )
-      }
-
-      <div class="options">
-
-        <span class="options-title">
-          표시 항목
-        </span>
-
-        ${
-          option(
-            "부서명",
-            options.showDept,
-            "showDept",
-            "plan"
-          )
-        }
-
-        ${
-          option(
-            "경건회",
-            options.showPrayer,
-            "showPrayer",
-            "plan"
-          )
-        }
-
-        ${
-          option(
-            "자습감독",
-            options.showSupervisor,
-            "showSupervisor",
-            "plan"
-          )
-        }
-
-        <span class="options-title">
-          표 구성
-        </span>
-
-        ${
-          option(
-            "주말 제외",
-            options.excludeWeekends,
-            "excludeWeekends",
-            "plan"
-          )
-        }
-
-        ${
-          option(
-            "일정 가로 배열",
-            options.horizontal,
-            "horizontal",
-            "plan"
-          )
-        }
-
-      </div>
-
-      <div class="print-title">
-        ${year}학년도 ${month+1}월중 학사운영 계획
-      </div>
+      <div class="print-title">${year}학년도 ${month+1}월중 학사운영 계획</div>
   `;
 
-  output += `
-    <div
-      class="mobile-only ${state.mobile?"":"hidden"}"
-    >
-  `;
+  // 모바일 뷰
+  output += `<div class="mobile-only ${state.mobile?"":"hidden"}">`;
+  for(let day=1; day<=lastDay; day++){
+    const date = new Date(year, month, day);
+    const dow = date.getDay();
+    if(options.excludeWeekends && (dow === 0 || dow === 6)) continue;
 
-  for(
-    let day=1;
-    day<=lastDay;
-    day++
-  ){
-
-    const date =
-      new Date(
-        year,
-        month,
-        day
-      );
-
-    const dow =
-      date.getDay();
-
-    if(
-      options.excludeWeekends &&
-      (
-        dow === 0 ||
-        dow === 6
-      )
-    ){
-      continue;
-    }
-
-    const key =
-      getDateKey(date);
-
-    const events =
-      planEvents(
-        key,
-        options.showDept,
-        options.horizontal
-      );
-
-    const prayer =
-      data.prayer[key] || {};
-
-    const supervisor =
-      data.supervisor[key] || "";
+    const key = getDateKey(date);
+    const events = planEvents(key, options.showDept, options.horizontal);
+    const prayer = data.prayer[key] || {};
+    const supervisor = data.supervisor[key] || "";
 
     output += `
-      <div
-        class="mobile-card ${key===todayKey?"today":""}"
-        data-day="${key}"
-      >
-
-        <div class="mobile-date">
+      <div class="mobile-card ${key===todayKey?"today":""}" data-day="${key}">
+        <div class="mobile-date" style="${dow===0?'color:#e03131':dow===6?'color:#1c7ed6':''}">
           ${day}일 (${DOW[dow]})
         </div>
-
-        <div
-          style="
-            min-height:18px;
-            margin-bottom:6px
-          "
-        >
-          ${
-            events ||
-            '<span style="color:var(--muted)">일정 없음</span>'
-          }
+        <div style="min-height:18px;margin-bottom:6px">
+          ${events || '<span style="color:var(--muted)">일정 없음</span>'}
         </div>
-
-        ${
-          (
-            options.showPrayer &&
-            prayer.name
-          ) ||
-          (
-            options.showSupervisor &&
-            supervisor
-          )
-            ? `
-              <div class="mobile-meta">
-
-                ${
-                  options.showPrayer &&
-                  prayer.name
-                    ? `
-                      <span>
-                        🙏 ${escapeHTML(prayer.name)}
-                      </span>
-                    `
-                    : ""
-                }
-
-                ${
-                  options.showSupervisor &&
-                  supervisor
-                    ? `
-                      <span>
-                        👀 ${escapeHTML(supervisor)}
-                      </span>
-                    `
-                    : ""
-                }
-
-              </div>
-            `
-            : ""
-        }
-
+        ${(options.showPrayer && prayer.name) || (options.showSupervisor && supervisor) ? `
+          <div class="mobile-meta">
+            ${options.showPrayer && prayer.name ? `<span>🙏 ${escapeHTML(prayer.name)}</span>` : ""}
+            ${options.showSupervisor && supervisor ? `<span>👀 ${escapeHTML(supervisor)}</span>` : ""}
+          </div>
+        ` : ""}
       </div>
     `;
   }
+  output += `</div>`;
 
-  output += `
-    </div>
-  `;
-
+  // PC 데스크톱 테이블
   let headers = `
-    <th style="width:42px">
-      날짜
-    </th>
-
-    <th style="width:42px">
-      요일
-    </th>
-
-    <th>
-      주요 행사 내용
-    </th>
+    <th style="width:50px">날짜</th>
+    <th style="width:50px">요일</th>
+    <th>주요 행사 내용</th>
   `;
-
-  if(options.showPrayer){
-    headers += `
-      <th style="width:80px">
-        경건회
-      </th>
-    `;
-  }
-
-  if(options.showSupervisor){
-    headers += `
-      <th style="width:80px">
-        자습감독
-      </th>
-    `;
-  }
+  if(options.showPrayer) headers += `<th style="width:90px">경건회</th>`;
+  if(options.showSupervisor) headers += `<th style="width:90px">자습감독</th>`;
 
   output += `
-    <div
-      class="desktop-only ${state.mobile?"hidden":""}"
-    >
-
+    <div class="desktop-only ${state.mobile?"hidden":""}">
       <div class="table-wrap">
-
         <table class="plan-table">
-
-          <thead>
-            <tr>
-              ${headers}
-            </tr>
-          </thead>
-
+          <thead><tr>${headers}</tr></thead>
           <tbody>
   `;
 
-  for(
-    let day=1;
-    day<=lastDay;
-    day++
-  ){
+  for(let day=1; day<=lastDay; day++){
+    const date = new Date(year, month, day);
+    const dow = date.getDay();
+    if(options.excludeWeekends && (dow === 0 || dow === 6)) continue;
 
-    const date =
-      new Date(
-        year,
-        month,
-        day
-      );
-
-    const dow =
-      date.getDay();
-
-    if(
-      options.excludeWeekends &&
-      (
-        dow === 0 ||
-        dow === 6
-      )
-    ){
-      continue;
-    }
-
-    const key =
-      getDateKey(date);
-
-    const events =
-      planEvents(
-        key,
-        options.showDept,
-        options.horizontal
-      );
-
-    const prayer =
-      data.prayer[key] || {};
-
-    const supervisor =
-      data.supervisor[key] || "";
+    const key = getDateKey(date);
+    const events = planEvents(key, options.showDept, options.horizontal);
+    const prayer = data.prayer[key] || {};
+    const supervisor = data.supervisor[key] || "";
 
     output += `
-      <tr
-        class="
-          ${
-            dow===0
-              ? "weekend-sun"
-              : dow===6
-                ? "weekend-sat"
-                : ""
-          }
-
-          ${
-            key===todayKey
-              ? "today-row"
-              : ""
-          }
-        "
-        data-day="${key}"
-      >
-
-        <td>
-          <strong>
-            ${day}
-          </strong>
-        </td>
-
-        <td>
-          <strong>
-            ${DOW[dow]}
-          </strong>
-        </td>
-
-        <td style="text-align:left">
-          ${events}
-        </td>
-
-        ${
-          options.showPrayer
-            ? `
-              <td>
-                <strong>
-                  ${escapeHTML(prayer.name || "")}
-                </strong>
-              </td>
-            `
-            : ""
-        }
-
-        ${
-          options.showSupervisor
-            ? `
-              <td>
-                <strong>
-                  ${escapeHTML(supervisor)}
-                </strong>
-              </td>
-            `
-            : ""
-        }
-
+      <tr class="${dow===0?"weekend-sun":dow===6?"weekend-sat":""}" data-day="${key}" title="${day}일 상세정보 보기">
+        <td><strong>${day}</strong></td>
+        <td><strong style="${dow===0?'color:#e03131':dow===6?'color:#1c7ed6':''}">${DOW[dow]}</strong></td>
+        <td style="text-align:left">${events || '<span style="color:var(--muted)">-</span>'}</td>
+        ${options.showPrayer ? `<td><strong>${escapeHTML(prayer.name || "")}</strong></td>` : ""}
+        ${options.showSupervisor ? `<td><strong>${escapeHTML(supervisor)}</strong></td>` : ""}
       </tr>
     `;
   }
 
   output += `
           </tbody>
-
         </table>
-
       </div>
-
     </div>
-
   </div>
   `;
-
   return output;
 }
 
 function renderStudent(){
-
-  const year =
-    state.viewDate
-      .getFullYear();
-
-  const month =
-    state.viewDate
-      .getMonth();
-
-  const lastDay =
-    new Date(
-      year,
-      month+1,
-      0
-    ).getDate();
-
-  const todayKey =
-    getDateKey(
-      new Date()
-    );
-
-  const options =
-    state.student;
+  const year = state.viewDate.getFullYear();
+  const month = state.viewDate.getMonth();
+  const lastDay = new Date(year, month+1, 0).getDate();
+  const todayKey = getDateKey(new Date());
+  const options = state.student;
 
   let output = `
     <div class="page">
+      ${toolbar(
+        "",
+        "학생일정",
+        "",
+        monthNav(`${year}년 ${month+1}월`, true),
+        `<div class="options">
+          ${option("주말 제외", options.excludeWeekends, "excludeWeekends", "student")}
+          ${option("가로 배열", options.horizontal, "horizontal", "student")}
+        </div>`
+      )}
 
-      ${
-        toolbar(
-          "🎒",
-          "학생일정",
-          "학생에게 안내할 월별 일정을 확인하고 인쇄합니다.",
-          monthNav(
-            `${year}년 ${month+1}월`,
-            true
-          )
-        )
-      }
-
-      <div class="options">
-
-        ${
-          option(
-            "주말 제외",
-            options.excludeWeekends,
-            "excludeWeekends",
-            "student"
-          )
-        }
-
-        ${
-          option(
-            "일정 가로 배열",
-            options.horizontal,
-            "horizontal",
-            "student"
-          )
-        }
-
-      </div>
-
-      <div class="print-title">
-        ${year}학년도 ${month+1}월 학생일정
-      </div>
+      <div class="print-title">${year}학년도 ${month+1}월 학생일정</div>
   `;
 
-  output += `
-    <div
-      class="mobile-only ${state.mobile?"":"hidden"}"
-    >
-  `;
+  output += `<div class="mobile-only ${state.mobile?"":"hidden"}">`;
+  for(let day=1; day<=lastDay; day++){
+    const date = new Date(year, month, day);
+    const dow = date.getDay();
+    if(options.excludeWeekends && (dow === 0 || dow === 6)) continue;
 
-  for(
-    let day=1;
-    day<=lastDay;
-    day++
-  ){
-
-    const date =
-      new Date(
-        year,
-        month,
-        day
-      );
-
-    const dow =
-      date.getDay();
-
-    if(
-      options.excludeWeekends &&
-      (
-        dow === 0 ||
-        dow === 6
-      )
-    ){
-      continue;
-    }
-
-    const key =
-      getDateKey(date);
-
-    const events =
-      planEvents(
-        key,
-        false,
-        options.horizontal,
-        true
-      );
+    const key = getDateKey(date);
+    const events = planEvents(key, false, options.horizontal, true);
 
     output += `
-      <div
-        class="mobile-card ${key===todayKey?"today":""}"
-        data-day="${key}"
-      >
-
-        <div class="mobile-date">
+      <div class="mobile-card ${key===todayKey?"today":""}" data-day="${key}">
+        <div class="mobile-date" style="${dow===0?'color:#e03131':dow===6?'color:#1c7ed6':''}">
           ${day}일 (${DOW[dow]})
         </div>
-
-        <div>
-          ${
-            events ||
-            '<span style="color:var(--muted)">일정 없음</span>'
-          }
-        </div>
-
+        <div>${events || '<span style="color:var(--muted)">일정 없음</span>'}</div>
       </div>
     `;
   }
+  output += `</div>`;
 
   output += `
-    </div>
-
-    <div
-      class="desktop-only ${state.mobile?"hidden":""}"
-    >
-
+    <div class="desktop-only ${state.mobile?"hidden":""}">
       <div class="table-wrap">
-
-        <table>
-
+        <table class="student-table">
           <thead>
             <tr>
-
-              <th style="width:42px">
-                날짜
-              </th>
-
-              <th style="width:42px">
-                요일
-              </th>
-
-              <th>
-                학생 일정
-              </th>
-
+              <th style="width:50px">날짜</th>
+              <th style="width:50px">요일</th>
+              <th>학생 행사 및 학사일정</th>
             </tr>
           </thead>
-
           <tbody>
   `;
 
-  for(
-    let day=1;
-    day<=lastDay;
-    day++
-  ){
+  for(let day=1; day<=lastDay; day++){
+    const date = new Date(year, month, day);
+    const dow = date.getDay();
+    if(options.excludeWeekends && (dow === 0 || dow === 6)) continue;
 
-    const date =
-      new Date(
-        year,
-        month,
-        day
-      );
-
-    const dow =
-      date.getDay();
-
-    if(
-      options.excludeWeekends &&
-      (
-        dow === 0 ||
-        dow === 6
-      )
-    ){
-      continue;
-    }
-
-    const key =
-      getDateKey(date);
-
-    const events =
-      planEvents(
-        key,
-        false,
-        options.horizontal,
-        true
-      );
+    const key = getDateKey(date);
+    const events = planEvents(key, false, options.horizontal, true);
 
     output += `
-      <tr
-        class="
-          ${
-            dow===0
-              ? "weekend-sun"
-              : dow===6
-                ? "weekend-sat"
-                : ""
-          }
-
-          ${
-            key===todayKey
-              ? "today-row"
-              : ""
-          }
-        "
-        data-day="${key}"
-      >
-
-        <td>
-          <strong>
-            ${day}
-          </strong>
-        </td>
-
-        <td>
-          <strong>
-            ${DOW[dow]}
-          </strong>
-        </td>
-
-        <td style="text-align:left">
-          ${events}
-        </td>
-
+      <tr class="${dow===0?"weekend-sun":dow===6?"weekend-sat":""} ${key===todayKey?"today-row":""}" data-day="${key}" title="${day}일 상세정보 보기">
+        <td><strong>${day}</strong></td>
+        <td><strong style="${dow===0?'color:#e03131':dow===6?'color:#1c7ed6':''}">${DOW[dow]}</strong></td>
+        <td style="text-align:left">${events || '<span style="color:var(--muted)">-</span>'}</td>
       </tr>
     `;
   }
@@ -3355,1360 +2115,494 @@ function renderStudent(){
     </div>
   </div>
   `;
-
   return output;
 }
 
 function renderDept(){
-
-  const ids =
-    (
-      data.deptIndex[
-        state.dept
-      ] || []
-    )
-    .filter(id=>
-      matches(
-        data.eventsById[id].dept,
-        data.eventsById[id].text
-      )
-    );
-
-  const groups =
-    new Map();
-
+  const ids = (data.deptIndex[state.dept] || []).filter(id=>
+    matches(data.eventsById[id].dept, data.eventsById[id].text)
+  );
+  const groups = new Map();
   ids.forEach(id=>{
-
-    const event =
-      data.eventsById[id];
-
-    const date =
-      dateFromKey(
-        event.dateKey
-      );
-
-    const key =
-      `${date.getFullYear()}년 ${date.getMonth()+1}월`;
-
-    if(!groups.has(key)){
-      groups.set(
-        key,
-        []
-      );
-    }
-
-    groups
-      .get(key)
-      .push({
-        id,
-        ev:event,
-        d:date
-      });
+    const event = data.eventsById[id];
+    const date = dateFromKey(event.dateKey);
+    const key = `${date.getFullYear()}년 ${date.getMonth()+1}월`;
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ id, ev:event, d:date });
   });
 
-  let output = `
-    <div class="page">
+  const deptFilters = `
+    <div class="dept-quick" role="group" aria-label="부서 선택">
+      ${FIXED_DEPTS.map(dept=>`
+        <button class="seg-btn dept-quick-btn ${dept===state.dept?"active":""}" style="--dept-color:${DEPT_COLORS[dept]}" data-dept="${escapeHTML(dept)}" type="button">
+          ${escapeHTML(dept)}
+        </button>
+      `).join("")}
+    </div>`;
 
-      ${
-        toolbar(
-          "🏢",
-          "부서별 조회",
-          "부서를 선택해 월별 일정만 모아 봅니다.",
-          `
-            <select
-              id="deptSelect"
-              class="btn"
-            >
-              ${
-                FIXED_DEPTS
-                  .map(
-                    dept=>`
-                      <option
-                        ${dept===state.dept?"selected":""}
-                      >
-                        ${escapeHTML(dept)}
-                      </option>
-                    `
-                  )
-                  .join("")
-              }
-            </select>
-          `
-        )
-      }
-
-      <div class="dept-picker no-print">
-
-        ${
-          FIXED_DEPTS
-            .map(
-              dept=>`
-                <button
-                  class="dept-pick ${dept===state.dept?"active":""}"
-                  style="--dept-color:${DEPT_COLORS[dept]}"
-                  data-dept="${escapeHTML(dept)}"
-                >
-                  ${escapeHTML(dept)}
-                </button>
-              `
-            )
-            .join("")
-        }
-
-      </div>
+  let output = `<div class="page">
+    ${toolbar("", "부서조회", "", "", deptFilters)}
   `;
 
-  if(!groups.size){
-    return (
-      output +
-      empty(
-        "등록된 일정이 없습니다."
-      ) +
-      "</div>"
-    );
-  }
+  if(!groups.size) return output + empty("등록된 부서 일정이 없습니다.") + "</div>";
 
-  for(
-    const [
-      month,
-      items
-    ] of groups
-  ){
-
-    output += `
-      <div class="section-title">
-        ${month}
-      </div>
-
-      <div class="dept-grid">
-    `;
-
-    for(
-      const item of items
-    ){
-
+  for(const [month, items] of groups){
+    output += `<div class="section-title">${month}<span class="section-count">${items.length}건</span></div>
+      <div class="dept-grid">`;
+    for(const item of items){
       output += `
-        <div
-          class="dept-card"
-          style="--dept-color:${DEPT_COLORS[state.dept]}"
-          data-event-id="${item.id}"
-          tabindex="0"
-        >
-
-          <strong>
-            ${item.d.getMonth()+1}월
-            ${item.d.getDate()}일
-            (${DOW[item.d.getDay()]})
-          </strong>
-
-          <div style="margin-top:6px">
-            • ${highlight(item.ev.text)}
+        <div class="dept-card" data-event-id="${item.id}" tabindex="0" role="button" aria-label="${item.d.getMonth()+1}월 ${item.d.getDate()}일 ${escapeHTML(item.ev.text)} 상세보기">
+          <div class="dept-card-date">${item.d.getMonth()+1}월 ${item.d.getDate()}일 (${DOW[item.d.getDay()]})</div>
+          <div class="dept-card-content">
+            <span class="dept-tag" style="--dept-color:${DEPT_COLORS[state.dept]}">${escapeHTML(state.dept)}</span>
+            <div class="dept-card-text">${highlight(item.ev.text)}</div>
           </div>
-
-        </div>
-      `;
+        </div>`;
     }
-
-    output += `
-      </div>
-    `;
+    output += `</div>`;
   }
 
-  output += `
-    </div>
-  `;
-
+  output += `</div>`;
   return output;
 }
 
 function nugaCategories(){
-
   return state.nuga.grade === 3
-    ? [
-        "전체",
-        "자율",
-        "봉사",
-        "동아리",
-        "진로"
-      ]
-    : [
-        "전체",
-        "자율자치",
-        "동아리",
-        "진로"
-      ];
+    ? ["전체","자율","봉사","동아리","진로"]
+    : ["전체","자율자치","동아리","진로"];
 }
 
-function nugaMatch(
-  row,
-  category
-){
-  return (
-    category === "전체" ||
-    row.displayCategory[
-      state.nuga.grade
-    ] === category
-  );
+function nugaMatch(row, category){
+  return (category === "전체" || row.displayCategory[state.nuga.grade] === category);
 }
 
 function renderNuga(){
+  const gradeIndex = state.nuga.grade - 1;
+  const categories = nugaCategories();
 
-  const gradeIndex =
-    state.nuga.grade - 1;
-
-  const categories =
-    nugaCategories();
-
-  if(
-    !categories.includes(
-      state.nuga.category
-    )
-  ){
-    state.nuga.category =
-      "전체";
+  if(!categories.includes(state.nuga.category)){
+    state.nuga.category = "전체";
   }
 
-  const gradeRows =
-    data.nuga.filter(
-      row=>
-        row.grades[
-          gradeIndex
-        ]
-    );
-
+  const gradeRows = data.nuga.filter(row=>row.grades[gradeIndex]);
   const hours = {};
 
-  categories.forEach(
-    category=>{
+  categories.forEach(category=>{
+    hours[category] = gradeRows
+      .filter(row=>nugaMatch(row, category))
+      .reduce((sum,row)=>sum + row.hours, 0);
+  });
 
-      hours[category] =
-        gradeRows
-          .filter(
-            row=>
-              nugaMatch(
-                row,
-                category
-              )
-          )
-          .reduce(
-            (sum,row)=>
-              sum +
-              row.hours,
-            0
-          );
-    }
-  );
+  const rows = gradeRows
+    .filter(row=>nugaMatch(row, state.nuga.category))
+    .filter(row=>{
+      if(!state.search.tokens.length) return true;
+      const hay = `${row.displayCategory[state.nuga.grade]} ${row.content} ${row.remark}`.toLowerCase();
+      return state.search.tokens.every(token=>hay.includes(token));
+    });
 
-  const rows =
-    gradeRows
-      .filter(
-        row=>
-          nugaMatch(
-            row,
-            state.nuga.category
-          )
-      )
-      .filter(row=>{
-
-        if(
-          !state.search.tokens.length
-        ){
-          return true;
-        }
-
-        const hay =
-          `${row.displayCategory[state.nuga.grade]} ${row.content} ${row.remark}`
-            .toLowerCase();
-
-        return state.search.tokens.every(
-          token=>
-            hay.includes(token)
-        );
-      });
+  const nugaFilters = `
+    <div class="nuga-toolbar-filters">
+      <div class="segment-group" role="group" aria-label="학년 선택">
+        ${[1,2,3].map(grade=>`<button class="seg-btn ${grade===state.nuga.grade?"active":""}" data-grade="${grade}" type="button">${grade}학년</button>`).join("")}
+      </div>
+      <div class="segment-group" role="group" aria-label="영역 선택">
+        ${categories.map(category=>`<button class="seg-btn nuga-cat ${category===state.nuga.category?"active":""}" style="--cat:${NUGA_COLORS[category] || "#e9ecef"}" data-category="${category}" type="button"><span class="nuga-cat-tag">${category}</span><span class="seg-count">${hours[category] || 0}</span></button>`).join("")}
+      </div>
+    </div>`;
 
   let output = `
     <div class="page">
-
-      ${
-        toolbar(
-          "📝",
-          "누가기록",
-          "학년과 영역별 활동 내역 및 이수시간을 확인합니다.",
-          `
-            <div class="grade-switch">
-
-              ${
-                [1,2,3]
-                  .map(
-                    grade=>`
-                      <button
-                        class="grade-btn ${grade===state.nuga.grade?"active":""}"
-                        data-grade="${grade}"
-                      >
-                        ${grade}학년
-                      </button>
-                    `
-                  )
-                  .join("")
-              }
-
-            </div>
-          `
-        )
-      }
-
-      <div class="nuga-filters no-print">
-
-        ${
-          categories
-            .map(
-              category=>`
-                <button
-                  class="nuga-filter ${category===state.nuga.category?"active":""}"
-                  style="--cat:${NUGA_COLORS[category] || "#868e96"}"
-                  data-category="${category}"
-                >
-
-                  <span>
-                    ${category}
-                  </span>
-
-                  <strong>
-                    ${hours[category] || 0}
-                    <small>
-                      시간
-                    </small>
-                  </strong>
-
-                </button>
-              `
-            )
-            .join("")
-        }
-
-      </div>
+      ${toolbar("", "창체 누가기록", "", "", nugaFilters)}
   `;
 
   if(!rows.length){
-    return (
-      output +
-      empty(
-        "해당 조건의 누가기록이 없습니다."
-      ) +
-      "</div>"
-    );
+    return output + empty("해당 조건의 누가기록 데이터가 없습니다.") + "</div>";
   }
 
   if(state.mobile){
-
     let total = 0;
-
     rows.forEach(row=>{
-
-      total +=
-        row.hours;
-
-      const category =
-        row.displayCategory[
-          state.nuga.grade
-        ];
-
-      const color =
-        NUGA_COLORS[
-          category
-        ] ||
-        "#e9ecef";
+      total += row.hours;
+      const category = row.displayCategory[state.nuga.grade];
+      const color = NUGA_COLORS[category] || "#e9ecef";
 
       output += `
-        <div
-          class="mobile-card"
-          style="border-left:6px solid ${color}"
-        >
-
+        <div class="mobile-card" style="border-left:6px solid ${color}">
           <div class="mobile-date">
-            ${row.date.getMonth()+1}/${row.date.getDate()}
-            (${row.dayOfWeek})
+            ${row.date.getMonth()+1}/${row.date.getDate()} (${row.dayOfWeek})
           </div>
-
           <div>
-
-            <span
-              class="dept-tag"
-              style="background:${color}"
-            >
-              ${escapeHTML(category)}
-            </span>
-
-            <strong>
-              ${highlight(row.content)}
-            </strong>
-
+            <span class="dept-tag" style="--tag-color:${color}">${escapeHTML(category)}</span>
+            <strong>${highlight(row.content)}</strong>
           </div>
-
-          <div
-            class="mobile-meta"
-            style="margin-top:6px"
-          >
-
-            <span>
-              교시 ${escapeHTML(row.periods)}
-            </span>
-
-            <span>
-              ${row.hours}시간 · 누계 ${total}
-            </span>
-
+          <div class="mobile-meta" style="margin-top:6px">
+            <span>교시: ${escapeHTML(row.periods)}</span>
+            <span>${row.hours}시간 (누계 ${total}시간)</span>
           </div>
-
-          ${
-            row.remark
-              ? `
-                <div
-                  style="
-                    margin-top:5px;
-                    color:var(--muted)
-                  "
-                >
-                  비고:
-                  ${highlight(row.remark)}
-                </div>
-              `
-              : ""
-          }
-
+          ${row.remark ? `<div style="margin-top:5px;color:var(--muted);font-size:12px">비고: ${highlight(row.remark)}</div>` : ""}
         </div>
       `;
     });
-
   }else{
-
     let total = 0;
-
     output += `
       <div class="table-wrap">
-
-        <table>
-
+        <table class="data-table">
           <thead>
             <tr>
-
-              <th style="width:38px">
-                No
-              </th>
-
-              <th style="width:75px">
-                영역
-              </th>
-
-              <th style="width:75px">
-                일자
-              </th>
-
-              <th style="width:42px">
-                요일
-              </th>
-
-              <th style="width:72px">
-                교시
-              </th>
-
-              <th style="width:62px">
-                이수시간
-              </th>
-
-              <th>
-                활동내용
-              </th>
-
-              <th style="width:20%">
-                비고
-              </th>
-
+              <th style="width:42px">No</th>
+              <th style="width:80px">영역</th>
+              <th style="width:80px">일자</th>
+              <th style="width:46px">요일</th>
+              <th style="width:75px">교시</th>
+              <th style="width:70px">이수시간</th>
+              <th>활동내용</th>
+              <th style="width:22%">비고</th>
             </tr>
           </thead>
-
           <tbody>
     `;
 
-    rows.forEach(
-      (row,index)=>{
+    rows.forEach((row,index)=>{
+      total += row.hours;
+      const category = row.displayCategory[state.nuga.grade];
+      const color = NUGA_COLORS[category] || "#e9ecef";
 
-        total +=
-          row.hours;
-
-        const category =
-          row.displayCategory[
-            state.nuga.grade
-          ];
-
-        const color =
-          NUGA_COLORS[
-            category
-          ] ||
-          "#e9ecef";
-
-        output += `
-          <tr>
-
-            <td>
-              ${index+1}
-            </td>
-
-            <td>
-
-              <span
-                class="dept-tag"
-                style="background:${color}"
-              >
-                ${escapeHTML(category)}
-              </span>
-
-            </td>
-
-            <td>
-              ${row.date.getMonth()+1}/${row.date.getDate()}
-            </td>
-
-            <td>
-              ${row.dayOfWeek}
-            </td>
-
-            <td>
-              ${escapeHTML(row.periods)}
-            </td>
-
-            <td>
-              <strong>
-                ${row.hours}
-              </strong>
-            </td>
-
-            <td style="text-align:left">
-              ${highlight(row.content)}
-            </td>
-
-            <td
-              style="
-                text-align:left;
-                color:var(--muted)
-              "
-            >
-              ${highlight(row.remark)}
-            </td>
-
-          </tr>
-        `;
-      }
-    );
+      output += `
+        <tr>
+          <td>${index+1}</td>
+          <td><span class="dept-tag" style="--tag-color:${color}">${escapeHTML(category)}</span></td>
+          <td>${row.date.getMonth()+1}/${row.date.getDate()}</td>
+          <td>${row.dayOfWeek}</td>
+          <td>${escapeHTML(row.periods)}</td>
+          <td><strong>${row.hours}</strong></td>
+          <td style="text-align:left">${highlight(row.content)}</td>
+          <td style="text-align:left;color:var(--muted)">${highlight(row.remark)}</td>
+        </tr>
+      `;
+    });
 
     output += `
-      <tr>
-
-        <td
-          colspan="5"
-          style="text-align:right"
-        >
-          <strong>
-            합계
-          </strong>
-        </td>
-
-        <td>
-          <strong>
-            ${total}
-          </strong>
-        </td>
-
+      <tr style="background:var(--surface-2)">
+        <td colspan="5" style="text-align:right"><strong>총 이수시간 합계</strong></td>
+        <td><strong style="color:var(--accent);font-size:15px">${total}</strong></td>
         <td colspan="2"></td>
-
       </tr>
-
           </tbody>
-
         </table>
-
       </div>
     `;
   }
 
-  output += `
-    </div>
-  `;
-
+  output += `</div>`;
   return output;
 }
 
 function renderRequest(){
-
   return `
     <div class="page">
+      ${toolbar(
+        "✍️",
+        "학사일정 수정·추가 요청",
+        "일정 변경, 누락 등록 또는 시스템 개선 사항을 제출합니다."
+      )}
 
-      ${
-        toolbar(
-          "✍️",
-          "수정·추가 요청",
-          "현재 Apps Script 규격(name/type/content)을 그대로 사용합니다."
-        )
-      }
-
-      <form
-        id="requestForm"
-        class="request-form"
-      >
-
+      <form id="requestForm" class="request-form">
         <div class="form-grid">
-
           <div class="form-group">
-
-            <label class="form-label">
-              작성자 성함
-              <span class="required">
-                필수
-              </span>
-            </label>
-
-            <input
-              id="reqName"
-              class="form-input"
-              autocomplete="name"
-            >
-
+            <label class="form-label">작성자 성함 <span class="required">필수</span></label>
+            <input id="reqName" class="form-input" placeholder="예: 홍길동 (교무부)" autocomplete="name" required>
           </div>
 
           <div class="form-group">
-
-            <label class="form-label">
-              요청 유형
-            </label>
-
-            <select
-              id="reqType"
-              class="form-input"
-            >
-
-              <option value="일정수정">
-                일정 수정·추가
-              </option>
-
-              <option value="프로그램 개선">
-                시스템 개선
-              </option>
-
-              <option value="기타">
-                기타
-              </option>
-
+            <label class="form-label">요청 유형</label>
+            <select id="reqType" class="form-input">
+              <option value="일정수정">일정 수정·추가</option>
+              <option value="프로그램 개선">시스템 기능 개선</option>
+              <option value="기타">기타 문의</option>
             </select>
-
           </div>
-
         </div>
 
         <div class="form-group">
-
-          <label class="form-label">
-
-            요청 내용
-
-            <span class="required">
-              필수
-            </span>
-
-          </label>
-
+          <label class="form-label">요청 내용 <span class="required">필수</span></label>
           <textarea
             id="reqContent"
             class="form-textarea"
-            placeholder="관련 날짜, 부서, 현재 내용과 원하는 변경 사항을 함께 적어 주세요."
+            placeholder="관련 날짜, 부서, 현재 등록된 내용과 변경 희망 사항을 구체적으로 적어주세요."
+            required
           ></textarea>
-
           <div class="form-help">
-
-            <span>
-              전송 전에 내용이 브라우저에 임시 저장됩니다.
-            </span>
-
-            <span>
-              <b id="reqCount">
-                0
-              </b>자
-            </span>
-
+            <span>작성 중인 내용은 브라우저에 자동 임시 저장됩니다.</span>
+            <span><b id="reqCount">0</b>자</span>
           </div>
-
         </div>
 
         <div class="form-actions">
-
-          <button
-            id="submitRequestBtn"
-            class="submit"
-            type="submit"
-          >
-            요청 보내기
-          </button>
-
+          <button id="submitRequestBtn" class="submit" type="submit">요청 제출하기</button>
         </div>
-
       </form>
-
     </div>
   `;
 }
 
 /* =========================
-   10. 상세 / 모달
+   10. 모달 및 상세 패널 제어
    ========================= */
 
 function showNotices(){
-
-  if(
-    !data.notices.length
-  ){
+  const button = $("#noticeBtn");
+  if(!data.notices.length){
+    button.classList.add("hidden");
     return;
   }
-
-  $("#noticeBody").textContent =
-    data.notices.join(
-      "\n\n────────────────\n\n"
-    );
-
-  $("#noticeModal").classList.add(
-    "open"
-  );
+  button.textContent = `공지 ${data.notices.length}`;
+  button.classList.remove("hidden");
+  $("#noticeBody").textContent = data.notices.join("\n\n────────────────\n\n");
 }
 
 function openEvent(id){
+  const event = data.eventsById[id];
+  if(!event) return;
 
-  const event =
-    data.eventsById[id];
-
-  if(!event){
+  if(!state.mobile && window.innerWidth > 850){
+    openDetail(event.dateKey, id, null);
     return;
   }
 
-  if(
-    !state.mobile &&
-    window.innerWidth > 850
-  ){
-    openDetail(
-      event.dateKey,
-      id,
-      null
-    );
-
-    return;
-  }
-
-  const date =
-    dateFromKey(
-      event.dateKey
-    );
-
+  const date = dateFromKey(event.dateKey);
   const lines = [
     `날짜: ${event.dateKey} (${DOW[date.getDay()]})`,
     `부서: ${event.dept}`,
     `내용: ${event.text}`
   ];
 
-  const prayer =
-    data.prayer[
-      event.dateKey
-    ];
-
+  const prayer = data.prayer[event.dateKey];
   if(prayer?.name){
-
-    lines.push(
-      "",
-      "기도/말씀",
-      `- 담당: ${prayer.name}`
-    );
-
-    if(prayer.hymn){
-      lines.push(
-        `- 찬송: ${prayer.hymn}`
-      );
-    }
-
-    if(prayer.bible){
-      lines.push(
-        `- 말씀: ${prayer.bible}`
-      );
-    }
+    lines.push("", "기도/말씀 담당", `- 담당: ${prayer.name}`);
+    if(prayer.hymn) lines.push(`- 찬송: ${prayer.hymn}`);
+    if(prayer.bible) lines.push(`- 말씀: ${prayer.bible}`);
   }
 
-  if(
-    data.supervisor[
-      event.dateKey
-    ]
-  ){
-    lines.push(
-      "",
-      `자습감독: ${data.supervisor[event.dateKey]}`
-    );
+  if(data.supervisor[event.dateKey]){
+    lines.push("", `자습감독: ${data.supervisor[event.dateKey]}`);
   }
 
-  $("#eventModalTitle").textContent =
-    `📌 ${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]}) · ${event.dept}`;
+  $("#eventModalTitle").textContent = `${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]}) · ${event.dept}`;
+  $("#eventModalBody").textContent = lines.join("\n");
+  $("#eventDeptBtn").style.display = "";
+  $("#eventDeptBtn").onclick = ()=>{
+    state.dept = event.dept;
+    closeModal("eventModal");
+    switchTab("dept");
+  };
 
-  $("#eventModalBody").textContent =
-    lines.join("\n");
-
-  $("#eventDeptBtn").style.display =
-    "";
-
-  $("#eventDeptBtn").onclick =
-    ()=>{
-
-      state.dept =
-        event.dept;
-
-      closeModal(
-        "eventModal"
-      );
-
-      switchTab(
-        "dept"
-      );
-    };
-
-  $("#eventModal").classList.add(
-    "open"
-  );
+  $("#eventModal").classList.add("open");
 }
 
 function openStudentEvent(id){
+  const event = data.studentEventsById[id];
+  if(!event) return;
 
-  const event =
-    data.studentEventsById[
-      id
-    ];
-
-  if(!event){
+  if(!state.mobile && window.innerWidth > 850){
+    openDetail(event.dateKey, null, id);
     return;
   }
 
-  if(
-    !state.mobile &&
-    window.innerWidth > 850
-  ){
-    openDetail(
-      event.dateKey,
-      null,
-      id
-    );
-
-    return;
-  }
-
-  const date =
-    dateFromKey(
-      event.dateKey
-    );
-
-  $("#eventModalTitle").textContent =
-    `🎒 ${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]}) · 학생일정`;
-
-  $("#eventModalBody").textContent =
-    `날짜: ${event.dateKey} (${DOW[date.getDay()]})\n내용: ${event.text}`;
-
-  $("#eventDeptBtn").style.display =
-    "none";
-
-  $("#eventModal").classList.add(
-    "open"
-  );
+  const date = dateFromKey(event.dateKey);
+  $("#eventModalTitle").textContent = `${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]}) · 학생일정`;
+  $("#eventModalBody").textContent = `날짜: ${event.dateKey} (${DOW[date.getDay()]})\n내용: ${event.text}`;
+  $("#eventDeptBtn").style.display = "none";
+  $("#eventModal").classList.add("open");
 }
 
 function closeModal(id){
+  $("#"+id).classList.remove("open");
+}
 
-  $("#"+id).classList.remove(
-    "open"
-  );
+
+function normalizeScheduleEventText(value){
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[!！]/g, "")
+    .replace(/[\s\u00a0]+/g, "")
+    .replace(/[·•ㆍ]/g, "")
+    .trim();
+}
+
+function classifiedDayEvents(key){
+  const studentIds = data.studentDaysByKey[key]?.eventIds || [];
+  const studentQueues = Object.create(null);
+  for(const id of studentIds){
+    const k = normalizeScheduleEventText(data.studentEventsById[id]?.text);
+    if(k) (studentQueues[k] ??= []).push(id);
+  }
+
+  const teacherOnlyIds = [];
+  const studentDeptById = Object.create(null);
+  for(const id of (data.daysByKey[key]?.eventIds || [])){
+    const event = data.eventsById[id];
+    const k = normalizeScheduleEventText(event?.text);
+    const queue = k ? studentQueues[k] : null;
+    if(queue?.length){
+      const studentId = queue.shift();
+      studentDeptById[studentId] = event.dept;
+    }else{
+      teacherOnlyIds.push(id);
+    }
+  }
+  return { teacherOnlyIds, studentIds, studentDeptById };
 }
 
 function dayText(key){
+  const date = dateFromKey(key);
+  const lines = [`${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]})`];
 
-  const date =
-    dateFromKey(key);
+  const { teacherOnlyIds, studentIds, studentDeptById } = classifiedDayEvents(key);
 
-  const lines = [
-    `${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]})`
-  ];
-
-  (
-    data.daysByKey[
-      key
-    ]?.eventIds || []
-  )
-  .forEach(id=>{
-
-    const event =
-      data.eventsById[id];
-
-    lines.push(
-      `[${event.dept}] ${event.text}`
-    );
+  teacherOnlyIds.forEach(id=>{
+    const event = data.eventsById[id];
+    lines.push(`[교직원/${event.dept}] ${event.text}`);
   });
 
-  (
-    data.studentDaysByKey[
-      key
-    ]?.eventIds || []
-  )
-  .forEach(id=>
+  studentIds.forEach(id=>{
+    const dept = studentDeptById[id];
+    lines.push(`${dept ? `[${dept}] ` : ""}${data.studentEventsById[id].text}`);
+  });
 
-    lines.push(
-      `[학생] ${data.studentEventsById[id].text}`
-    )
-  );
-
-  const prayer =
-    data.prayer[key];
-
-  if(prayer?.name){
-    lines.push(
-      `경건회: ${prayer.name}`
-    );
-  }
-
-  if(
-    data.supervisor[key]
-  ){
-    lines.push(
-      `자습감독: ${data.supervisor[key]}`
-    );
-  }
+  const prayer = data.prayer[key];
+  if(prayer?.name) lines.push(`경건회: ${prayer.name} (찬송:${prayer.hymn || "-"} / 말씀:${prayer.bible || "-"})`);
+  if(data.supervisor[key]) lines.push(`자습감독: ${data.supervisor[key]}`);
 
   return lines.join("\n");
 }
 
-function openDetail(
-  key,
-  eventId=null,
-  studentId=null
-){
+function openDetail(key, eventId=null, studentId=null){
+  state.detailDate = key;
+  const date = dateFromKey(key);
+  $("#detailTitle").textContent = `${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]})`;
+  $("#detailSub").textContent = `${date.getFullYear()}학년도`;
 
-  state.detailDate =
-    key;
+  const { teacherOnlyIds, studentIds, studentDeptById } = classifiedDayEvents(key);
 
-  const date =
-    dateFromKey(key);
-
-  $("#detailTitle").textContent =
-    `${date.getMonth()+1}월 ${date.getDate()}일 (${DOW[date.getDay()]})`;
-
-  $("#detailSub").textContent =
-    `${date.getFullYear()}년`;
-
-  let body = `
-    <section class="detail-section">
-
-      <h3>
-        전체 학사일정
-      </h3>
-  `;
-
-  const ids =
-    data.daysByKey[
-      key
-    ]?.eventIds || [];
-
-  body += ids.length
-    ? ids
-        .map(id=>{
-
-          const event =
-            data.eventsById[id];
-
-          return `
-            <div
-              class="detail-event ${id===eventId?"selected":""}"
-            >
-
-              <button
-                class="dept-tag"
-                data-panel-dept="${escapeHTML(event.dept)}"
-                style="background:${DEPT_COLORS[event.dept]}"
-              >
-                ${escapeHTML(event.dept)}
-              </button>
-
-              <div>
-                ${escapeHTML(event.text)}
-              </div>
-
-            </div>
-          `;
-        })
-        .join("")
-    : empty(
-        "등록된 학사일정이 없습니다."
-      );
-
-  body += `
-    </section>
-  `;
-
-  const studentIds =
-    data.studentDaysByKey[
-      key
-    ]?.eventIds || [];
+  let body = `<section class="detail-section"><h3>교직원 일정</h3>`;
+  body += teacherOnlyIds.length ? teacherOnlyIds.map(id=>{
+    const event = data.eventsById[id];
+    return `<div class="detail-event ${id===eventId?"selected":""}">
+      <button class="dept-tag clickable" data-panel-dept="${escapeHTML(event.dept)}" style="--dept-color:${DEPT_COLORS[event.dept]}" type="button">${escapeHTML(event.dept)}</button>
+      <div>${escapeHTML(event.text)}</div>
+    </div>`;
+  }).join("") : `<div class="detail-empty">학생일정과 구분되는 교직원 전용 일정이 없습니다.</div>`;
+  body += `</section>`;
 
   if(studentIds.length){
-
-    body += `
-      <section class="detail-section">
-
-        <h3>
-          학생일정
-        </h3>
-
-        ${
-          studentIds
-            .map(id=>`
-
-              <div
-                class="detail-event ${id===studentId?"selected":""}"
-              >
-
-                <span
-                  class="dept-tag"
-                  style="background:#fff3bf"
-                >
-                  학생
-                </span>
-
-                <div>
-                  ${escapeHTML(data.studentEventsById[id].text)}
-                </div>
-
-              </div>
-            `)
-            .join("")
-        }
-
-      </section>
-    `;
+    body += `<section class="detail-section"><h3>학생일정</h3>${studentIds.map(id=>{
+      const dept = studentDeptById[id];
+      return `
+      <div class="detail-event ${id===studentId?"selected":""}">
+        ${dept ? `<button class="dept-tag clickable" data-panel-dept="${escapeHTML(dept)}" style="--dept-color:${DEPT_COLORS[dept]}" type="button">${escapeHTML(dept)}</button>` : `<span class="dept-tag neutral" aria-hidden="true"></span>`}
+        <div>${escapeHTML(data.studentEventsById[id].text)}</div>
+      </div>`;
+    }).join("")}</section>`;
   }
 
-  const prayer =
-    data.prayer[key];
-
-  const supervisor =
-    data.supervisor[key] || "";
-
-  if(
-    prayer?.name ||
-    prayer?.hymn ||
-    prayer?.bible ||
-    supervisor
-  ){
-
-    body += `
-      <section class="detail-section">
-
-        <h3>
-          당일 담당 정보
-        </h3>
-
-        <div>
-
-          ${
-            prayer?.name
-              ? `
-                <div>
-                  경건회 담당:
-                  ${escapeHTML(prayer.name)}
-                </div>
-              `
-              : ""
-          }
-
-          ${
-            prayer?.hymn
-              ? `
-                <div>
-                  찬송:
-                  ${escapeHTML(prayer.hymn)}
-                </div>
-              `
-              : ""
-          }
-
-          ${
-            prayer?.bible
-              ? `
-                <div>
-                  말씀:
-                  ${escapeHTML(prayer.bible)}
-                </div>
-              `
-              : ""
-          }
-
-          ${
-            supervisor
-              ? `
-                <div>
-                  자습감독:
-                  ${escapeHTML(supervisor)}
-                </div>
-              `
-              : ""
-          }
-
-        </div>
-
-      </section>
-    `;
+  const prayer = data.prayer[key];
+  const supervisor = data.supervisor[key] || "";
+  if(prayer?.name || prayer?.hymn || prayer?.bible || supervisor){
+    body += `<section class="detail-section"><h3>담당 정보</h3><div class="detail-meta">
+      ${prayer?.name ? `<div><strong>경건회</strong><span>${escapeHTML(prayer.name)}</span></div>` : ""}
+      ${prayer?.hymn ? `<div><strong>찬송</strong><span>${escapeHTML(prayer.hymn)}</span></div>` : ""}
+      ${prayer?.bible ? `<div><strong>말씀</strong><span>${escapeHTML(prayer.bible)}</span></div>` : ""}
+      ${supervisor ? `<div><strong>자습감독</strong><span>${escapeHTML(supervisor)}</span></div>` : ""}
+    </div></section>`;
   }
 
-  $("#detailBody").innerHTML =
-    body;
-
-  $("#detailPanel").classList.add(
-    "open"
-  );
+  $("#detailBody").innerHTML = body;
+  $("#detailPanel").classList.add("open");
 }
 
 function closeDetail(){
-
-  state.detailDate =
-    "";
-
-  $("#detailPanel").classList.remove(
-    "open"
-  );
+  state.detailDate = "";
+  $("#detailPanel").classList.remove("open");
 }
 
 function moveDetail(delta){
-
-  if(
-    !state.detailDate
-  ){
-    return;
-  }
-
-  const date =
-    dateFromKey(
-      state.detailDate
-    );
-
-  date.setDate(
-    date.getDate()+delta
-  );
-
-  openDetail(
-    getDateKey(date)
-  );
+  if(!state.detailDate) return;
+  const date = dateFromKey(state.detailDate);
+  date.setDate(date.getDate() + delta);
+  openDetail(getDateKey(date));
 }
 
 /* =========================
-   11. 상태 변경
+   11. 탭 및 검색 제어
    ========================= */
 
 function switchTab(tab){
-
-  state.tab =
-    tab;
-
+  state.tab = tab;
   closeDetail();
-
   closeMobileMenu();
-
-  render();
+  const focusToday = ["calendar","plan","student"].includes(tab);
+  render({preserveScroll:false, focusToday, toTop:!focusToday});
 }
 
 function changeMonth(delta){
-
-  const step =
-    state.tab === "calendar" &&
-    state.calendar.yearly
-      ? 12
-      : 1;
-
-  state.viewDate =
-    new Date(
-      state.viewDate.getFullYear(),
-      state.viewDate.getMonth() +
-        delta * step,
-      1
-    );
-
-  render();
+  const step = (state.tab === "calendar" && state.calendar.yearly) ? 12 : 1;
+  state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta * step, 1);
+  closeDetail();
+  render({preserveScroll:false,toTop:true});
 }
 
 function goToday(){
-
-  const today =
-    new Date();
-
-  state.viewDate =
-    new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    );
-
-  render();
+  const today = new Date();
+  state.viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  render({preserveScroll:false,focusToday:true});
 }
 
 function setMobile(value){
-
-  state.mobile =
-    !!value;
-
+  state.mobile = !!value;
   closeDetail();
-
   closeMobileMenu();
-
-  render();
+  render({preserveScroll:false,toTop:true});
 }
 
 function updateSearch(value){
-
-  state.search.query =
-    normalizeQuery(value);
-
-  state.search.tokens =
-    state.search.query
-      ? state.search.query
-          .split(" ")
-          .filter(Boolean)
-      : [];
-
-  render();
+  state.search.query = normalizeQuery(value);
+  state.search.tokens = state.search.query ? state.search.query.split(" ").filter(Boolean) : [];
+  render({preserveScroll:true});
 }
 
 function updateSearchMeta(){
-
-  if(
-    !state.search.tokens.length
-  ){
-    $("#searchMeta").textContent =
-      "AND 검색";
-
+  if(!state.search.tokens.length){
+    $("#searchMeta").textContent = "";
     return;
   }
 
   let count = 0;
-
-  if(
-    state.tab === "student"
-  ){
-
-    count =
-      Object.values(
-        data.studentEventsById
-      )
-      .filter(
-        event=>
-          matchesStudent(
-            event.text
-          )
-      )
-      .length;
-
-  }else if(
-    state.tab === "dept"
-  ){
-
-    count =
-      (
-        data.deptIndex[
-          state.dept
-        ] || []
-      )
-      .filter(id=>
-        matches(
-          data.eventsById[
-            id
-          ].dept,
-
-          data.eventsById[
-            id
-          ].text
-        )
-      )
-      .length;
-
-  }else if(
-    state.tab === "nuga"
-  ){
-
-    count =
-      data.nuga
-        .filter(row=>{
-
-          const hay =
-            `${row.displayCategory[state.nuga.grade]} ${row.content} ${row.remark}`
-              .toLowerCase();
-
-          return state.search.tokens.every(
-            token=>
-              hay.includes(token)
-          );
-        })
-        .length;
-
+  if(state.tab === "student"){
+    count = Object.values(data.studentEventsById).filter(event=>matchesStudent(event.text)).length;
+  }else if(state.tab === "dept"){
+    count = (data.deptIndex[state.dept] || []).filter(id=>matches(data.eventsById[id].dept, data.eventsById[id].text)).length;
+  }else if(state.tab === "nuga"){
+    count = data.nuga.filter(row=>{
+      const hay = `${row.displayCategory[state.nuga.grade]} ${row.content} ${row.remark}`.toLowerCase();
+      return state.search.tokens.every(token=>hay.includes(token));
+    }).length;
   }else{
-
-    count =
-      Object.values(
-        data.eventsById
-      )
-      .filter(
-        event=>
-          matches(
-            event.dept,
-            event.text
-          )
-      )
-      .length;
+    count = Object.values(data.eventsById).filter(event=>matches(event.dept, event.text)).length;
   }
 
-  $("#searchMeta").textContent =
-    `${count}건`;
+  $("#searchMeta").textContent = `${count}건`;
 }
 
 function scrollToday(){
+  const main = $("#appMain");
+  const target = $(".today,.today-row", main);
+  if(!target) return;
 
-  const main =
-    $("#appMain");
-
-  const target =
-    $(
-      ".today,.today-row",
-      main
-    );
-
-  if(!target){
-    return;
-  }
-
-  const targetRect =
-    target.getBoundingClientRect();
-
-  const mainRect =
-    main.getBoundingClientRect();
-
-  main.scrollTop =
-    Math.max(
-      0,
-      main.scrollTop +
-      (
-        targetRect.top -
-        mainRect.top
-      ) -
-      Math.max(
-        0,
-        (
-          main.clientHeight -
-          targetRect.height
-        ) / 2
-      )
-    );
+  const targetRect = target.getBoundingClientRect();
+  const mainRect = main.getBoundingClientRect();
+  main.scrollTop = Math.max(0, main.scrollTop + (targetRect.top - mainRect.top) - Math.max(0, (main.clientHeight - targetRect.height) / 2));
 }
 
 /* =========================
@@ -4716,730 +2610,320 @@ function scrollToday(){
    ========================= */
 
 async function submitRequest(event){
-
   event.preventDefault();
+  const name = $("#reqName").value.trim();
+  const type = $("#reqType").value;
+  const content = $("#reqContent").value.trim();
+  const button = $("#submitRequestBtn");
 
-  const name =
-    $("#reqName")
-      .value
-      .trim();
-
-  const type =
-    $("#reqType")
-      .value;
-
-  const content =
-    $("#reqContent")
-      .value
-      .trim();
-
-  const button =
-    $("#submitRequestBtn");
-
-  if(
-    !name ||
-    !content
-  ){
-    alert(
-      "성함과 요청 내용을 모두 입력해 주세요."
-    );
-
+  if(!name || !content){
+    showToast("성함과 요청 내용을 입력해 주세요.", 2600);
     return;
   }
 
-  const draft = {
-    name,
-    type,
-    content,
-    createdAt:Date.now()
-  };
-
   try{
-    localStorage.setItem(
-      "academic-calendar-request-draft",
-      JSON.stringify(draft)
-    );
+    localStorage.setItem("academic-calendar-request-draft", JSON.stringify({ name, type, content, createdAt:Date.now() }));
   }catch{}
 
-  button.disabled =
-    true;
-
-  button.textContent =
-    "전송 중...";
+  button.disabled = true;
+  button.textContent = "전송 중...";
 
   try{
-
-    await fetch(
-      CONFIG.WEB_APP_URL,
-      {
-        method:"POST",
-        mode:"no-cors",
-
-        headers:{
-          "Content-Type":
-            "application/json"
-        },
-
-        body:
-          JSON.stringify({
-            name,
-            type,
-            content
-          })
-      }
-    );
-
-    alert(
-      "전송 요청을 보냈습니다. 현재 Apps Script 전송 방식에서는 서버의 최종 저장 성공 여부를 브라우저에서 확인할 수 없습니다."
-    );
-
+    await fetch(CONFIG.WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, type, content })
+    });
+    showToast("요청이 접수되었습니다.", 2400);
+    $("#reqContent").value = "";
+    $("#reqCount").textContent = "0";
+    try{ localStorage.removeItem("academic-calendar-request-draft"); }catch{}
   }catch(error){
-
-    alert(
-      "전송 요청을 시작하지 못했습니다. 입력 내용은 브라우저에 임시 저장되어 있습니다."
-    );
-
+    showToast("전송 오류: 작성 내용은 임시 저장되었습니다.", 3400);
   }finally{
-
-    button.disabled =
-      false;
-
-    button.textContent =
-      "요청 보내기";
+    button.disabled = false;
+    button.textContent = "요청 제출하기";
   }
 }
 
 function restoreRequestDraft(){
-
-  if(
-    state.tab !== "request"
-  ){
-    return;
-  }
-
+  if(state.tab !== "request") return;
   try{
-
-    const draft =
-      JSON.parse(
-        localStorage.getItem(
-          "academic-calendar-request-draft"
-        ) ||
-        "null"
-      );
-
-    if(!draft){
-      return;
-    }
-
-    $("#reqName").value =
-      draft.name || "";
-
-    $("#reqType").value =
-      draft.type ||
-      "일정수정";
-
-    $("#reqContent").value =
-      draft.content ||
-      "";
-
-    $("#reqCount").textContent =
-      $("#reqContent")
-        .value
-        .length;
-
+    const draft = JSON.parse(localStorage.getItem("academic-calendar-request-draft") || "null");
+    if(!draft) return;
+    $("#reqName").value = draft.name || "";
+    $("#reqType").value = draft.type || "일정수정";
+    $("#reqContent").value = draft.content || "";
+    $("#reqCount").textContent = $("#reqContent").value.length;
   }catch{}
 }
 
+function showToast(message, duration=1800){
+  const toast = $("#toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(()=>toast.classList.remove("show"), duration);
+}
+
 /* =========================
-   13. 모바일 메뉴
+   13. 모바일 메뉴 제어
    ========================= */
 
 function openMobileMenu(){
-
-  $("#mobileMenu").classList.add(
-    "open"
-  );
-
-  $("#mobileBackdrop").classList.add(
-    "open"
-  );
+  $("#mobileMenu").classList.add("open");
+  $("#mobileBackdrop").classList.add("open");
 }
 
 function closeMobileMenu(){
-
-  $("#mobileMenu").classList.remove(
-    "open"
-  );
-
-  $("#mobileBackdrop").classList.remove(
-    "open"
-  );
+  $("#mobileMenu").classList.remove("open");
+  $("#mobileBackdrop").classList.remove("open");
 }
 
 /* =========================
    14. 이벤트 위임
    ========================= */
 
-document.addEventListener(
-  "click",
-  event=>{
 
-    const tab =
-      event.target.closest(
-        "[data-tab]"
-      );
+function printCurrentView(){
+  const onePageTable = state.tab === "plan" || state.tab === "student";
+  const calendarPrint = state.tab === "calendar";
+  document.body.classList.toggle("print-table-one-page", onePageTable);
+  document.body.classList.toggle("print-calendar", calendarPrint);
+  const cleanup = ()=>{
+    document.body.classList.remove("print-table-one-page");
+    document.body.classList.remove("print-calendar");
+  };
+  window.addEventListener("afterprint", cleanup, { once:true });
+  window.print();
+}
 
-    if(tab){
-      switchTab(
-        tab.dataset.tab
-      );
+document.addEventListener("click", event=>{
+  // PC 우측 상세 패널: 패널 바깥을 클릭하면 닫기.
+  // 다른 날짜/일정을 클릭한 경우에는 아래 기존 핸들러가 즉시 새 상세를 다시 연다.
+  if(!state.mobile && $("#detailPanel")?.classList.contains("open") && !event.target.closest("#detailPanel")){
+    closeDetail();
+  }
+  if(event.target.closest("#noticeBtn")){
+    $("#noticeModal").classList.add("open");
+    return;
+  }
+  if(event.target.closest("#searchClearBtn")){
+    $("#searchInput").value = "";
+    updateSearch("");
+    $("#searchInput").focus();
+    return;
+  }
 
-      return;
-    }
+  // 탭 전환
+  const tab = event.target.closest("[data-tab]");
+  if(tab){
+    switchTab(tab.dataset.tab);
+    return;
+  }
 
-    const eventItem =
-      event.target.closest(
-        "[data-event-id]"
-      );
+  // 일정 아이템 클릭
+  const eventItem = event.target.closest("[data-event-id]");
+  if(eventItem){
+    openEvent(+eventItem.dataset.eventId);
+    return;
+  }
 
-    if(eventItem){
-      openEvent(
-        +eventItem.dataset.eventId
-      );
+  // 학생 일정 클릭
+  const studentItem = event.target.closest("[data-student-id]");
+  if(studentItem){
+    openStudentEvent(+studentItem.dataset.studentId);
+    return;
+  }
 
-      return;
-    }
+  // 달력 날짜 셀 / 테이블 행 클릭 (PC 상세 패널 열기)
+  const day = event.target.closest("[data-day]");
+  if(day && !state.mobile && window.innerWidth > 850){
+    openDetail(day.dataset.day);
+    return;
+  }
 
-    const studentItem =
-      event.target.closest(
-        "[data-student-id]"
-      );
+  // 부서 선택
+  const dept = event.target.closest("[data-dept]");
+  if(dept){
+    state.dept = dept.dataset.dept;
+    render();
+    return;
+  }
 
-    if(studentItem){
-      openStudentEvent(
-        +studentItem.dataset.studentId
-      );
+  // 누가기록 카테고리 필터
+  const category = event.target.closest("[data-category]");
+  if(category){
+    state.nuga.category = category.dataset.category;
+    render();
+    return;
+  }
 
-      return;
-    }
+  // 누가기록 학년 필터
+  const grade = event.target.closest("[data-grade]");
+  if(grade){
+    state.nuga.grade = +grade.dataset.grade;
+    state.nuga.category = "전체";
+    render();
+    return;
+  }
 
-    const day =
-      event.target.closest(
-        "[data-day]"
-      );
+  // 상세 패널 내 부서 뱃지 클릭 (해당 부서 탭으로 즉시 이동)
+  const panelDept = event.target.closest("[data-panel-dept]");
+  if(panelDept){
+    state.dept = panelDept.dataset.panelDept;
+    closeDetail();
+    switchTab("dept");
+    return;
+  }
 
-    if(
-      day &&
-      !state.mobile &&
-      window.innerWidth > 850
-    ){
-      openDetail(
-        day.dataset.day
-      );
+  // 상단 툴바 액션 (월 이동 / 오늘 / 인쇄)
+  const action = event.target.closest("[data-action]")?.dataset.action;
+  if(action === "prev-month"){ changeMonth(-1); return; }
+  if(action === "next-month"){ changeMonth(1); return; }
+  if(action === "today"){ goToday(); return; }
+  if(action === "print"){ printCurrentView(); return; }
 
-      return;
-    }
+  // 모달 닫기
+  const close = event.target.closest("[data-close-modal]");
+  if(close){
+    closeModal(close.dataset.closeModal);
+    return;
+  }
 
-    const dept =
-      event.target.closest(
-        "[data-dept]"
-      );
+  if(event.target.classList.contains("modal")){
+    event.target.classList.remove("open");
+  }
+});
 
-    if(dept){
-      state.dept =
-        dept.dataset.dept;
+document.addEventListener("change", event=>{
+  if(event.target.matches("[data-option-group]")){
+    const group = event.target.dataset.optionGroup;
+    const key = event.target.dataset.optionKey;
+    state[group][key] = event.target.checked;
+    render();
+    return;
+  }
+});
 
-      render();
+document.addEventListener("input", event=>{
+  if(event.target.id === "reqContent"){
+    $("#reqCount").textContent = event.target.value.length;
+  }
+});
 
-      return;
-    }
+document.addEventListener("submit", event=>{
+  if(event.target.id === "requestForm"){
+    submitRequest(event);
+  }
+});
 
-    const category =
-      event.target.closest(
-        "[data-category]"
-      );
+document.addEventListener("keydown", event=>{
+  if(event.key === "Escape"){
+    closeDetail();
+    closeMobileMenu();
+    $$(".modal.open").forEach(modal=>modal.classList.remove("open"));
+  }
 
-    if(category){
-      state.nuga.category =
-        category.dataset.category;
-
-      render();
-
-      return;
-    }
-
-    const grade =
-      event.target.closest(
-        "[data-grade]"
-      );
-
-    if(grade){
-
-      state.nuga.grade =
-        +grade.dataset.grade;
-
-      state.nuga.category =
-        "전체";
-
-      render();
-
-      return;
-    }
-
-    const panelDept =
-      event.target.closest(
-        "[data-panel-dept]"
-      );
-
-    if(panelDept){
-
-      state.dept =
-        panelDept.dataset.panelDept;
-
-      closeDetail();
-
-      switchTab(
-        "dept"
-      );
-
-      return;
-    }
-
-    const action =
-      event.target
-        .closest(
-          "[data-action]"
-        )
-        ?.dataset
-        .action;
-
-    if(
-      action ===
-      "prev-month"
-    ){
-      changeMonth(-1);
-      return;
-    }
-
-    if(
-      action ===
-      "next-month"
-    ){
-      changeMonth(1);
-      return;
-    }
-
-    if(
-      action ===
-      "today"
-    ){
-      goToday();
-      return;
-    }
-
-    if(
-      action ===
-      "print"
-    ){
-      window.print();
-      return;
-    }
-
-    const close =
-      event.target.closest(
-        "[data-close-modal]"
-      );
-
-    if(close){
-      closeModal(
-        close.dataset.closeModal
-      );
-
-      return;
-    }
-
-    if(
-      event.target
-        .classList
-        .contains(
-          "modal"
-        )
-    ){
-      event.target
-        .classList
-        .remove(
-          "open"
-        );
+  const active = document.activeElement;
+  if((event.key === "Enter" || event.key === " ") && active?.matches(".cal-cell[data-day],.dept-card[data-event-id]")){
+    event.preventDefault();
+    if(active.matches(".dept-card")){
+      openEvent(+active.dataset.eventId);
+    }else{
+      openDetail(active.dataset.day);
     }
   }
-);
 
-document.addEventListener(
-  "change",
-  event=>{
-
-    if(
-      event.target.matches(
-        "[data-option-group]"
-      )
-    ){
-
-      const group =
-        event.target.dataset
-          .optionGroup;
-
-      const key =
-        event.target.dataset
-          .optionKey;
-
-      state[group][key] =
-        event.target.checked;
-
-      render();
-
-      return;
-    }
-
-    if(
-      event.target.id ===
-      "deptSelect"
-    ){
-      state.dept =
-        event.target.value;
-
-      render();
-    }
+  if(event.key === "/" && !["INPUT","TEXTAREA","SELECT"].includes(active?.tagName)){
+    event.preventDefault();
+    $("#searchInput").focus();
   }
-);
 
-document.addEventListener(
-  "input",
-  event=>{
-
-    if(
-      event.target.id ===
-      "reqContent"
-    ){
-      $("#reqCount").textContent =
-        event.target
-          .value
-          .length;
-    }
+  if(event.altKey && event.key === "ArrowLeft"){
+    event.preventDefault();
+    changeMonth(-1);
   }
-);
 
-document.addEventListener(
-  "submit",
-  event=>{
-
-    if(
-      event.target.id ===
-      "requestForm"
-    ){
-      submitRequest(event);
-    }
+  if(event.altKey && event.key === "ArrowRight"){
+    event.preventDefault();
+    changeMonth(1);
   }
-);
-
-document.addEventListener(
-  "keydown",
-  event=>{
-
-    if(
-      event.key ===
-      "Escape"
-    ){
-      closeDetail();
-
-      closeMobileMenu();
-
-      $$(".modal.open")
-        .forEach(
-          modal=>
-            modal.classList.remove(
-              "open"
-            )
-        );
-    }
-
-    const active =
-      document.activeElement;
-
-    if(
-      (
-        event.key ===
-        "Enter" ||
-        event.key ===
-        " "
-      ) &&
-      active?.matches(
-        ".cal-cell[data-day],.dept-card[data-event-id]"
-      )
-    ){
-      event.preventDefault();
-
-      if(
-        active.matches(
-          ".dept-card"
-        )
-      ){
-        openEvent(
-          +active.dataset.eventId
-        );
-      }else{
-        openDetail(
-          active.dataset.day
-        );
-      }
-    }
-
-    if(
-      event.key === "/" &&
-      ![
-        "INPUT",
-        "TEXTAREA",
-        "SELECT"
-      ].includes(
-        active?.tagName
-      )
-    ){
-      event.preventDefault();
-
-      $("#searchInput").focus();
-    }
-
-    if(
-      event.altKey &&
-      event.key ===
-      "ArrowLeft"
-    ){
-      event.preventDefault();
-
-      changeMonth(-1);
-    }
-
-    if(
-      event.altKey &&
-      event.key ===
-      "ArrowRight"
-    ){
-      event.preventDefault();
-
-      changeMonth(1);
-    }
-  }
-);
+});
 
 /* =========================
-   15. 고정 컨트롤
+   15. 컨트롤 이벤트 바인딩
    ========================= */
 
 let searchTimer = null;
+$("#searchInput").addEventListener("input", event=>{
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>{ updateSearch(event.target.value); }, 140);
+});
 
-$("#searchInput")
-  .addEventListener(
-    "input",
-    event=>{
+$("#retryBtn").onclick = reloadAll;
+$("#closeBannerBtn").onclick = hideError;
+$("#refreshBtn").onclick = reloadAll;
 
-      clearTimeout(
-        searchTimer
-      );
+$("#scaleDownBtn")?.addEventListener("click",()=>{ state.scale = clamp(-2, 2, state.scale-1); render(); });
+$("#scaleResetBtn")?.addEventListener("click",()=>{ state.scale = 0; render(); });
+$("#scaleUpBtn")?.addEventListener("click",()=>{ state.scale = clamp(-2, 2, state.scale+1); render(); });
 
-      searchTimer =
-        setTimeout(
-          ()=>{
-            updateSearch(
-              event.target.value
-            );
-          },
-          140
-        );
-    }
-  );
+$("#viewBtn")?.addEventListener("click",()=>setMobile(!state.mobile));
 
-$("#retryBtn").onclick =
-  reloadAll;
+$("#mobileFab").onclick = openMobileMenu;
+$("#mobileCloseBtn").onclick = closeMobileMenu;
+$("#mobileBackdrop").onclick = closeMobileMenu;
 
-$("#closeBannerBtn").onclick =
-  hideError;
+$("#detailCloseBtn").onclick = closeDetail;
+$("#detailDoneBtn")?.addEventListener("click",closeDetail);
 
-$("#refreshBtn").onclick =
-  reloadAll;
 
-$("#scaleDownBtn").onclick =
-  ()=>{
+$("#detailPrevBtn")?.addEventListener("click",()=>moveDetail(-1));
+$("#detailNextBtn")?.addEventListener("click",()=>moveDetail(1));
+$("#detailTodayBtn")?.addEventListener("click",()=>openDetail(getDateKey(new Date())));
 
-    state.scale =
-      clamp(
-        -2,
-        2,
-        state.scale-1
-      );
-
-    render();
-  };
-
-$("#scaleResetBtn").onclick =
-  ()=>{
-
-    state.scale =
-      0;
-
-    render();
-  };
-
-$("#scaleUpBtn").onclick =
-  ()=>{
-
-    state.scale =
-      clamp(
-        -2,
-        2,
-        state.scale+1
-      );
-
-    render();
-  };
-
-$("#darkBtn").onclick =
-  ()=>{
-
-    state.dark =
-      !state.dark;
-
-    render();
-  };
-
-$("#viewBtn").onclick =
-  ()=>setMobile(
-    !state.mobile
-  );
-
-$("#mobileFab").onclick =
-  openMobileMenu;
-
-$("#mobileCloseBtn").onclick =
-  closeMobileMenu;
-
-$("#mobileBackdrop").onclick =
-  closeMobileMenu;
-
-$("#detailCloseBtn").onclick =
-  closeDetail;
-
-$("#detailDoneBtn").onclick =
-  closeDetail;
-
-$("#detailPrevBtn").onclick =
-  ()=>moveDetail(-1);
-
-$("#detailNextBtn").onclick =
-  ()=>moveDetail(1);
-
-$("#detailTodayBtn").onclick =
-  ()=>openDetail(
-    getDateKey(
-      new Date()
-    )
-  );
-
-$("#detailCopyBtn").onclick =
-  ()=>{
-
-    if(
-      state.detailDate &&
-      navigator.clipboard
-    ){
-      navigator.clipboard.writeText(
-        dayText(
-          state.detailDate
-        )
-      );
-    }
-  };
+$("#detailCopyBtn").onclick = async ()=>{
+  if(!state.detailDate || !navigator.clipboard) return;
+  await navigator.clipboard.writeText(dayText(state.detailDate));
+  showToast("복사됨");
+};
 
 /* =========================
-   16. 부팅
+   16. 초기화 및 백그라운드 갱신
    ========================= */
 
 restorePrefs();
-
+state.mobile = window.innerWidth <= 850;
 applyPrefs();
-
 render();
 
 let resizeTimer = null;
-
-window.addEventListener(
-  "resize",
-  ()=>{
-
-    clearTimeout(
-      resizeTimer
-    );
-
-    resizeTimer =
-      setTimeout(
-        ()=>{
-
-          const shouldMobile =
-            window.innerWidth <= 850;
-
-          if(
-            shouldMobile !==
-              state.mobile &&
-            window.innerWidth <= 850
-          ){
-            setMobile(true);
-          }
-
-          if(
-            window.innerWidth > 850 &&
-            state.mobile &&
-            matchMedia(
-              "(pointer:fine)"
-            ).matches
-          ){
-            setMobile(false);
-          }
-
-        },
-        180
-      );
-  }
-);
-
-document.addEventListener(
-  "visibilitychange",
-  ()=>{
-
-    if(
-      !document.hidden &&
-      state.load.lastRefresh &&
-      Date.now() -
-        state.load.lastRefresh >
-        300000
-    ){
-      reloadAll();
+window.addEventListener("resize", ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{
+    const shouldMobile = window.innerWidth <= 850;
+    if(shouldMobile !== state.mobile){
+      setMobile(shouldMobile);
     }
+  }, 180);
+});
+
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden && state.load.lastRefresh && Date.now() - state.load.lastRefresh > 300000){
+    reloadAll();
   }
-);
+});
 
-setInterval(
-  ()=>{
-
-    if(
-      !document.hidden &&
-      state.load.lastRefresh
-    ){
-      reloadAll();
-    }
-  },
-  300000
-);
+setInterval(()=>{
+  if(!document.hidden && state.load.lastRefresh){
+    reloadAll();
+  }
+}, 300000);
 
 reloadAll();
 </script>
 
 </body>
-    </html>
+</html>
