@@ -311,6 +311,9 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   tbody tr{cursor:default}
   .plan-table tbody tr,.student-table tbody tr{cursor:pointer}
   .plan-table td{padding-top:9px;padding-bottom:9px}
+  /* 월중계획 화면: 같은 날짜의 여러 일정 사이에 최소 간격 확보 */
+  .plan-table .event-row{line-height:1.38}
+  .plan-table .event-row + .event-row{margin-top:2px}
   .plan-table tbody tr:hover,.student-table tbody tr:hover{background:color-mix(in srgb,var(--accent) 4%,var(--surface))}
   tr.weekend-sun{background:color-mix(in srgb,#ff6b6b 4%,var(--surface));color:var(--text)}
   tr.weekend-sat{background:color-mix(in srgb,#4dabf7 4%,var(--surface));color:var(--text)}
@@ -773,19 +776,19 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-calendar .calendar.col-7 .dept-tag{width:13mm!important;max-width:13mm!important;min-width:13mm!important;font-size:5.9pt!important;padding:.25mm .4mm!important}
 }
 
-@page tablePage{size:A4 portrait;margin:3mm}
+@page tablePage{size:A4 portrait;margin:7mm}
 @media print{
   body.print-table-one-page .page{page:tablePage!important}
   body.print-table-one-page{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body.print-table-one-page .print-title{font-size:14px!important;line-height:1.05!important;font-weight:700!important;margin:0 0 1.2mm!important}
+  body.print-table-one-page .print-title{font-size:14px!important;line-height:1.1!important;font-weight:700!important;margin:0 0 2mm!important}
   body.print-table-one-page .table-wrap{overflow:visible!important}
   body.print-table-one-page .plan-table,
   body.print-table-one-page .student-table{
     width:100%!important;
     min-width:0!important;
     table-layout:fixed!important;
-    font-size:8.8pt!important;
-    line-height:1.18!important;
+    font-size:9.2pt!important;
+    line-height:1.12!important;
     page-break-inside:avoid!important;
     break-inside:avoid!important;
   }
@@ -795,11 +798,11 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-table-one-page .student-table td{
     /* 인쇄 셀 안쪽 여백은 상하좌우 모두 3px 이하 */
     padding:1px 2px!important;
-    line-height:1.18!important;
+    line-height:1.12!important;
     vertical-align:middle!important;
   }
   body.print-table-one-page .plan-table th,
-  body.print-table-one-page .student-table th{font-size:8.9pt!important;font-weight:700!important}
+  body.print-table-one-page .student-table th{font-size:9.2pt!important;font-weight:700!important}
   body.print-table-one-page .plan-table tr,
   body.print-table-one-page .student-table tr{page-break-inside:avoid!important;break-inside:avoid!important}
   body.print-table-one-page .plan-table .today-row,
@@ -813,8 +816,8 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     gap:2px!important;
     align-items:start!important;
     white-space:normal!important;
-    font-size:8.4pt!important;
-    line-height:1.16!important;
+    font-size:8.8pt!important;
+    line-height:1.12!important;
     vertical-align:top!important;
   }
   body.print-table-one-page .event-row:not(.has-dept){grid-template-columns:minmax(0,1fr)!important}
@@ -832,8 +835,8 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
     width:auto!important;
     min-width:0!important;
     max-width:none!important;
-    font-size:7.5pt!important;
-    line-height:1.05!important;
+    font-size:7.8pt!important;
+    line-height:1!important;
     padding:0 2px!important;
     white-space:nowrap!important;
     background:var(--dept-color,var(--tag-color,#e9ecef))!important;
@@ -857,8 +860,11 @@ tr.today-row{outline:3px solid var(--today);outline-offset:-3px}
   body.print-table-one-page .student-table .event-row{max-width:100%!important}
   body.print-table-one-page .plan-table .event-row span:last-child,
   body.print-table-one-page .student-table .event-row span:last-child{text-overflow:clip!important}
+  /* 행 높이를 강제로 늘리지 않는다. 내용이 적은 날은 얇게, 일정이 많은 날만 자연스럽게 확장 */
   body.print-table-one-page .plan-table tbody tr,
-  body.print-table-one-page .student-table tbody tr{height:var(--print-table-row-h,7.2mm)!important;min-height:var(--print-table-row-h,7.2mm)!important}
+  body.print-table-one-page .student-table tbody tr{height:auto!important;min-height:0!important}
+  body.print-table-one-page .plan-table tbody td,
+  body.print-table-one-page .student-table tbody td{height:auto!important}
   body.print-table-one-page .weekend-sat{background:#e7f5ff!important}
   body.print-table-one-page .weekend-sun{background:#ffe3e3!important}
 }
@@ -2700,14 +2706,8 @@ function printCurrentView(){
   document.body.classList.toggle("print-table-one-page", onePageTable);
   document.body.classList.toggle("print-calendar", calendarPrint);
 
-  // 인쇄 기본값은 용지를 최대한 채우도록 현재 표시 행 수에 맞춰 높이를 계산한다.
-  if(onePageTable){
-    const table = state.tab === "plan" ? $(".plan-table") : $(".student-table");
-    const rowCount = table ? table.querySelectorAll("tbody tr").length : 31;
-    // A4 세로 3mm 여백 기준. 작은 셀 패딩 + 큰 글자를 유지하면서 한 장을 채운다.
-    const rowHeight = clamp(7.0, 10.4, 277 / Math.max(rowCount, 1));
-    document.documentElement.style.setProperty("--print-table-row-h", `${rowHeight.toFixed(2)}mm`);
-  }
+  // 월중/학생 인쇄는 강제 행높이를 쓰지 않는다.
+  // 일정이 적은 행의 불필요한 위아래 여백을 없애고, 내용이 많은 행만 자연스럽게 높아지게 한다.
 
   if(calendarPrint){
     const calendar = $(".calendar");
@@ -2734,7 +2734,6 @@ function printCurrentView(){
   const cleanup = ()=>{
     document.body.classList.remove("print-table-one-page");
     document.body.classList.remove("print-calendar");
-    document.documentElement.style.removeProperty("--print-table-row-h");
     document.documentElement.style.removeProperty("--print-cal-row-h");
   };
   window.addEventListener("afterprint", cleanup, { once:true });
