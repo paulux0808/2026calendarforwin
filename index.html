@@ -3081,11 +3081,11 @@ $("#detailCopyBtn").onclick = async ()=>{
    16. 초기화 및 백그라운드 갱신
    ========================= */
 
-restorePrefs();
+try { localStorage.removeItem(STORAGE_KEY); } catch {}
 state.mobile = window.innerWidth <= 850;
 applyPrefs();
 render();
-
+  
 let resizeTimer = null;
 window.addEventListener("resize", ()=>{
   clearTimeout(resizeTimer);
