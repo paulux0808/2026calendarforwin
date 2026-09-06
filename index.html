@@ -225,6 +225,11 @@ td.c-n{font-size:var(--f-sm);padding-top:5px}
 .seg button[aria-pressed="true"]{background:var(--key);color:#fff}
 :root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#12161C}
 .seg b{font-weight:700;margin-left:5px}
+.cm{
+  width:8px;height:8px;flex:none;border-radius:1px;margin-right:1px;
+  background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--label-s)) var(--label-l));
+}
+.seg button[aria-pressed="true"] .cm{background:currentColor}
 .num{text-align:right;width:64px;white-space:nowrap}
 tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-2)}
 .cards{display:none}
@@ -267,6 +272,8 @@ tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-
 .src-flags{border-top:1px solid var(--line-2);background:var(--warn-bg);color:var(--warn-ink);padding:7px 10px;font-size:var(--f-xs);line-height:1.6}
 .src-flags b{display:block;margin-bottom:2px}
 .src-flags ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:0 14px}
+.src-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding:7px 10px;font-size:var(--f-xs);color:var(--ink-3)}
+.src-foot span{flex:1;min-width:0}
 
 /* ---- 요청 ---- */
 .form{max-width:660px}
@@ -522,6 +529,14 @@ const DEPTS = [
 const DEPT_NAMES = DEPTS.map(d => d[0]);
 const TONE = new Map(DEPTS.map(([n, h, s]) => [n, `--dh:${h};--ds:${s}%`]));
 const tone = d => TONE.get(d) || TONE.get("기타");
+
+/* 창체 영역 색 — 부서 칩과 같은 방식. 색상만 다르게 준다.
+   마크 색은 명도대역·채도·색각이상 분리 검사를 통과한 값에서 뽑았다. */
+const CAT_TONE = {
+  "자율":"--dh:218;--ds:62%", "자율자치":"--dh:218;--ds:62%",
+  "봉사":"--dh:168;--ds:66%", "동아리":"--dh:33;--ds:72%", "진로":"--dh:283;--ds:48%"
+};
+const catTone = c => CAT_TONE[c] || "--dh:212;--ds:7%";
 
 const W = ["일","월","화","수","목","금","토"];
 const VIEWS = {
@@ -966,7 +981,8 @@ function drawTools(){
       `<button type="button" data-g="${n}" aria-pressed="${S.grade === n}">${n}학년</button>`).join("")}</div>`);
     const base = nugaAll();
     out.push(`<div class="seg" role="group" aria-label="영역">${cats().map(c =>
-      `<button type="button" data-cat="${esc(c)}" aria-pressed="${S.cat === c}">${esc(c)}<b>${
+      `<button type="button" data-cat="${esc(c)}" aria-pressed="${S.cat === c}" style="${catTone(c)}">${
+        c === "전체" ? "" : '<span class="cm" aria-hidden="true"></span>'}${esc(c)}<b>${
         base.filter(r => c === "전체" || catOf(r) === c).reduce((s, r) => s + r.hours, 0)}</b></button>`).join("")}</div>`);
   }
   if(v === "calendar" || v === "plan"){
@@ -1140,7 +1156,7 @@ function drawNuga(){
       <th class="num">시간</th><th>활동내용</th><th style="width:20%">비고</th></tr></thead>
     <tbody>${rows.map(r => `<tr>
       <td>${r.d.getMonth() + 1}.${r.d.getDate()} (${W[r.d.getDay()]})</td>
-      <td>${esc(catOf(r))}</td><td>${esc(r.label)}</td>
+      <td><span class="tag" style="${catTone(catOf(r))}">${esc(catOf(r))}</span></td><td>${esc(r.label)}</td>
       <td class="num">${r.ok ? r.hours : '<span class="dash">확인 필요</span>'}</td>
       <td>${hl(r.text)}</td><td>${hl(r.note)}</td></tr>`).join("")}</tbody>
     <tfoot><tr><td colspan="3">합계</td><td class="num">${total}</td><td colspan="2"></td></tr></tfoot>
@@ -1149,7 +1165,8 @@ function drawNuga(){
   const cards = `<div class="frame cards">${rows.map(r => {
     run += r.hours;
     return `<article class="card">
-      <div class="card-h"><span>${r.d.getMonth() + 1}.${r.d.getDate()} (${W[r.d.getDay()]})</span><span>${esc(catOf(r))}</span></div>
+      <div class="card-h"><span>${r.d.getMonth() + 1}.${r.d.getDate()} (${W[r.d.getDay()]})</span>
+        <span class="tag" style="${catTone(catOf(r))}">${esc(catOf(r))}</span></div>
       <p>${hl(r.text)}</p>${r.note ? `<p style="color:var(--ink-2);font-size:var(--f-sm)">${hl(r.note)}</p>` : ""}
       <div class="card-f"><span>${r.label ? esc(r.label) + "교시 · " : ""}${r.ok ? r.hours + "시간" : "확인 필요"}</span>
         <span>누계 ${run}</span></div></article>`;
@@ -1253,6 +1270,12 @@ function drawSource(){
     ${flags.length ? `<div class="src-flags"><b>확인할 행 ${flags.length}개 — 시트를 고친 뒤 새로고침하세요</b>
       <ul>${flags.slice(0, 40).map(([name, t]) => `<li>${esc(name)} ${esc(t)}</li>`).join("")}
       ${flags.length > 40 ? `<li>… 외 ${flags.length - 40}개</li>` : ""}</ul></div>` : ""}
+    <div class="src-foot">
+      <span>${cachedAt
+        ? `이 기기에 사본 보관 중 (${new Date(cachedAt).toLocaleString("ko-KR", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit", hour12:false })}) · 연결이 없을 때 이 사본을 보여 줍니다`
+        : "이 기기에 보관된 사본이 없습니다"}</span>
+      <button class="btn btn-s" data-a="clear" type="button"${cachedAt ? "" : " disabled"}>사본 비우기</button>
+    </div>
   </div>`;
 }
 
@@ -1573,9 +1596,6 @@ function openSettings(){
     <div class="set"><span>글자</span><div class="seg">${
       [[0.92,"작게"],[1,"보통"],[1.1,"크게"],[1.22,"아주 크게"]].map(([v, l]) =>
         `<button type="button" data-fs="${v}" aria-pressed="${S.fs === v}">${l}</button>`).join("")}</div></div>
-    <div class="set"><span>자료</span><div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn" data-a="reload" type="button">새로고침</button>
-      <button class="btn" data-a="clear" type="button">저장본 지우기</button></div></div>
     <h3>단축키</h3>
     <div class="keys">
       <div><kbd>1</kbd>–<kbd>6</kbd><span>화면</span></div>
@@ -1691,7 +1711,8 @@ document.addEventListener("click", ev => {
     case "clear":
       try{ localStorage.removeItem(CACHE); }catch{}
       cachedAt = 0;
-      toast("저장본을 지웠습니다");
+      drawSource();
+      toast("이 기기에 보관하던 사본을 지웠습니다");
       break;
   }
 });
