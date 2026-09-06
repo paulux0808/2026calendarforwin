@@ -233,6 +233,41 @@ tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-
 .card-h{display:flex;gap:8px;font-size:var(--f-xs);color:var(--ink-2);margin-bottom:2px}
 .card-f{display:flex;justify-content:space-between;gap:8px;font-size:var(--f-xs);color:var(--ink-3);margin-top:2px}
 
+/* ---- 연간 미니 달력 ---- */
+.years{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:9px}
+.mini{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);overflow:hidden}
+.mini-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:4px 8px;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.mini-h b{font-size:var(--f-md);font-weight:700}
+.mini-h span{font-size:var(--f-xs);color:var(--ink-3)}
+.mini-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:3px}
+.mini-g .w{font-size:var(--f-xs);text-align:center;color:var(--ink-3);padding:2px 0}
+.mini-g .w.s0{color:var(--sun)} .mini-g .w.s6{color:var(--sat)}
+.mini-g button{
+  min-height:30px;border-radius:3px;display:flex;align-items:center;justify-content:center;gap:2px;
+  font-size:var(--f-sm);color:var(--ink-2);
+}
+.mini-g button:hover{background:var(--bg-2)}
+.mini-g button.s0{color:var(--sun)} .mini-g button.s6{color:var(--sat)}
+.mini-g button.on{font-weight:700;color:var(--ink)}
+.mini-g button.now{outline:1.5px solid var(--key);outline-offset:-2px}
+.mini-g .n{font-size:9px;font-weight:700;color:var(--key);background:var(--key-bg);border-radius:2px;padding:0 2px;line-height:1.4}
+.mini-g .pad{visibility:hidden}
+
+/* ---- 자료 출처 ---- */
+.src{margin-top:12px;font-size:var(--f-sm);color:var(--ink-2)}
+.src > summary{cursor:pointer;padding:4px 2px;color:var(--ink-2)}
+.src > summary::marker{color:var(--ink-3)}
+.src-body{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);margin-top:5px;overflow:hidden}
+.src-row{display:grid;grid-template-columns:8.5rem 1fr auto;gap:8px;align-items:baseline;padding:6px 10px;border-bottom:1px solid var(--line)}
+.src-row:last-child{border-bottom:0}
+.src-row b{font-weight:600;color:var(--ink)}
+.src-row .st{font-size:var(--f-xs)}
+.src-row .bad{color:var(--sun)}
+.src-row a{font-size:var(--f-xs);white-space:nowrap}
+.src-flags{border-top:1px solid var(--line-2);background:var(--warn-bg);color:var(--warn-ink);padding:7px 10px;font-size:var(--f-xs);line-height:1.6}
+.src-flags b{display:block;margin-bottom:2px}
+.src-flags ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:0 14px}
+
 /* ---- 요청 ---- */
 .form{max-width:660px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -362,6 +397,8 @@ kbd{
   td.c-n:empty{display:none}
   td.c-n:not(:empty)::before{content:attr(data-l) " ";color:var(--ink-3);font-weight:700}
   .grp{grid-template-columns:minmax(0,1fr);gap:2px}
+  .src-row{grid-template-columns:1fr auto;gap:2px 8px}
+  .src-row .st{grid-column:1/-1}
   .hide-s{display:none}
   .cards{display:block}
   .pair{grid-template-columns:1fr;gap:0}
@@ -378,7 +415,7 @@ kbd{
   body.pr #proot{position:static;visibility:visible}
   body.pr #proot .stage{transform:none!important;box-shadow:none;width:196mm;height:281mm;overflow:hidden}
   .paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  body:not(.pr) .top,body:not(.pr) .strip,body:not(.pr) .toast,dialog{display:none!important}
+  body:not(.pr) .top,body:not(.pr) .strip,body:not(.pr) .toast,body:not(.pr) .src,dialog{display:none!important}
   body:not(.pr) main{padding:0}
   .d,tr{break-inside:avoid}
 }
@@ -409,7 +446,9 @@ kbd{
   <button class="btn btn-s btn-q" data-a="alert-x" type="button">닫기</button>
 </div>
 
-<main id="main" tabindex="-1"><div id="view"></div></main>
+<main id="main" tabindex="-1"><div id="view"></div>
+<details class="src" id="src"><summary id="srcSum">자료 불러오는 중</summary><div id="srcBody"></div></details>
+</main>
 
 <dialog id="ddlg" aria-labelledby="dtitle">
   <div class="dh">
@@ -564,8 +603,8 @@ const S = {
   theme:"system", fs:1,
   dept:DEPT_NAMES[0], hidden:[], grade:1, cat:"전체",
   cal:{ weekend:true, year:false },
-  plan:{ dept:true, prayer:true, super:true, noWeekend:false, flat:false },
-  stu:{ noWeekend:false, flat:false },
+  plan:{ dept:true, prayer:true, super:true, noWeekend:false, hideEmpty:false, flat:false },
+  stu:{ noWeekend:false, hideEmpty:false, flat:false },
   print:{ weekend:true, dept:true, prayer:true, super:true, flat:false }
 };
 let hadMonth = false;
@@ -596,35 +635,65 @@ function applyPrefs(){
 /* ============ 데이터 ============ */
 const M = { schedule:[], student:[], prayer:new Map(), super:new Map(), notices:[], nuga:[] };
 const IX = { byId:new Map(), day:new Map(), stuDay:new Map() };
+/* 시트별 상태 — 무엇이 들어왔고 어느 행이 이상한지 화면에 그대로 내보인다 */
+const SRC = Object.fromEntries(CONFIG.SHEETS.map(x =>
+  [x.key, { name:x.name, gid:x.gid, rows:0, at:0, error:"", flags:[] }]));
+const sheetLink = gid => `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/edit#gid=${gid}`;
+
+/* gviz 는 오류도 200 으로 준다. 모양을 직접 확인해야 한다. */
+function validate(raw){
+  if(!raw || !["ok", "warning"].includes(raw.status)){
+    const said = (raw?.errors || [])
+      .map(e => String(e?.detailed_message || e?.message || "").trim()).filter(Boolean).join(" / ");
+    throw new Error(said || "시트 응답이 아닙니다 (접근 권한을 확인해 주세요)");
+  }
+  const t = raw.table;
+  if(!t || !Array.isArray(t.cols) || !Array.isArray(t.rows) || !t.rows.every(r => r && Array.isArray(r.c)))
+    throw new Error("시트 구조를 읽을 수 없습니다");
+  return t;
+}
+const HEADER = /^(날짜|일자|일시|시작일|게시일|번호|연번)$/;
 let loading = false, loaded = false, job = null, lastLoad = 0, first = true, cachedAt = 0;
 let printing = false, printTimer = null;
 
-function decode(k, raw){
-  const rows = raw.table.rows.map(r => r.c || []);
+function decode(k, table){
+  const rows = table.rows.map(r => r.c || []);
+  const flags = [];
+  const flag = (n, m) => { if(flags.length < 60) flags.push(`${n + 1}행 · ${m}`); };
+  const done = items => ({ items, flags });
 
   if(k === "schedule"){
-    return rows.flatMap((r, n) => {
+    return done(rows.flatMap((r, n) => {
       const d = toDate(r[0]), body = cell(r[2]);
-      if(!d || !body || body === "null") return [];
+      if(!d){
+        if(body && body !== "null" && !HEADER.test(cell(r[0]))) flag(n, "날짜를 읽을 수 없습니다");
+        return [];
+      }
+      if(!body || body === "null") return [];
       return body.split(/\r?\n/).map(x => x.trim()).filter(x => x && x !== "null").map((line, i) => {
         const t = line.match(/^\[([^\]]+)\]\s*/);
         const known = t && DEPT_NAMES.includes(t[1].trim());
+        if(t && !known) flag(n, `모르는 부서 이름: ${t[1].trim()}`);
         return { id:`s${n}-${i}`, k:key(d), d, dept:known ? t[1].trim() : "기타",
                  text:known ? line.slice(t[0].length) : line, src:"schedule" };
       });
-    }).sort((a, b) => a.d - b.d);
+    }).sort((a, b) => a.d - b.d));
   }
 
   if(k === "student"){
     const base = ayOf(M.schedule[0]?.d || m1(S.month));
-    return rows.flatMap((r, n) => {
+    return done(rows.flatMap((r, n) => {
       let d = toDate(r[0]);
       const raw0 = cell(r[0]);
       if(!d && !/^\d{4}/.test(raw0)){
         const md = raw0.match(/^(\d{1,2})\s*[-./]\s*(\d{1,2})(?!\d)/);
         if(md) d = mkDate(base + (+md[1] < 3 ? 1 : 0), +md[1], +md[2]);
       }
-      if(!d) return [];
+      let text0 = r.slice(2).map(cell).filter(v => v && v !== "null").join("\n");
+      if(!d){
+        if((text0 || cell(r[0])) && !HEADER.test(cell(r[0]))) flag(n, "날짜를 읽을 수 없습니다");
+        return [];
+      }
       let text = r.slice(2).map(cell).filter(v => v && v !== "null").join("\n")
         || r.slice(1).map(cell).filter(v => v && v !== "null" && !/^[월화수목금토일]$/.test(v)).join("\n");
       if(!text){
@@ -634,41 +703,65 @@ function decode(k, raw){
       return text.split(/\r?\n/)
         .map(x => x.replace(/^\s*[-•]\s*/, "").replace(/^\s*\[[^\]]+\]\s*/, "").trim()).filter(Boolean)
         .map((line, i) => ({ id:`u${n}-${i}`, k:key(d), d, text:line, dept:"", src:"student" }));
-    }).sort((a, b) => a.d - b.d);
+    }).sort((a, b) => a.d - b.d));
   }
 
   if(k === "prayer" || k === "supervisor"){
     const map = new Map();
-    for(const r of rows){
+    rows.forEach((r, n) => {
       const d = toDate(r[0]), name = cell(r[2]);
-      if(!d || !name || name === "null") continue;
+      const has = name && name !== "null";
+      if(!d){
+        if(has && !HEADER.test(cell(r[0]))) flag(n, "날짜를 읽을 수 없습니다");
+        return;
+      }
+      if(!has) return;
       map.set(key(d), k === "prayer" ? { name, bible:cell(r[3]), hymn:cell(r[4]) } : name);
-    }
-    return map;
+    });
+    return done(map);
   }
 
   if(k === "notice"){
-    return rows.filter(r => cell(r[2]) && cell(r[2]) !== "null")
-      .map(r => ({ from:toDate(r[0]), to:toDate(r[1]), text:cell(r[2]) }));
+    const out = [];
+    rows.forEach((r, n) => {
+      const text = cell(r[2]);
+      if(!text || text === "null") return;
+      const from = toDate(r[0]), to = toDate(r[1]);
+      const rawFrom = cell(r[0]), rawTo = cell(r[1]);
+      if((rawFrom && !from) || (rawTo && !to)){
+        if(!HEADER.test(rawFrom)) flag(n, `게시 기간을 읽을 수 없습니다: ${rawFrom || "-"} ~ ${rawTo || "-"}`);
+        return;
+      }
+      if(from && to && from > to){ flag(n, "게시 시작일이 종료일보다 늦습니다"); return; }
+      out.push({ from, to, text });
+    });
+    return done(out);
   }
 
   const flat = v => String(v ?? "").replace(/\s/g, "");
   const head = new Map();
-  (raw.table.cols || []).forEach((c, i) => { for(const l of [c.label, c.id]) if(l) head.set(flat(l), i); });
+  (table.cols || []).forEach((c, i) => { for(const l of [c.label, c.id]) if(l) head.set(flat(l), i); });
   const pick = (names, fb) => names.map(flat).map(n => head.get(n)).find(i => i != null) ?? fb;
   const at = {
     cat:pick(["영역"], 1), date:pick(["일자","날짜"], 2), per:pick(["교시텍스트","교시"], 3),
     grades:[pick(["1학년","1"], 4), pick(["2학년","2"], 5), pick(["3학년","3"], 6)],
     body:pick(["활동내용","내용"], 7), note:pick(["비고"], 8)
   };
-  return rows.flatMap((r, n) => {
+  return done(rows.flatMap((r, n) => {
     const d = toDate(r[at.date]);
     const cat = cell(r[at.cat]).replace(/\(.*$/, "").trim();
-    if(!d || !cat) return [];
-    return [{ id:`n${n}`, k:key(d), d, cat, ...periods(r[at.per]),
+    if(!d || !cat){
+      const any = cat || cell(r[at.date]) || cell(r[at.body]);
+      if(any && !HEADER.test(cell(r[at.date])) && cell(r[at.cat]) !== "영역")
+        flag(n, !d ? "날짜를 읽을 수 없습니다" : "영역이 비어 있습니다");
+      return [];
+    }
+    const p = periods(r[at.per]);
+    if(!p.ok) flag(n, `교시를 읽을 수 없습니다: ${p.label || "빈 값"}`);
+    return [{ id:`n${n}`, k:key(d), d, cat, ...p,
       grades:at.grades.map(i => /^(1|o|○|◯|v|✓|✔|true|y)$/i.test(cell(r[i]))),
       text:cell(r[at.body]), note:cell(r[at.note]) }];
-  }).sort((a, b) => a.d - b.d);
+  }).sort((a, b) => a.d - b.d));
 }
 
 function reindex(){
@@ -689,7 +782,8 @@ function saveCache(){
     student:M.student.map(e => [e.k, e.text]),
     prayer:[...M.prayer], super:[...M.super],
     notices:M.notices.map(n => [n.from ? key(n.from) : "", n.to ? key(n.to) : "", n.text]),
-    nuga:M.nuga.map(r => [r.k, r.cat, r.label, r.hours, r.ok, r.grades, r.text, r.note])
+    nuga:M.nuga.map(r => [r.k, r.cat, r.label, r.hours, r.ok, r.grades, r.text, r.note]),
+    src:Object.fromEntries(Object.entries(SRC).map(([k, v]) => [k, { rows:v.rows, at:v.at, flags:v.flags }]))
   })) cachedAt = Date.now();
 }
 function loadCache(){
@@ -703,6 +797,12 @@ function loadCache(){
     M.nuga = c.nuga.map(([k, cat, label, hours, ok, grades, text, note], i) =>
       ({ id:`n c${i}`, k, d:toDate(k), cat, label, hours, ok, grades, text, note })).filter(r => r.d);
     cachedAt = c.at || 0;
+    for(const [k, v] of Object.entries(c.src || {})){
+      if(!SRC[k]) continue;
+      SRC[k].rows = v.rows || 0;
+      SRC[k].at = v.at || 0;
+      SRC[k].flags = Array.isArray(v.flags) ? v.flags : [];
+    }
     reindex();
     loaded = M.schedule.length > 0 || M.student.length > 0;
     return loaded;
@@ -722,10 +822,9 @@ function fetchSheet(sheet){
       setTimeout(() => { delete window[cb]; }, 60000);
       err ? rej(err) : res(raw);
     };
-    const t = setTimeout(() => end(new Error("timeout")), CONFIG.LOAD_MS);
-    window[cb] = raw => (raw?.status === "error" || !Array.isArray(raw?.table?.rows))
-      ? end(new Error("bad response")) : end(null, raw);
-    el.onerror = () => end(new Error("network"));
+    const t = setTimeout(() => end(new Error("응답 시간 초과")), CONFIG.LOAD_MS);
+    window[cb] = raw => { try{ end(null, validate(raw)); }catch(err){ end(err); } };
+    el.onerror = () => end(new Error("연결하지 못했습니다"));
     el.src = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq`
       + `?gid=${sheet.gid}&tqx=out:json;responseHandler:${cb}&_=${Date.now()}`;
     document.body.appendChild(el);
@@ -741,14 +840,25 @@ async function reload(){
   job = (async () => {
     const out = await Promise.allSettled(CONFIG.SHEETS.map(fetchSheet));
     const bad = [];
+    const stamp = Date.now();
     let ok = 0;
     out.forEach((r, i) => {
       const sheet = CONFIG.SHEETS[i];
+      const slot = SRC[sheet.key];
       try{
         if(r.status !== "fulfilled") throw r.reason;
-        M[sheet.key === "notice" ? "notices" : sheet.key === "supervisor" ? "super" : sheet.key] = decode(sheet.key, r.value);
+        const table = r.value;
+        const res = decode(sheet.key, table);
+        M[sheet.key === "notice" ? "notices" : sheet.key === "supervisor" ? "super" : sheet.key] = res.items;
+        slot.rows = table.rows.length;
+        slot.at = stamp;
+        slot.error = "";
+        slot.flags = res.flags;
         ok++;
-      }catch{ bad.push(sheet.name); }
+      }catch(err){
+        slot.error = String(err?.message || err || "실패").slice(0, 160);
+        bad.push(sheet.name);
+      }
     });
     reindex();
     loaded = loaded || ok > 0;
@@ -847,8 +957,8 @@ function drawTools(){
       <button class="btn" data-a="today" type="button">오늘</button></div>`);
   }
   if(v === "calendar") out.push(`<div class="opts">${opt("주말", "cal", "weekend")}${opt("연간", "cal", "year")}</div>`);
-  if(v === "plan") out.push(`<div class="opts">${opt("부서명", "plan", "dept")}${opt("경건회", "plan", "prayer")}${opt("자습감독", "plan", "super")}${opt("주말 빼기", "plan", "noWeekend")}${opt("한 줄", "plan", "flat")}</div>`);
-  if(v === "student") out.push(`<div class="opts">${opt("주말 빼기", "stu", "noWeekend")}${opt("한 줄", "stu", "flat")}</div>`);
+  if(v === "plan") out.push(`<div class="opts">${opt("부서명", "plan", "dept")}${opt("경건회", "plan", "prayer")}${opt("자습감독", "plan", "super")}${opt("주말 빼기", "plan", "noWeekend")}${opt("빈 날 숨김", "plan", "hideEmpty")}${opt("한 줄", "plan", "flat")}</div>`);
+  if(v === "student") out.push(`<div class="opts">${opt("주말 빼기", "stu", "noWeekend")}${opt("빈 날 숨김", "stu", "hideEmpty")}${opt("한 줄", "stu", "flat")}</div>`);
   if(v === "dept") out.push(`<label class="lbl">부서
     <select class="fld" id="ds">${DEPT_NAMES.map(d => `<option${S.dept === d ? " selected" : ""}>${esc(d)}</option>`).join("")}</select></label>`);
   if(v === "nuga"){
@@ -872,11 +982,41 @@ function drawTools(){
   $("#tools").hidden = false;
 }
 
+/* ---- 연간: 열두 달을 한 화면에 ---- */
+function drawYear(){
+  const y = +S.month.slice(0, 4), now = today();
+  const heads = ["월","화","수","목","금","토","일"];
+  let n = 0;
+
+  const html = Array.from({ length:12 }, (_, i) => {
+    const mk = `${y}-${p2(i + 1)}`;
+    const days = monthDays(mk, false);
+    const lead = (days[0].getDay() + 6) % 7;
+    let count = 0;
+    const cells = days.map(d => {
+      const k = key(d), w = d.getDay(), list = onDay(k);
+      count += list.length;
+      const cls = [w === 0 ? "s0" : w === 6 ? "s6" : "", list.length ? "on" : "", k === now ? "now" : ""];
+      return `<button type="button" data-d="${k}" class="${cls.join(" ").trim()}"
+        aria-label="${i + 1}월 ${d.getDate()}일 일정 ${list.length}건">${d.getDate()}${
+        list.length ? `<span class="n">${list.length}</span>` : ""}</button>`;
+    }).join("");
+    n += count;
+    return `<section class="mini">
+      <div class="mini-h"><b>${i + 1}월</b><span>${count ? count + "건" : ""}</span></div>
+      <div class="mini-g">${heads.map((w, j) =>
+        `<span class="w ${j === 5 ? "s6" : j === 6 ? "s0" : ""}">${w}</span>`).join("")}
+        ${'<span class="pad"></span>'.repeat(lead)}${cells}</div>
+    </section>`;
+  }).join("");
+
+  return { n, html:`<div class="years">${html}</div>` };
+}
+
 /* ---- 달력 ---- */
 function drawCalendar(){
-  const yr = S.cal.year, wk = S.cal.weekend;
-  const y = +S.month.slice(0, 4);
-  const months = yr ? Array.from({ length:12 }, (_, i) => `${y}-${p2(i + 1)}`) : [S.month];
+  const wk = S.cal.weekend;
+  const months = [S.month];
   const heads = wk ? ["월","화","수","목","금","토","일"] : ["월","화","수","목","금"];
   const cols = wk ? 7 : 5;
   const now = today();
@@ -917,8 +1057,7 @@ function drawCalendar(){
         ${list.length || fold ? "" : '<span class="d-none">—</span>'}${fold}</section>`;
     }).join("");
 
-    return `${yr ? `<h2 class="cap">${+mk.slice(5)}월</h2>` : ""}
-      <div class="cal" style="--c:${cols}">
+    return `<div class="cal" style="--c:${cols}">
         ${heads.map(h => `<div class="cal-h ${h === "토" ? "s6" : h === "일" ? "s0" : ""}">${h}</div>`).join("")}
         ${pad(colOf(days[0]) - 1)}${cells}${pad(cols - colOf(days.at(-1)))}</div>`;
   }).join("");
@@ -941,7 +1080,8 @@ function monthRows(v){
 }
 function drawTable(v){
   const plan = v === "plan", o = S[plan ? "plan" : "stu"];
-  const rows = monthRows(v), now = today();
+  const rows = monthRows(v).filter(r => !o.hideEmpty || r.rows.length);
+  const now = today();
   let n = 0;
 
   const body = rows.map(r => {
@@ -962,7 +1102,7 @@ function drawTable(v){
       <th>${plan ? "주요 행사" : "학생일정"}</th>
       ${plan && o.prayer ? '<th class="c-n">경건회</th>' : ""}
       ${plan && o.super ? '<th class="c-n">자습감독</th>' : ""}</tr></thead>
-    <tbody>${body}</tbody></table></div>` };
+    <tbody>${body || `<tr><td colspan="5" class="dash" style="padding:16px;text-align:center">표시할 날이 없습니다</td></tr>`}</tbody></table></div>` };
 }
 
 /* ---- 부서 ---- */
@@ -1051,6 +1191,7 @@ function draw({ keep = false } = {}){
   drawTabs();
   drawTools();
   drawNotice();
+  drawSource();
 
   const find = $("#find");
   find.hidden = S.view === "request";
@@ -1062,7 +1203,7 @@ function draw({ keep = false } = {}){
   }else{
     let r;
     if(!loaded) r = { n:0, html:nothing(loading ? "불러오는 중" : "불러온 자료 없음") };
-    else if(S.view === "calendar") r = drawCalendar();
+    else if(S.view === "calendar") r = S.cal.year ? drawYear() : drawCalendar();
     else if(S.view === "plan" || S.view === "student") r = drawTable(S.view);
     else if(S.view === "dept") r = drawDept();
     else r = drawNuga();
@@ -1084,6 +1225,35 @@ function draw({ keep = false } = {}){
     if(el) el.scrollIntoView({ block:"center", behavior:"instant" });
     else if(keep) window.scrollTo({ top, behavior:"instant" });
   }else if(keep) window.scrollTo({ top, behavior:"instant" });
+}
+
+function drawSource(){
+  const box = $("#src");
+  if(S.view === "request"){ box.hidden = true; return; }
+  box.hidden = false;
+
+  const list = CONFIG.SHEETS.map(x => SRC[x.key]);
+  const have = list.filter(v => v.at).length;   /* 저장본이라도 내용이 있으면 있는 것 */
+  const flags = list.flatMap(v => v.flags.map(t => [v.name, t]));
+  const hhmm = ms => new Date(ms).toLocaleTimeString("ko-KR", { hour:"2-digit", minute:"2-digit", hour12:false });
+
+  $("#srcSum").textContent = `자료 ${have}/${list.length}`
+    + (lastLoad ? ` · ${hhmm(lastLoad)} 갱신` : cachedAt ? " · 저장본" : "")
+    + (flags.length ? ` · 확인할 행 ${flags.length}` : "");
+
+  $("#srcBody").innerHTML = `<div class="src-body">${list.map(v => `
+    <div class="src-row">
+      <b>${esc(v.name)}</b>
+      <span class="st${v.error ? " bad" : ""}">${
+        v.error
+          ? (v.at ? `${v.rows}행 저장본 · ` : "") + esc(v.error)
+          : v.at ? `${v.rows}행 · ${hhmm(v.at)}` : "불러오는 중"}</span>
+      <a href="${sheetLink(v.gid)}" target="_blank" rel="noopener">원자료</a>
+    </div>`).join("")}
+    ${flags.length ? `<div class="src-flags"><b>확인할 행 ${flags.length}개 — 시트를 고친 뒤 새로고침하세요</b>
+      <ul>${flags.slice(0, 40).map(([name, t]) => `<li>${esc(name)} ${esc(t)}</li>`).join("")}
+      ${flags.length > 40 ? `<li>… 외 ${flags.length - 40}개</li>` : ""}</ul></div>` : ""}
+  </div>`;
 }
 
 function drawNotice(){
@@ -1181,9 +1351,13 @@ async function copyDay(){
 
 /* 시트에 쓸 수 있는 길은 요청 하나뿐이다. 보던 일정을 그 요청에 그대로 얹는다. */
 function askAbout(k, e){
-  const line = e ? `${dayLabel(k)} ${e.dept ? `[${e.dept}] ` : ""}${e.text}` : dayLabel(k);
+  const d = toDate(k);
+  const when = `${d.getFullYear()}.${p2(d.getMonth() + 1)}.${p2(d.getDate())} (${W[d.getDay()]})`;
+  const head = e
+    ? `[관련 일정: ${when}]\n${e.dept ? `[${e.dept}] ` : ""}${e.text}`
+    : `[관련 날짜: ${when}]`;
   const before = String(draft.content || "").trim();
-  draft.content = (before ? before + "\n\n" : "") + `· ${line}\n  → `;
+  draft.content = (before ? before + "\n\n" : "") + `${head}\n\n요청 내용: `;
   write(DRAFT, draft);
   if($("#ddlg").open) $("#ddlg").close();
   if(S.view !== "request") go("request");
