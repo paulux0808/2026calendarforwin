@@ -170,7 +170,7 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
 
 main{padding:12px}
 .none{padding:44px 12px;text-align:center;color:var(--ink-3);font-size:var(--f-sm)}
-.frame{border:1px solid var(--line);border-radius:var(--r)}
+.frame{border:1px solid var(--cell-line);border-radius:var(--r)}
 .frame > table{border-collapse:separate;border-spacing:0}
 .frame > table thead th:first-child{border-top-left-radius:3px}
 .frame > table thead th:last-child{border-top-right-radius:3px}
@@ -205,7 +205,7 @@ th{
   position:sticky;top:var(--top-h,0px);z-index:2;white-space:nowrap;
 }
 td{padding:4px 8px;vertical-align:top;border-bottom:1px solid var(--cell-line);overflow-wrap:anywhere}
-tr:last-child td{border-bottom:0}
+.frame > table > tbody > tr:last-child > td{border-bottom:0}
 tr.wk.s6{background:var(--sat-bg)}
 tr.wk.s0{background:var(--sun-bg)}
 tr.now:not(.wk){background:var(--key-bg)}
@@ -338,7 +338,7 @@ kbd{
 #pdlg{width:min(900px,calc(100vw - 20px))}
 .plan{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px}
 .view{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);padding:10px;overflow:hidden}
-.stage{width:196mm;height:281mm;background:#fff;position:relative;flex:none;transform-origin:top left;box-shadow:0 1px 8px rgba(0,0,0,.16)}
+.stage{width:var(--paper-width,196mm);height:var(--paper-height,281mm);background:#fff;position:relative;flex:none;transform-origin:top left;box-shadow:0 1px 8px rgba(0,0,0,.16)}
 .pset{display:flex;flex-direction:column;gap:2px}
 .chk{display:flex;align-items:center;gap:7px;padding:5px 3px;font-size:var(--f-sm);cursor:pointer;border-radius:2px}
 .chk:hover{background:var(--bg-2)}
@@ -348,18 +348,22 @@ kbd{
 
 /* 종이 — 화면과 인쇄가 같은 트리를 쓴다 */
 .paper{
-  position:absolute;left:0;top:0;width:196mm;transform-origin:top left;
+  position:absolute;left:0;top:0;width:100%;transform-origin:top left;
   color:#111;background:#fff;font-family:var(--sans);
   font-size:var(--pf,10pt);line-height:1.24;
 }
 .paper h1{font-size:1.55em;font-weight:800;letter-spacing:-.02em;margin:0 0 2.4mm;text-align:center}
-.paper table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:inherit}
+.paper table{display:table;width:100%;table-layout:fixed;border-collapse:collapse;font-size:inherit}
 .paper th,.paper td{
   border:.5pt solid #666;padding:var(--pp,1.3px) 3px;line-height:1.2;
   vertical-align:middle;overflow-wrap:anywhere;position:static;background:none;
 }
 .paper th{background:#ececec;font-weight:700;text-align:center;font-size:.92em}
-.paper tbody tr{height:var(--pr,auto)}
+.paper thead{display:table-header-group}
+.paper tbody{display:table-row-group}
+.paper tbody tr{display:table-row;height:var(--pr,auto)}
+.paper th,.paper td{display:table-cell}
+.paper tbody tr:last-child td{border-bottom:.5pt solid #666}
 .paper .p1{width:7mm;text-align:center;font-weight:700}
 .paper .p2{width:8.5mm;text-align:center;white-space:nowrap}
 .paper .p3{width:20mm;text-align:center}
@@ -372,9 +376,9 @@ kbd{
 .pd{font-weight:700;font-size:.88em}
 .pn{color:#aaa}
 .pf{margin-top:1.6mm;display:flex;justify-content:space-between;font-size:.74em;color:#666}
-.pcal{display:grid;grid-auto-rows:1fr;border:.5pt solid #666;border-width:.5pt 0 0 .5pt}
+.pcal{display:grid;border:.5pt solid #666;border-width:.5pt 0 0 .5pt}
 .pcal > div{border:.5pt solid #666;border-width:0 .5pt .5pt 0;padding:1mm}
-.pcal{grid-template-rows:auto}
+.pcal{grid-template-rows:auto repeat(var(--print-weeks,6),minmax(var(--pr,19mm),1fr))}
 .pcal .h{background:#ececec;text-align:center;font-weight:700;font-size:.92em}
 .pcal .c{min-height:var(--pr,19mm);overflow:hidden}
 .pcal .c b{display:block;font-weight:700;margin-bottom:.4mm}
@@ -427,13 +431,14 @@ kbd{
   html,body{background:#fff!important;margin:0!important;height:auto!important}
   body.pr > *:not(#proot){display:none!important}
   body.pr #proot{position:static;visibility:visible}
-  body.pr #proot .stage{transform:none!important;box-shadow:none;width:196mm;height:281mm;overflow:hidden}
+  body.pr #proot .stage{transform:none!important;box-shadow:none;overflow:hidden}
   .paper{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body:not(.pr) .top,body:not(.pr) .strip,body:not(.pr) .toast,body:not(.pr) .src,dialog{display:none!important}
   body:not(.pr) main{padding:0}
   .d,tr{break-inside:avoid}
 }
 </style>
+<style id="printPageStyle">@page{size:A4 portrait;margin:7mm}</style>
 </head>
 <body>
 
@@ -1412,6 +1417,15 @@ function askAbout(k, e){
 const P = { w:196, h:281, max:11, min:6.6 };
 const mm = v => v * 96 / 25.4;
 const PR = { view:"", fit:null };
+function setPaperSize(){
+  const landscape = PR.view === "calendar";
+  P.w = landscape ? 283 : 196;
+  P.h = landscape ? 194 : 281;
+  const stage = $("#stage");
+  stage.style.setProperty("--paper-width", P.w + "mm");
+  stage.style.setProperty("--paper-height", P.h + "mm");
+  $("#printPageStyle").textContent = `@page{size:A4 ${landscape ? "landscape" : "portrait"};margin:7mm}`;
+}
 
 function paperHTML(v){
   const o = S.print, d = m1(S.month), ay = ayOf(d), mn = d.getMonth() + 1;
@@ -1422,6 +1436,7 @@ function paperHTML(v){
     const cols = o.weekend ? 7 : 5;
     const heads = o.weekend ? ["일","월","화","수","목","금","토"] : ["월","화","수","목","금"];
     const colOf = x => o.weekend ? x.getDay() + 1 : x.getDay();
+    const weeks = Math.ceil((colOf(days[0]) - 1 + days.length) / cols);
     const pad = c => '<div class="c"></div>'.repeat(Math.max(0, c));
     const cells = days.map(x => {
       const k = key(x), w = x.getDay();
@@ -1433,7 +1448,7 @@ function paperHTML(v){
         `<span class="pe">${o.dept ? `<span class="pd">[${esc(e.dept)}]</span> ` : ""}${esc(e.text)}</span>`).join("")}</div>`;
     }).join("");
     return `<div class="paper"><h1>${ay}학년도 ${mn}월 학사일정</h1>
-      <div class="pcal" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">
+      <div class="pcal" style="--print-weeks:${weeks};grid-template-columns:repeat(${cols},minmax(0,1fr))">
         ${heads.map(h => `<div class="h">${h}</div>`).join("")}
         ${pad(colOf(days[0]) - 1)}${cells}${pad(cols - colOf(days.at(-1)))}</div>
       <div class="pf"><span>${esc(hiddenNote())}</span><span>${stamp()}</span></div></div>`;
@@ -1527,6 +1542,7 @@ function fitPaper(stage){
   return { font, scale, pt:font * scale };
 }
 function buildPaper(){
+  setPaperSize();
   const stage = $("#stage"), prev = stage.style.transform;
   stage.style.transform = "none";
   stage.innerHTML = paperHTML(PR.view);
@@ -1540,7 +1556,7 @@ function buildPaper(){
   if(o.weekend) tips.push("주말 빼기");
   const el = $("#fit");
   el.className = `fit${tight ? " tight" : ""}`;
-  el.textContent = !tight ? `A4 한 장 · ${pt.toFixed(1)}pt`
+  el.textContent = !tight ? `A4 ${PR.view === "calendar" ? "가로" : "세로"} 한 장 · ${pt.toFixed(1)}pt`
     : tips.length ? `${pt.toFixed(1)}pt — ${tips.join(", ")}` : `${pt.toFixed(1)}pt · 나눠 인쇄 권장`;
 }
 function scaleView(){
