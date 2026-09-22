@@ -23,7 +23,8 @@
 :root{
   color-scheme:light;
   --bg:#FFFFFF;
-  --bg-2:#F5F6F8;      /* 표 머리, 주말 */
+  --bg-2:#F5F6F8;      /* 표 머리 */
+  --weekend-bg:#E2E6EC; /* 주말 셀 */
   --bg-3:#EDEFF2;
   --ink:#17181C;
   --ink-2:#5A6169;
@@ -56,6 +57,7 @@
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#16181C; --bg-2:#1E2126; --bg-3:#262A30;
+  --weekend-bg:#303640;
   --ink:#E6E8EB; --ink-2:#A3AAB3; --ink-3:#767D86;
   --line:#2C3036; --line-2:#3B4149;
   --key:#7FADE8; --key-bg:#1C2A3B;
@@ -179,7 +181,7 @@ main{padding:12px}
 .cal-h.s6{color:var(--sat)} .cal-h.s0{color:var(--sun)}
 .d{background:var(--bg);padding:4px 5px 6px;min-height:98px;min-width:0;display:flex;flex-direction:column;gap:3px}
 .d-x{background:var(--bg-2)}
-.d.wk{background:var(--bg-2)}
+.d.wk{background:var(--weekend-bg)}
 .d.now{background:var(--key-bg);box-shadow:inset 0 2px 0 var(--key)}
 .dnum{align-self:flex-start;padding:0 3px;margin-left:-3px;font-size:var(--f-md);font-weight:700;border-radius:2px}
 .dnum:hover{background:var(--bg-3)}
@@ -199,7 +201,7 @@ th{
 }
 td{padding:4px 8px;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
 tr:last-child td{border-bottom:0}
-tr.wk{background:var(--bg-2)}
+tr.wk{background:var(--weekend-bg)}
 tr.now{background:var(--key-bg);box-shadow:inset 3px 0 0 var(--key)}
 .c-d{width:44px}.c-w{width:36px}.c-n{width:96px}
 td.c-d{padding-top:3px}
@@ -251,7 +253,8 @@ tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-
   min-height:30px;border-radius:3px;display:flex;align-items:center;justify-content:center;gap:2px;
   font-size:var(--f-sm);color:var(--ink-2);
 }
-.mini-g button:hover{background:var(--bg-2)}
+.mini-g button.s0,.mini-g button.s6{background:var(--weekend-bg)}
+.mini-g button:hover{background:var(--bg-3)}
 .mini-g button.s0{color:var(--sun)} .mini-g button.s6{color:var(--sat)}
 .mini-g button.on{font-weight:700;color:var(--ink)}
 .mini-g button.now{outline:1.5px solid var(--key);outline-offset:-2px}
@@ -352,7 +355,7 @@ kbd{
 .paper .p1{width:7mm;text-align:center;font-weight:700}
 .paper .p2{width:8.5mm;text-align:center;white-space:nowrap}
 .paper .p3{width:20mm;text-align:center}
-.paper .we{background:#f4f4f4}
+.paper .we{background:#e2e6ec}
 .paper .nw{box-shadow:inset 2pt 0 0 #1A4B8C}
 .pe{display:block}
 .paper.flat .pe{display:inline}
