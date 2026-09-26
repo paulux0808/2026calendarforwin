@@ -1,0 +1,29 @@
+{
+  "name": "학교 예보 · 보성여고 학사일정",
+  "short_name": "학교 예보",
+  "description": "보성여고 학사일정을 날씨 예보처럼 봅니다.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1D5CA6",
+  "theme_color": "#1D5CA6",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

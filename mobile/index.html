@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>학교 예보</title>
+<meta name="description" content="보성여고 학사일정을 날씨 예보처럼 봅니다.">
+<meta name="theme-color" content="#1D5CA6" id="theme-color">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="학교 예보">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;600;700&family=Outfit:wght@200;300;500&display=swap">
+<style>
+:root{
+  --s1:#1D5CA6; --s2:#4B8ED6;
+  --t1:#FFFFFF; --t2:rgba(255,255,255,.82); --t3:rgba(255,255,255,.66);
+  --panel:rgba(8,22,44,.24); --line:rgba(255,255,255,.16);
+  --sunday:#FFC2BC; --saturday:#C4DBFF;
+  --sans:"Gothic A1",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --num:"Outfit","Gothic A1",-apple-system,sans-serif;
+  --dock-h:calc(54px + env(safe-area-inset-bottom));
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--s1)}
+html.locked{overflow:hidden}
+body{margin:0;min-height:100vh;color:var(--t1);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere;background:var(--s1);padding-bottom:calc(var(--dock-h) + 20px)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--t1)}
+:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wx{display:block;flex:none}
+
+/* ── 하늘 ───────────────────────────────────────────── */
+.sky{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 100%)}
+.sky i{position:absolute;display:block;opacity:0;transition:opacity 1.2s ease}
+.sky .sun{right:-40px;top:-30px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,236,160,.95) 0 16%,rgba(255,220,120,.35) 30%,rgba(255,220,120,0) 64%)}
+.sky .moon{right:48px;top:86px;width:46px;height:46px;border-radius:50%;box-shadow:12px 6px 0 0 #EDE3B8;filter:drop-shadow(0 0 12px rgba(237,227,184,.4))}
+.sky .stars{inset:0;background-image:radial-gradient(1.2px 1.2px at 20px 30px,#fff,transparent),radial-gradient(1px 1px at 120px 80px,#fff,transparent),radial-gradient(1.4px 1.4px at 200px 20px,#fff,transparent),radial-gradient(1px 1px at 60px 150px,#fff,transparent),radial-gradient(1.2px 1.2px at 170px 170px,#fff,transparent),radial-gradient(1px 1px at 250px 120px,#fff,transparent);background-size:280px 220px;mask-image:linear-gradient(#000 0%,transparent 70%);-webkit-mask-image:linear-gradient(#000 0%,transparent 70%)}
+.sky .bow{right:-230px;top:40px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,transparent 57%,rgba(255,128,128,.3) 58%,rgba(255,206,110,.3) 61%,rgba(140,220,150,.28) 64%,rgba(130,176,255,.28) 67%,rgba(170,140,255,.2) 69.5%,transparent 71%);mask-image:linear-gradient(#000 30%,transparent 62%);-webkit-mask-image:linear-gradient(#000 30%,transparent 62%)}
+.sky .cloud{width:340px;height:120px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.5),rgba(255,255,255,0));filter:blur(4px);animation:drift 46s ease-in-out infinite alternate}
+.sky .c1{left:-60px;top:70px}
+.sky .c2{right:-120px;top:190px;width:420px;animation-duration:58s;animation-direction:alternate-reverse}
+.sky .c3{left:10%;top:330px;width:380px;height:100px;animation-duration:70s}
+.sky .rain{inset:-160px -40px 0;background-image:repeating-linear-gradient(100deg,transparent 0 22px,rgba(255,255,255,.2) 22px 23px,transparent 23px 47px);background-size:100% 160px;animation:fall .7s linear infinite;mask-image:linear-gradient(transparent,#000 20%,#000 60%,transparent);-webkit-mask-image:linear-gradient(transparent,#000 20%,#000 60%,transparent)}
+.sky .flash{inset:0;background:#fff;animation:flash 9s infinite}
+@keyframes drift{from{transform:translateX(-30px)}to{transform:translateX(40px)}}
+@keyframes fall{to{background-position:-28px 160px}}
+@keyframes flash{0%,91%,100%{opacity:0}92%{opacity:.16}93%{opacity:0}94.5%{opacity:.1}96%{opacity:0}}
+
+body.clear:not(.night) .sun,body.partly:not(.night) .sun,body.rainbow .sun{opacity:1}
+body.night.clear .moon,body.night.partly .moon,body.night .stars{opacity:1}
+body.night:not(.clear):not(.partly) .stars{opacity:0}
+body.partly .c1,body.rainbow .c2{opacity:.8}
+body.cloudy .cloud,body.rain .cloud,body.storm .cloud{opacity:.75}
+body.rain .cloud,body.storm .cloud{filter:blur(4px) brightness(.8)}
+body.rain .rain,body.storm .rain{opacity:1}
+body.rainbow .bow{opacity:1}
+body.night .cloud{background:radial-gradient(closest-side,rgba(200,215,240,.26),rgba(200,215,240,0))}
+body:not(.storm) .sky .flash{animation:none}
+
+main,.dock,.sheet,.sheet-bg{position:relative;z-index:1}
+.wrap{max-width:540px;margin:0 auto;padding:0 16px}
+
+/* ── 머리 (오늘 예보) ─────────────────────────────── */
+.hero{text-align:center;padding:calc(34px + env(safe-area-inset-top)) 0 18px;touch-action:pan-y}
+.place{margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em;text-shadow:0 1px 8px rgba(0,0,0,.12)}
+.when{margin:2px 0 0;font-size:14px;color:var(--t2)}
+.big{margin:4px 0 0;display:inline-flex;align-items:flex-start;font:200 108px/1 var(--num);letter-spacing:-.04em;text-shadow:0 2px 18px rgba(0,0,0,.1)}
+.big .unit{font:500 17px/1 var(--sans);letter-spacing:0;margin:18px 0 0 6px;color:var(--t2)}
+.cond{margin:0;font-size:21px;font-weight:600}
+.cond small{font-size:17px;font-weight:500;color:var(--t2)}
+.hl{margin:4px 0 0;font-size:14px;color:var(--t2)}
+.hl + .hl{margin-top:0;color:var(--t3);font-size:13px}
+.hero.swap{animation:swap .35s ease}
+@keyframes swap{from{opacity:0;transform:translateX(var(--dx,16px))}to{opacity:1;transform:none}}
+
+/* ── 판 ─────────────────────────────────────────────── */
+.panel{margin-top:12px;border-radius:18px;background:var(--panel);border:1px solid var(--line);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);overflow:hidden}
+.ph{display:flex;align-items:center;gap:6px;margin:0;padding:11px 14px 9px;font-size:12.5px;font-weight:600;color:var(--t3);border-bottom:1px solid var(--line);letter-spacing:.01em}
+.ph svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ph .more{margin-left:auto;font-weight:600;color:var(--t2);background:none;border:0;padding:0;font-size:12.5px}
+
+.alert{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px 14px;border:0;background:none;color:inherit}
+.alert .wx{margin-top:1px}
+.alert b{display:block;font-size:13px;color:#FFE08A}
+.alert span{font-size:15px;font-weight:500}
+.alert + .alert{border-top:1px solid var(--line)}
+.alert.note b{color:var(--t2)}
+
+/* 교시별 예보 */
+.strip{display:flex;overflow-x:auto;scrollbar-width:none;padding:6px 6px 4px;border-bottom:1px solid var(--line);scroll-snap-type:x proximity}
+.strip::-webkit-scrollbar{display:none}
+.pc{flex:1 0 54px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px 9px;border:0;background:none;border-radius:14px;scroll-snap-align:start}
+.pc .pl{font-size:12.5px;font-weight:600;color:var(--t2)}
+.pc .pn{font:500 15px var(--num)}
+.pc .pn.zero{color:var(--t3)}
+.pc[aria-selected="true"]{background:rgba(255,255,255,.16)}
+.pc[aria-selected="true"] .pl{color:var(--t1)}
+.items{list-style:none;margin:0;padding:4px 0}
+.it{padding:9px 14px}
+.it + .it{border-top:1px solid rgba(255,255,255,.08)}
+.it-d{display:block;font-size:12px;font-weight:600;color:var(--t3)}
+.it-t{font-size:15px;font-weight:500}
+.it-b{display:inline-flex;flex-wrap:wrap;gap:4px;margin-left:6px;vertical-align:1px}
+.it-b i{font-style:normal;font-size:11.5px;font-weight:600;line-height:18px;padding:0 7px;border-radius:999px;background:rgba(255,255,255,.16);color:var(--t1);white-space:nowrap}
+.it.hol .it-t{color:#FFE08A}
+.it.none{color:var(--t3);font-size:14px}
+
+/* 열흘 예보 */
+.days{list-style:none;margin:0;padding:2px 0}
+.dr{display:grid;grid-template-columns:52px 34px minmax(0,1fr) 30px;align-items:center;gap:10px;width:100%;padding:9px 14px;border:0;background:none;text-align:left}
+.days li + li .dr{border-top:1px solid rgba(255,255,255,.08)}
+.dr .dn{font-size:16px;font-weight:600;line-height:1.15}
+.dr .dn small{display:block;font:500 11.5px var(--num);color:var(--t3)}
+.dr .dn.sun{color:var(--sunday)}.dr .dn.sat{color:var(--saturday)}
+.dr .dw{min-width:0;display:grid;gap:5px}
+.dr .dw span{font-size:13px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);position:relative;overflow:hidden}
+.bar::after{content:"";position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#8FE0C0,#F2E07A 45%,#F5A05A 72%,#EE5D52);clip-path:inset(0 calc(100% - var(--v)) 0 0 round 3px)}
+.dr .dv{font:500 17px var(--num);text-align:right}
+.dr.today{background:rgba(255,255,255,.08)}
+
+/* 타일 */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.tile{margin:0;display:flex;flex-direction:column;min-height:150px;text-align:left;color:inherit;padding:0}
+.tile.wide{grid-column:1/-1;min-height:0}
+.tile.tap{cursor:pointer}
+.tile .ph{border-bottom:0;padding-bottom:4px;width:100%}
+.tb{padding:2px 14px 14px;display:flex;flex-direction:column;flex:1;width:100%}
+.tv{font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
+.tv.num{font:300 34px/1.1 var(--num);letter-spacing:-.02em}
+.tv.num small{font:500 14px var(--sans);color:var(--t2);margin-left:3px;letter-spacing:0}
+.ts{margin-top:auto;padding-top:8px;font-size:13px;color:var(--t2);line-height:1.4}
+.ts b{color:var(--t1);font-weight:600}
+.tlist{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px;font-size:13.5px}
+.tlist li{display:flex;gap:6px;align-items:baseline;min-width:0}
+.tlist li span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0;flex:1}
+.tlist li small{color:var(--t3);white-space:nowrap}
+.stack{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:10px;background:rgba(255,255,255,.12)}
+.stack i{display:block;height:100%}
+.krow{display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px;border:0;border-top:1px solid rgba(255,255,255,.08);background:none;text-align:left}
+.krow:first-of-type{border-top:0}
+.krow .kd{font:500 15px var(--num);min-width:62px}
+.krow .kt{flex:1;min-width:0;font-size:15px;font-weight:500}
+.krow .kt small{display:block;font-size:12px;color:var(--t3);font-weight:400}
+
+.foot{margin:22px 4px 0;font-size:12.5px;color:var(--t3);line-height:1.6}
+.foot p{margin:0 0 6px}
+.foot a{color:var(--t2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.12);font-size:14px;font-weight:600;color:var(--t1);text-decoration:none}
+.btn.solid{background:#fff;color:#16253A;border-color:#fff}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+/* ── 아래 막대 ──────────────────────────────────────── */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:5;height:var(--dock-h);padding-bottom:env(safe-area-inset-bottom);background:rgba(6,16,32,.3);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+.dock .wrap{height:54px;display:flex;align-items:center;justify-content:space-between}
+.dock-btn{width:44px;height:44px;border:0;background:none;display:grid;place-items:center;border-radius:12px;color:var(--t1)}
+.dock-btn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dots{display:flex;gap:4px;align-items:center}
+.dots button{width:22px;height:30px;border:0;background:none;display:grid;place-items:center;padding:0}
+.dots button::before{content:"";width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.38);transition:background .2s,transform .2s}
+.dots button[aria-current="true"]::before{background:#fff;transform:scale(1.15)}
+.dots button:first-child::before{width:9px;height:9px;border-radius:2px;transform:rotate(45deg) scale(.8)}
+.dots button:first-child[aria-current="true"]::before{transform:rotate(45deg) scale(.95)}
+
+/* ── 아래서 올라오는 판 ─────────────────────────────── */
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(0,6,16,.45);opacity:0;transition:opacity .25s}
+.sheet-bg.open{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:560px;margin:0 auto;max-height:90vh;max-height:90dvh;display:flex;flex-direction:column;border-radius:24px 24px 0 0;background:linear-gradient(180deg,var(--k1,#1E3350),var(--k2,#2B4A72));box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);outline:none}
+.sheet.open{transform:none}
+.sheet[hidden],.sheet-bg[hidden]{display:none}
+.sheet-top{display:flex;align-items:center;gap:8px;padding:10px 12px 4px 18px;flex:none}
+.sheet-top h2{flex:1;margin:0;font-size:17px;font-weight:700}
+.sheet-top .x{width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;color:var(--t1)}
+.sheet-top .x svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+.grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.35);margin:8px auto 0;flex:none}
+.sheet-body{overflow-y:auto;overscroll-behavior:contain;padding:4px 16px calc(24px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.sheet .panel{background:rgba(0,10,26,.22);-webkit-backdrop-filter:none;backdrop-filter:none}
+
+.dayhead{display:flex;align-items:center;gap:14px;padding:6px 2px 4px}
+.dayhead .dnum{font:200 64px/1 var(--num);letter-spacing:-.03em}
+.dayhead .dnum small{font:500 14px var(--sans);color:var(--t2);margin-left:2px;letter-spacing:0}
+.dayhead .dtx{flex:1;min-width:0}
+.dayhead .dtx b{display:block;font-size:19px}
+.dayhead .dtx span{font-size:13.5px;color:var(--t2)}
+.daynav{display:flex;gap:8px;margin-top:14px}
+.daynav .btn{flex:1}
+
+.search{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border-radius:12px;background:rgba(0,0,0,.2);border:1px solid var(--line);margin-top:4px}
+.search svg{width:18px;height:18px;stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round;flex:none}
+.search input{flex:1;min-width:0;height:100%;border:0;background:none;outline:none;font-size:15px}
+.search input::placeholder{color:var(--t3)}
+.search input::-webkit-search-cancel-button{display:none}
+.hits{list-style:none;margin:8px 0 0;padding:0}
+.hit{display:grid;grid-template-columns:58px 1fr;gap:10px;width:100%;padding:9px 4px;border:0;border-top:1px solid rgba(255,255,255,.08);background:none;text-align:left}
+.hits li:first-child .hit{border-top:0}
+.hit .hd{font:500 13px var(--num);color:var(--t2);padding-top:2px}
+.hit mark{background:rgba(255,224,138,.9);color:#1B2436;border-radius:3px;padding:0 1px}
+.hits-note{margin:10px 2px 0;color:var(--t3);font-size:13px}
+
+.places{display:grid;gap:10px;margin-top:14px}
+.place-card{display:flex;align-items:center;gap:12px;width:100%;min-height:92px;padding:14px 16px;border:0;border-radius:18px;text-align:left;color:#fff;background:linear-gradient(160deg,var(--k1),var(--k2));position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.place-card[aria-current="true"]{box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)}
+.place-card .pc-l{flex:1;min-width:0}
+.place-card b{display:block;font-size:21px;font-weight:600}
+.place-card span{font-size:13px;color:var(--t2)}
+.place-card .pc-r{text-align:right}
+.place-card .pc-r strong{display:block;font:200 44px/1 var(--num);letter-spacing:-.03em}
+.place-card .pc-r span{font-size:13px}
+.group-h{margin:22px 2px 8px;font-size:13px;font-weight:600;color:var(--t3)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:3px;border-radius:12px;background:rgba(0,0,0,.2)}
+.seg button{height:36px;border:0;border-radius:9px;background:none;font-weight:600;color:var(--t2)}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.9);color:#16253A}
+.hint{margin:10px 2px 0;font-size:13px;color:var(--t3)}
+.srcs{list-style:none;margin:0;padding:0}
+.srcs li{display:flex;align-items:baseline;gap:10px;padding:10px 14px;font-size:14px}
+.srcs li + li{border-top:1px solid rgba(255,255,255,.08)}
+.srcs b{flex:1;font-weight:600}
+.srcs small{color:var(--t2);text-align:right;font-size:12.5px}
+.srcs small.bad{color:#FFB4AE}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:4px 2px 12px;font-size:12.5px;color:var(--t2)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:18px 14px}
+.mon h3{margin:0 0 6px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.mon h3 small{font-size:11.5px;color:var(--t3);font-weight:500}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.mc{aspect-ratio:1;border:0;border-radius:4px;padding:0;background:rgba(255,255,255,.07);font:500 9px var(--num);color:rgba(0,0,0,.55);display:grid;place-items:center}
+.mc.blank{background:none}
+.mc.today{box-shadow:0 0 0 2px #fff}
+.mc.w-clear{background:#F3D878}.mc.w-partly{background:#A9D0F2}.mc.w-cloudy{background:#94A3B5}.mc.w-rain{background:#5C8FCF;color:rgba(255,255,255,.8)}.mc.w-storm{background:#8E6FE0;color:rgba(255,255,255,.85)}
+.mc.w-rainbow{background:linear-gradient(135deg,#F4908A,#F3D878 40%,#8FD6A2 70%,#8DB6F6)}
+.mc.w-none{background:rgba(255,255,255,.07);color:transparent}
+.word p{margin:0 0 6px;font-size:15px}
+.word sup{font:500 11px var(--num);color:var(--t3);margin-right:4px}
+.cls-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.cls-col{padding:10px 12px;min-width:0}
+.cls-col + .cls-col{border-left:1px solid rgba(255,255,255,.1)}
+.cls-col h3{margin:0 0 6px;font-size:14px}
+.cls-col h3 small{display:block;font-size:11.5px;color:var(--t3);font-weight:500}
+.cls-col ol{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13.5px}
+.cls-col li{display:grid;grid-template-columns:14px 1fr auto;gap:5px;align-items:baseline}
+.cls-col li b{font:500 12px var(--num);color:var(--t3)}
+.cls-col li span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cls-col li small{font:500 12px var(--num);color:var(--t3)}
+.cls-col.me{background:rgba(255,255,255,.1)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body class="cloudy">
+<div class="sky" aria-hidden="true"><i class="sun"></i><i class="stars"></i><i class="moon"></i><i class="bow"></i><i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i><i class="rain"></i><i class="flash"></i></div>
+
+<main class="wrap" id="main"></main>
+
+<nav class="dock" aria-label="도구">
+  <div class="wrap">
+    <button class="dock-btn" data-action="climate" aria-label="기후 달력">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01" stroke-width="2.6"/></svg>
+    </button>
+    <div class="dots" id="dots" role="group" aria-label="학년"></div>
+    <button class="dock-btn" data-action="places" aria-label="학년 목록·검색·설정">
+      <svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="sheet-bg" id="sheet-bg" hidden data-action="close"></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1" hidden>
+  <div class="grab" aria-hidden="true"></div>
+  <div class="sheet-top"><h2 id="sheet-title"></h2><button class="x" data-action="close" aria-label="닫기"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3 3 13"/></svg></button></div>
+  <div class="sheet-body" id="sheet-body"></div>
+</section>
+
+<script>
+'use strict';
+
+/* ── 시트 ──────────────────────────────────────────── */
+const SHEET_ID = '10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+const SRC = {
+  plan:    {sheet: '연중행사계획',        label: '연중행사계획'},
+  planS:   {sheet: '(학생용)연중행사계획', label: '연중행사계획(학생용)'},
+  notice:  {sheet: '공지사항',            label: '공지사항'},
+  pray:    {sheet: '기도순서',            label: '기도순서'},
+  night:   {sheet: '자습감독',            label: '자습감독'},
+  classes: {sheet: '학생현황',            label: '학생현황'},
+  cc:      {sheet: '창체누가기록',         label: '창체누가기록'},
+};
+const NEED = {teacher: ['plan', 'notice', 'pray', 'night', 'classes', 'cc'], student: ['planS']};
+const TIMEOUT = 15000;
+const STALE = 5 * 60 * 1000;
+
+/* ── 예보 규칙 ─────────────────────────────────────── */
+// 시험은 뇌우, 큰 행사는 무지개, 쉬는 날은 맑음. 나머지는 일정 수로 구름의 양을 정한다.
+const EXAM = /(중간고사|기말고사|지필평가|정기고사|모의고사|학력평가|모의평가|대학수학능력시험|수능)/;
+const FEST = /(체육대회|축제|학예회|합창대회|수학여행|현장체험학습|수련회|졸업식|입학식|개학식|방학식|종업식)/;
+const NOT_EVENT = /(출제|제출|검토|원안|계획|협의|인쇄|감독|채점|확인|이의|성적|결과|분석|준비|연수|회의|입력|마감|신청|접수|원서|응원|배부|설명회|평가회|안내)/;
+const HOLIDAY = /(공휴일|대체\s*휴일|휴업일|재량\s*휴업|신정|설날|설\s*연휴|삼일절|3\.1절|어린이날|석가탄신일|부처님\s*오신\s*날|현충일|광복절|추석|개천절|한글날|성탄절|선거일|개교기념일)/;
+const WORD = {clear: '맑음', partly: '구름 조금', cloudy: '흐림', rain: '비', storm: '뇌우', rainbow: '무지개'};
+const SKY = {
+  clear:   {day: ['#1D5CA6', '#4B8ED6'], night: ['#0A142C', '#1C2E57']},
+  partly:  {day: ['#28598C', '#6592C0'], night: ['#111B31', '#2A3A5A']},
+  cloudy:  {day: ['#465869', '#7A8B9D'], night: ['#181F29', '#343E4D']},
+  rain:    {day: ['#30425A', '#52657A'], night: ['#131A23', '#28323F']},
+  storm:   {day: ['#261E3C', '#4A3D6A'], night: ['#130E22', '#2D2346']},
+  rainbow: {day: ['#2366A5', '#69A2D8'], night: ['#0E1A36', '#253A66']},
+};
+const AREA_TONE = {'자율': '#9CC8F5', '동아리': '#6FA3E8', '봉사': '#4A7FD0', '진로': '#2F5FB5'};
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const CIRCLED = {'①': 1, '②': 2, '③': 3};
+
+/* ── 날씨 그림 ─────────────────────────────────────── */
+const CLOUD = 'M9.5 25h14a5.5 5.5 0 0 0 .9-10.93A7.5 7.5 0 0 0 10 13.2 6 6 0 0 0 9.5 25z';
+const SUN = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFD45C"/>`
+  + [0, 45, 90, 135, 180, 225, 270, 315].map(a => {
+    const t = a * Math.PI / 180, x1 = cx + Math.cos(t) * (r + 2.4), y1 = cy + Math.sin(t) * (r + 2.4), x2 = cx + Math.cos(t) * (r + 5), y2 = cy + Math.sin(t) * (r + 5);
+    return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="#FFD45C" stroke-width="2" stroke-linecap="round"/>`;
+  }).join('');
+const MOON = (cx, cy, r) => `<path d="M${cx + r * .35} ${cy - r}a${r} ${r} 0 1 0 ${r * .65} ${r * 1.55}A${r * .8} ${r * .8} 0 0 1 ${cx + r * .35} ${cy - r}z" fill="#EDE3B8"/>`;
+function wx(cond, night, size = 32) {
+  let g = '';
+  if (cond === 'clear') g = night ? MOON(15, 16, 8) : SUN(16, 16, 6.5);
+  else if (cond === 'partly') g = (night ? MOON(12, 11, 6) : SUN(12, 11, 5)) + `<path d="${CLOUD}" fill="#fff" transform="translate(3 2) scale(.9)"/>`;
+  else if (cond === 'cloudy') g = `<path d="${CLOUD}" fill="#C9D4E0" transform="translate(-3 -4) scale(.8)"/><path d="${CLOUD}" fill="#fff" transform="translate(1 1)"/>`;
+  else if (cond === 'rain') g = `<path d="${CLOUD}" fill="#E4EAF1" transform="translate(0 -5)"/>`
+    + [10, 16, 22].map(x => `<path d="M${x} 23l-1.6 4.5" stroke="#7CC4FF" stroke-width="2.2" stroke-linecap="round"/>`).join('');
+  else if (cond === 'storm') g = `<path d="${CLOUD}" fill="#B9B3D6" transform="translate(0 -5)"/><path d="M17.5 18.5l-4.5 7h3.6l-1.6 5.5 6-8h-3.8l2-4.5z" fill="#FFD45C"/>`;
+  else if (cond === 'rainbow') g = [['#FF8A80', 11], ['#FFD45C', 8.8], ['#8FD6A2', 6.6], ['#8DB6F6', 4.4]].map(([c, r]) => `<path d="M${16 - r} 22a${r} ${r} 0 0 1 ${r * 2} 0" stroke="${c}" stroke-width="2.2" fill="none"/>`).join('')
+    + `<path d="${CLOUD}" fill="#fff" transform="translate(12 12) scale(.55)"/>`;
+  return `<svg class="wx" width="${size}" height="${size}" viewBox="0 0 32 32" aria-hidden="true">${g}</svg>`;
+}
+const I = {
+  clock: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.4"/></svg>',
+  cal: '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5 1.8v2.4M11 1.8v2.4"/></svg>',
+  warn: '<svg viewBox="0 0 16 16"><path d="M8 2.2 14.3 13H1.7z"/><path d="M8 6.5v3M8 11.3h.01"/></svg>',
+  hands: '<svg viewBox="0 0 16 16"><path d="M8 14V7.5M8 7.5 5.2 2.8c-.5-.8-1.7-.4-1.5.5L5 9l3 5M8 7.5l2.8-4.7c.5-.8 1.7-.4 1.5.5L11 9l-3 5"/></svg>',
+  moon: '<svg viewBox="0 0 16 16"><path d="M13 10.2A5.6 5.6 0 0 1 5.8 3a5.6 5.6 0 1 0 7.2 7.2z"/></svg>',
+  front: '<svg viewBox="0 0 16 16"><path d="M1.5 10.5c2-3 4.5-3 6.5 0s4.5 3 6.5 0"/><path d="M4 8.2 5 6M9 12.8l1-2.2" /></svg>',
+  sun: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>',
+  drop: '<svg viewBox="0 0 16 16"><path d="M8 1.8s4.5 5 4.5 8a4.5 4.5 0 0 1-9 0c0-3 4.5-8 4.5-8z"/></svg>',
+  people: '<svg viewBox="0 0 16 16"><circle cx="6" cy="5.5" r="2.3"/><path d="M1.8 13.5c.4-2.4 2.1-3.8 4.2-3.8s3.8 1.4 4.2 3.8"/><path d="M10.7 3.4a2.2 2.2 0 1 1 0 4.3M12.2 9.9c1.2.6 1.9 1.8 2.1 3.6"/></svg>',
+  star: '<svg viewBox="0 0 16 16"><path d="m8 1.8 1.8 4 4.3.4-3.3 2.9 1 4.2L8 11.1l-3.8 2.2 1-4.2-3.3-2.9 4.3-.4z"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>',
+};
+
+/* ── 유틸 ───────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const ymd = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+const toDate = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const keyOf = dt => ymd(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+const addDays = (k, n) => { const d = toDate(k); d.setDate(d.getDate() + n); return keyOf(d); };
+const diffDays = (a, b) => Math.round((toDate(b) - toDate(a)) / 86400000);
+const todayKey = () => keyOf(new Date());
+const dow = k => toDate(k).getDay();
+const md = k => { const d = toDate(k); return `${d.getMonth() + 1}/${d.getDate()}`; };
+const shortDate = k => { const d = toDate(k); return `${d.getMonth() + 1}.${d.getDate()} (${WD[d.getDay()]})`; };
+const longDate = k => { const d = toDate(k); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`; };
+const clock = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const schoolYear = () => { const d = new Date(); return d.getMonth() >= 2 ? d.getFullYear() : d.getFullYear() - 1; };
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isNight = () => { const h = new Date().getHours(); return h >= 19 || h < 6 || matchMedia('(prefers-color-scheme: dark)').matches; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const valid = (y, m, d) => {
+  if (!(y > 1900 && m >= 1 && m <= 12 && d >= 1 && d <= 31)) return null;
+  return new Date(y, m - 1, d).getMonth() === m - 1 ? ymd(y, m, d) : null;
+};
+const relDay = k => { const n = diffDays(S.today, k); return n === 0 ? '오늘' : n === 1 ? '내일' : n === -1 ? '어제' : `${WD[dow(k)]}요일`; };
+const store = {
+  get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const CACHE = 'hakgyo-yebo:cache:';
+const PREFS = 'hakgyo-yebo:prefs';
+
+/* ── 상태 ───────────────────────────────────────────── */
+const prefs = store.get(PREFS) || {};
+const forParam = new URLSearchParams(location.search).get('for');
+const S = {
+  mode: forParam === 'student' || forParam === 'teacher' ? forParam : (prefs.mode === 'student' ? 'student' : 'teacher'),
+  grade: [1, 2, 3].includes(prefs.grade) ? prefs.grade : 0,
+  src: {}, loading: false, lastLoad: 0, today: todayKey(),
+  pSel: 'all', sheet: null, sheetP: 'all', q: '', word: null,
+};
+const savePrefs = () => store.set(PREFS, {mode: S.mode, grade: S.grade});
+if (forParam) savePrefs();
+let M = emptyModel();
+
+/* ── 시트 읽기 (gviz JSONP) ─────────────────────────── */
+let seq = 0;
+function gviz(sheet, tq) {
+  return new Promise((resolve, reject) => {
+    const cb = `__yebo${++seq}_${Date.now().toString(36)}`;
+    const el = document.createElement('script');
+    let done = false;
+    const finish = (err, val) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      window[cb] = () => {};
+      el.remove();
+      err ? reject(err) : resolve(val);
+    };
+    const timer = setTimeout(() => finish(new Error('응답이 없습니다')), TIMEOUT);
+    window[cb] = res => {
+      if (!res || res.status === 'error') {
+        const e = res && res.errors && res.errors[0];
+        const msg = e && (e.detailed_message || e.message || e.reason);
+        finish(new Error(msg ? String(msg).replace(/<[^>]*>/g, '') : '시트가 오류를 돌려주었습니다'));
+        return;
+      }
+      const t = res.table;
+      if (!t || !Array.isArray(t.rows) || !Array.isArray(t.cols)) { finish(new Error('표 형식이 아닙니다')); return; }
+      finish(null, t);
+    };
+    el.onerror = () => finish(new Error('연결하지 못했습니다'));
+    // 비공개 시트는 로그인 페이지를 돌려줘 콜백이 불리지 않는다
+    el.onload = () => setTimeout(() => finish(new Error('시트를 읽을 수 없습니다. 공유 설정을 확인하세요')), 50);
+    el.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cb}`
+      + `&sheet=${encodeURIComponent(sheet)}` + (tq ? `&tq=${encodeURIComponent(tq)}` : '') + `&_=${Date.now()}`;
+    document.head.appendChild(el);
+  });
+}
+
+async function fetchSource(k) {
+  const st = S.src[k] || (S.src[k] = {});
+  try {
+    const t = await gviz(SRC[k].sheet);
+    Object.assign(st, {table: t, at: Date.now(), cached: false, error: null});
+    store.set(CACHE + k, {at: st.at, table: t});
+  } catch (e) {
+    st.error = e.message || String(e);
+  }
+}
+
+function primeFromCache() {
+  for (const k of NEED[S.mode]) {
+    const st = S.src[k] || (S.src[k] = {});
+    if (st.table) continue;
+    const c = store.get(CACHE + k);
+    if (c && c.table && Array.isArray(c.table.rows)) Object.assign(st, {table: c.table, at: c.at, cached: true});
+  }
+}
+
+async function load() {
+  if (S.loading) return;
+  S.loading = true;
+  await Promise.all(NEED[S.mode].map(fetchSource));
+  S.loading = false;
+  S.lastLoad = Date.now();
+  rebuild();
+  render();
+}
+
+/* ── 셀 해석 ───────────────────────────────────────── */
+function cText(c) {
+  if (!c) return '';
+  if (c.f != null && c.f !== '') return String(c.f).trim();
+  return c.v == null ? '' : String(c.v).trim();
+}
+
+// MM-DD 로만 적힌 날짜의 연도: 12월 → 1월로 넘어가면 해를 올린다
+function yearCursor(start) {
+  let year = start, last = 0;
+  return {
+    year(m) { if (last && m < last && last - m >= 6) year++; last = m; return year; },
+    seen(m, y) { year = y; last = m; },
+  };
+}
+
+function cellDate(c, cur) {
+  if (!c) return null;
+  if (typeof c.v === 'string') {
+    const g = c.v.match(/^Date\((\d+),\s*(\d+),\s*(\d+)/);
+    if (g) { if (cur) cur.seen(+g[2] + 1, +g[1]); return valid(+g[1], +g[2] + 1, +g[3]); }
+  }
+  const t = cText(c);
+  let m = t.match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);
+  if (m) { if (cur) cur.seen(+m[2], +m[1]); return valid(+m[1], +m[2], +m[3]); }
+  m = t.match(/^(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})\s*일?$/);
+  if (m && cur) return valid(cur.year(+m[1]), +m[1], +m[2]);
+  return null;
+}
+
+// 머리글 줄을 찾아 열 위치를 정한다. 못 찾으면 시트의 현재 배치를 쓴다.
+function columns(table, fallback) {
+  const names = Object.keys(fallback);
+  const words = names.filter(n => !/^\d+$/.test(n));
+  const out = {...fallback};
+  for (const r of table.rows.slice(0, 8)) {
+    const t = (r.c || []).map(cText);
+    if (words.filter(n => t.includes(n)).length >= Math.min(2, words.length)) {
+      names.forEach(n => { const i = t.indexOf(n); if (i >= 0) out[n] = i; });
+      return out;
+    }
+  }
+  const labels = (table.cols || []).map(c => String(c.label || '').trim().split(/\s+/).pop());
+  names.forEach(n => { const i = labels.indexOf(n); if (i >= 0) out[n] = i; });
+  return out;
+}
+
+/* ── 일정 한 줄 해석 ───────────────────────────────── */
+// "[교무부]개학식(②③,1)" → 부서 교무부, 2·3학년, 1교시
+function splitCell(text) {
+  const parts = [];
+  for (const line of String(text || '').replace(/\r/g, '').split('\n')) {
+    for (const piece of line.split(/\s+(?=\[[^\[\]]{1,20}\])/)) {
+      const s = piece.trim();
+      if (!s) continue;
+      if (s.startsWith('[') || !parts.length) parts.push(s);
+      else parts[parts.length - 1] += ' ' + s;
+    }
+  }
+  return parts;
+}
+
+function findGrades(s) {
+  const set = new Set();
+  for (const ch of s) if (CIRCLED[ch]) set.add(CIRCLED[ch]);
+  if (!set.size) {
+    for (const m of s.matchAll(/([1-3](?:\s*[,·~\-]\s*[1-3])*)\s*학년(?!부)/g)) {
+      const nums = m[1].match(/[1-3]/g).map(Number);
+      if (/[~\-]/.test(m[1]) && nums.length === 2) for (let k = Math.min(...nums); k <= Math.max(...nums); k++) set.add(k);
+      else nums.forEach(n => set.add(n));
+    }
+  }
+  return set.size && set.size < 3 ? [...set].sort() : null;
+}
+
+const PERIOD_TOKEN = /^(\d)\s*(?:[~\-–]\s*(\d))?\s*(?:교시)?$/;
+const RANGE_TOKEN = /^~\s*\d{1,2}(?:\s*[\/.]\s*\d{1,2})?\s*일?$/;
+
+function findPeriods(s) {
+  const set = new Set();
+  const add = (a, b) => { a = +a; b = b ? +b : a; if (a < 1 || b > 9 || b < a) return; for (let k = a; k <= b; k++) set.add(k); };
+  for (const m of s.matchAll(/(\d)\s*(?:[~\-–]\s*(\d)\s*)?교시/g)) add(m[1], m[2]);
+  for (const g of s.matchAll(/\(([^()]*)\)/g)) {
+    for (const tok of g[1].split(/[,，]/)) {
+      const m = tok.replace(/[①②③]/g, '').trim().match(PERIOD_TOKEN);
+      if (m) add(m[1], m[2]);
+    }
+  }
+  return set.size ? [...set].sort((a, b) => a - b) : null;
+}
+
+function findEnd(s, start) {
+  const [sy, sm, sd] = start.split('-').map(Number);
+  let y = sy, mo, d;
+  let m = s.match(/~\s*(\d{1,2})\s*[\/.]\s*(\d{1,2})/);
+  if (m) {
+    mo = +m[1]; d = +m[2];
+    if (mo < sm && sm - mo >= 6) y++;
+  } else {
+    // "~13일", "(②, ~13)" 처럼 날만 적은 경우. "1~3학년", "~4시" 는 기간이 아니다.
+    m = s.match(/~\s*(\d{1,2})\s*일?(?=\s*[),]|\s*$)/);
+    if (!m) return null;
+    mo = sm; d = +m[1];
+    if (d < sd) { mo++; if (mo > 12) { mo = 1; y++; } }
+  }
+  const k = valid(y, mo, d);
+  return k && k > start ? k : null;
+}
+
+// 학년·교시·기간만 담긴 괄호는 따로 보여 주므로 본문에서 뺀다
+function cleanText(s) {
+  return s.replace(/\s*\(([^()]*)\)/g, (all, inner) => {
+    const toks = inner.split(/[,，]/).map(t => t.trim()).filter(Boolean);
+    const rest = toks.filter(t => {
+      const x = t.replace(/[①②③]/g, '').trim();
+      return !(x === '' || PERIOD_TOKEN.test(x) || RANGE_TOKEN.test(x));
+    });
+    if (rest.length === toks.length) return all;
+    return rest.length ? `(${rest.join(', ')})` : '';
+  }).replace(/\s{2,}/g, ' ').trim();
+}
+
+function parseItem(src, date) {
+  let s = src.trim(), dept = '', cat = '';
+  let m = s.match(/^\[([^\]]{1,20})\]\s*/);
+  if (m) { dept = m[1].trim(); s = s.slice(m[0].length); }
+  m = s.match(/^<([^>]{1,10})>\s*/);
+  if (m) { cat = m[1].trim(); s = s.slice(m[0].length); }
+  const text = cleanText(s) || s;
+  return {
+    date, dept, cat, raw: src, text,
+    grades: findGrades(s),
+    periods: findPeriods(s),
+    end: findEnd(s, date),
+    // 부서가 붙은 줄은 "[교무부]재량휴업일" 처럼 쉬는 날이 분명할 때만 휴일로 본다
+    hol: HOLIDAY.test(s) && (!dept || /휴업|공휴일|대체\s*휴일/.test(s)),
+    exam: EXAM.test(text) && !NOT_EVENT.test(text),
+    fest: FEST.test(text) && !NOT_EVENT.test(text),
+  };
+}
+
+/* ── 모델 ───────────────────────────────────────────── */
+function emptyModel() {
+  return {byDate: new Map(), dates: [], duty: new Map(), notices: [], classes: [], cc: [], year: null, total: 0};
+}
+
+function parsePlan(t, m) {
+  const h = columns(t, {'날짜': 0, '요일': 1, '일정': 2});
+  for (const r of t.rows) {
+    const c = r.c || [];
+    const date = cellDate(c[h['날짜']]);
+    if (!date) continue;
+    const items = splitCell(cText(c[h['일정']])).map(s => parseItem(s, date)).filter(it => it.text);
+    const list = m.byDate.get(date) || [];
+    list.push(...items);
+    m.byDate.set(date, list);
+  }
+}
+
+const dutyOf = (m, date) => m.duty.get(date) || (m.duty.set(date, {}), m.duty.get(date));
+
+function parsePray(t, m) {
+  const h = columns(t, {'날짜': 0, '요일': 1, '이름': 2, '성경': 3, '찬송': 4});
+  const cur = yearCursor(m.year || schoolYear());
+  for (const r of t.rows) {
+    const c = r.c || [];
+    const date = cellDate(c[h['날짜']], cur);
+    if (!date) continue;
+    const p = {name: cText(c[h['이름']]), bible: cText(c[h['성경']]), hymn: cText(c[h['찬송']])};
+    if (p.name || p.bible || p.hymn) dutyOf(m, date).pray = p;
+  }
+}
+
+function parseNight(t, m) {
+  const h = columns(t, {'날짜': 0, '요일': 1, '이름': 2});
+  const cur = yearCursor(m.year || schoolYear());
+  for (const r of t.rows) {
+    const c = r.c || [];
+    const date = cellDate(c[h['날짜']], cur);
+    const name = cText(c[h['이름']]);
+    if (date && name) dutyOf(m, date).night = name;
+  }
+}
+
+function parseNotice(t, m) {
+  const h = columns(t, {'게시 시작일': 0, '게시 종료일': 1, '내용': 2});
+  for (const r of t.rows) {
+    const c = r.c || [];
+    const start = cellDate(c[h['게시 시작일']]);
+    const text = cText(c[h['내용']]);
+    if (!start || !text) continue;
+    let end = cellDate(c[h['게시 종료일']]) || start;
+    if (end < start) end = start;
+    m.notices.push({start, end, text});
+  }
+  m.notices.sort((a, b) => a.start.localeCompare(b.start));
+}
+
+// 학생현황: 학년마다 [학급, 담임, 학생수] 세 칸씩 옆으로 놓여 있다
+function parseClasses(t, m) {
+  const groups = Math.max(1, Math.floor(t.cols.length / 3));
+  for (let g = 0; g < groups; g++) {
+    let n = 0;
+    for (const r of t.rows) {
+      const c = r.c || [];
+      const teacher = cText(c[3 * g + 1]);
+      if (!teacher || /담임|학년|학급/.test(teacher)) continue;
+      const cls = parseInt(cText(c[3 * g]), 10);
+      n = Number.isFinite(cls) ? cls : n + 1;
+      const count = parseInt(cText(c[3 * g + 2]), 10);
+      m.classes.push({grade: g + 1, cls: n, teacher, count: Number.isFinite(count) ? count : 0});
+    }
+  }
+}
+
+function parseCC(t, m) {
+  const h = columns(t, {'순번': 0, '영역': 1, '일자': 2, '교시': 3, '1': 4, '2': 5, '3': 6, '활동내용': 7, '비고': 8});
+  for (const r of t.rows) {
+    const c = r.c || [];
+    const date = cellDate(c[h['일자']]);
+    if (!date) continue;
+    const hours = [1, 2, 3].map(g => {
+      const x = cText(c[h[String(g)]]);
+      if (!x) return 0;
+      const n = parseFloat(x);
+      return Number.isFinite(n) ? n : 1;
+    });
+    const text = cText(c[h['활동내용']]);
+    if (!text && !hours.some(Boolean)) continue;
+    m.cc.push({date, area: cText(c[h['영역']]).split('(')[0].trim() || '기타', period: cText(c[h['교시']]), hours, text});
+  }
+  m.cc.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function rebuild() {
+  const m = emptyModel();
+  const run = (k, fn) => {
+    const st = S.src[k];
+    if (!st || !st.table) return;
+    try { fn(st.table, m); st.parseError = null; }
+    catch (e) { st.parseError = e.message; console.error(k, e); }
+  };
+  run(S.mode === 'student' ? 'planS' : 'plan', parsePlan);
+  m.dates = [...m.byDate.keys()].sort();
+  m.year = m.dates.length ? toDate(m.dates[0]).getFullYear() : null;
+  for (const list of m.byDate.values()) m.total += list.length;
+  if (S.mode === 'teacher') {
+    run('notice', parseNotice);
+    run('pray', parsePray);
+    run('night', parseNight);
+    run('classes', parseClasses);
+    run('cc', parseCC);
+  }
+  M = m;
+}
+
+const planSrc = () => S.src[S.mode === 'student' ? 'planS' : 'plan'] || {};
+const ready = () => !!planSrc().table;
+
+/* ── 예보 계산 ─────────────────────────────────────── */
+const gradeOk = (it, g) => !g || !it.grades || it.grades.includes(g);
+const itemsOn = (date, g = S.grade) => (M.byDate.get(date) || []).filter(it => gradeOk(it, g));
+const keyTitle = it => it.text.replace(/\([^)]*\)/g, '').replace(/\s*\d+\s*일\s*차/g, '').replace(/\s{2,}/g, ' ').trim();
+
+function forecast(date, g = S.grade) {
+  const items = itemsOn(date, g);
+  const hol = items.filter(it => it.hol);
+  const reg = items.filter(it => !it.hol);
+  const exam = reg.find(it => it.exam);
+  const fest = reg.find(it => it.fest);
+  const periods = [...new Set(reg.flatMap(it => it.periods || []))].sort((a, b) => a - b);
+  const wd = dow(date);
+  let cond, note = '';
+  if (exam) { cond = 'storm'; note = keyTitle(exam); }
+  else if (hol.length) { cond = 'clear'; note = keyTitle(hol[0]); }
+  else if (fest) { cond = 'rainbow'; note = keyTitle(fest); }
+  else if (!reg.length) { cond = 'clear'; note = wd === 0 || wd === 6 ? '주말' : ''; }
+  else cond = reg.length <= 2 ? 'partly' : reg.length <= 5 ? 'cloudy' : 'rain';
+  const busy = Math.min(99, reg.length * 9 + periods.length * 5 + (exam ? 55 : 0) + (fest ? 15 : 0));
+  return {date, items, reg, hol, cond, word: WORD[cond], note, busy, periods};
+}
+
+function prevSchoolDay(date, g) {
+  for (let i = M.dates.length - 1; i >= 0; i--) {
+    const d = M.dates[i];
+    if (d < date && itemsOn(d, g).some(it => !it.hol)) return diffDays(d, date) <= 7 ? d : null;
+  }
+  return null;
+}
+function nextSchoolDay(date, g) {
+  for (const d of M.dates) if (d > date && itemsOn(d, g).some(it => !it.hol)) return d;
+  return null;
+}
+function upcoming(from, g, pred, limit, within = 400) {
+  const out = [], seen = new Set();
+  const until = addDays(from, within);
+  for (const d of M.dates) {
+    if (d < from) continue;
+    if (d > until) break;
+    for (const it of itemsOn(d, g)) {
+      if (!pred(it)) continue;
+      const t = keyTitle(it);
+      if (seen.has(t)) continue;
+      seen.add(t);
+      out.push({date: d, title: t, it});
+      if (out.length >= limit) return out;
+    }
+  }
+  return out;
+}
+function fronts(date, g) {
+  const out = [];
+  for (const d of M.dates) {
+    if (d > date) break;
+    for (const it of M.byDate.get(d)) if (it.end && it.end >= date && gradeOk(it, g)) out.push(it);
+  }
+  return out;
+}
+
+function periodLabel(p) {
+  const run = p.every((x, i) => i === 0 || x === p[i - 1] + 1);
+  return (p.length > 1 && run ? `${p[0]}–${p[p.length - 1]}` : p.join('·')) + '교시';
+}
+
+/* ── 그리기: 조각 ─────────────────────────────────── */
+function itemHTML(it, o = {}) {
+  const b = [];
+  if (it.grades) b.push(`${it.grades.join('·')}학년`);
+  if (it.periods && o.periods !== false) b.push(periodLabel(it.periods));
+  if (it.end && o.end !== false) b.push(`~${md(it.end)}`);
+  const head = [it.dept, it.cat].filter(Boolean).map(esc).join(' · ');
+  return `<li class="it${it.hol ? ' hol' : ''}">${head ? `<span class="it-d">${head}</span>` : ''}`
+    + `<span class="it-t">${esc(it.text)}</span>${b.length ? `<span class="it-b">${b.map(x => `<i>${x}</i>`).join('')}</span>` : ''}`
+    + (o.sub ? `<span class="it-d" style="margin-top:2px">${o.sub}</span>` : '') + `</li>`;
+}
+
+function periodCells(f) {
+  const max = Math.max(7, ...f.periods);
+  const cells = [{p: 'all', label: '하루', items: f.items, cond: f.cond}];
+  // 교시 표기 없는 시험·행사는 하루 전체에 걸린다
+  const allDay = f.reg.filter(it => !it.periods);
+  const baseExam = allDay.some(it => it.exam), baseFest = allDay.some(it => it.fest);
+  for (let p = 1; p <= max; p++) {
+    const its = f.reg.filter(it => it.periods && it.periods.includes(p));
+    const cond = baseExam || its.some(it => it.exam) ? 'storm' : baseFest || its.some(it => it.fest) ? 'rainbow'
+      : !its.length ? 'clear' : its.length === 1 ? 'partly' : its.length === 2 ? 'cloudy' : 'rain';
+    cells.push({p, label: `${p}교시`, items: its, cond});
+  }
+  return cells;
+}
+
+function cellItems(cell) {
+  if (!cell.items.length) return `<li class="it none">${cell.p === 'all' ? '예정된 일정이 없습니다.' : '이 시간엔 일정이 없습니다.'}</li>`;
+  const list = cell.p === 'all'
+    ? [...cell.items].sort((a, b) => (b.hol - a.hol) || ((a.periods ? a.periods[0] : 0) - (b.periods ? b.periods[0] : 0)))
+    : cell.items;
+  return list.map(it => itemHTML(it, {periods: cell.p === 'all' || it.periods.length > 1})).join('');
+}
+
+function periodPanel(f, ctx, title) {
+  const cells = periodCells(f);
+  const sel = ctx === 'main' ? S.pSel : S.sheetP;
+  const cur = cells.find(c => String(c.p) === String(sel)) || cells[0];
+  return `<section class="panel" data-ctx="${ctx}" data-date="${f.date}"><h2 class="ph">${I.clock}${esc(title)}</h2>`
+    + `<div class="strip" role="tablist" aria-label="교시">${cells.map(c =>
+      `<button class="pc" role="tab" aria-selected="${c === cur}" data-p="${c.p}" data-ctx="${ctx}" aria-label="${c.label} ${WORD[c.cond]} ${c.items.length}건">`
+      + `<span class="pl">${c.label}</span>${wx(c.cond, false, 30)}<span class="pn${c.items.length ? '' : ' zero'}">${c.items.length || '–'}</span></button>`).join('')}</div>`
+    + `<ul class="items" id="items-${ctx}">${cellItems(cur)}</ul></section>`;
+}
+
+function barHTML(v) { return `<span class="bar" style="--v:${Math.max(3, v)}%" role="img" aria-label="바쁨 ${v}"></span>`; }
+
+/* ── 그리기: 첫 화면 ─────────────────────────────── */
+function heroHTML(f, swap) {
+  const place = S.grade ? `${S.grade}학년` : '보성여고';
+  const when = `${longDate(S.today)}${S.mode === 'student' ? ' · 학생용' : ''}`;
+  const cls = `hero${swap ? ' swap' : ''}`;
+  if (!f) {
+    return `<header class="${cls}"><h1 class="place">${place}</h1><p class="when">${when}</p>`
+      + `<p class="big"><span>–</span></p><p class="cond">${S.loading || !S.lastLoad ? '관측 중' : '관측 자료 없음'}</p></header>`;
+  }
+  let line;
+  if (f.reg.length) line = `일정 ${f.reg.length}건` + (f.periods.length ? ` · ${f.periods[0]}교시부터 ${f.periods[f.periods.length - 1]}교시까지` : '');
+  else line = f.hol.length ? '쉬는 날입니다' : '예정된 일정이 없습니다';
+  let cmp = '';
+  const prev = f.reg.length ? prevSchoolDay(S.today, S.grade) : null;
+  if (prev) {
+    const d = f.busy - forecast(prev).busy;
+    cmp = d === 0 ? '지난 수업일과 비슷합니다' : `지난 수업일보다 ${Math.abs(d)} ${d > 0 ? '바쁩니다' : '여유롭습니다'}`;
+  }
+  return `<header class="${cls}"><h1 class="place">${place}</h1><p class="when">${when}</p>`
+    + `<p class="big" aria-label="바쁨 지수 ${f.busy}"><span>${f.busy}</span><span class="unit">바쁨</span></p>`
+    + `<p class="cond">${f.word}${f.note ? ` <small>· ${esc(f.note)}</small>` : ''}</p>`
+    + `<p class="hl">${line}</p>${cmp ? `<p class="hl">${cmp}</p>` : ''}</header>`;
+}
+
+function alertsHTML() {
+  const t = S.today;
+  const rows = [];
+  const ex = upcoming(t, S.grade, it => it.exam, 1, 14)[0];
+  if (ex) {
+    const n = diffDays(t, ex.date);
+    rows.push(`<button class="alert" data-day="${ex.date}">${wx('storm', false, 28)}<span><b>${n === 0 ? '시험 특보 발효 중' : '시험 특보'}</b>${esc(ex.title)} · ${n === 0 ? '오늘' : `${shortDate(ex.date)} · D-${n}`}</span></button>`);
+  }
+  const fe = upcoming(addDays(t, 1), S.grade, it => it.fest, 1, 7)[0];
+  if (fe) rows.push(`<button class="alert" data-day="${fe.date}">${wx('rainbow', false, 28)}<span><b>무지개 예보</b>${esc(fe.title)} · ${relDay(fe.date)} · D-${diffDays(t, fe.date)}</span></button>`);
+  for (const n of M.notices.filter(n => n.start <= t && t <= n.end)) {
+    rows.push(`<div class="alert note">${wx('partly', false, 28)}<span><b>통보 · ${md(n.end)}까지</b>${esc(n.text)}</span></div>`);
+  }
+  return rows.length ? `<section class="panel" aria-label="특보">${rows.join('')}</section>` : '';
+}
+
+function tenDayHTML() {
+  const t = S.today;
+  const rows = [];
+  for (let i = 0; i < 10; i++) {
+    const d = addDays(t, i);
+    const f = forecast(d);
+    const wd = dow(d);
+    const cls = f.hol.length || wd === 0 ? 'sun' : wd === 6 ? 'sat' : '';
+    const label = i === 0 ? '오늘' : i === 1 ? '내일' : WD[wd];
+    const say = f.note || (f.reg.length ? `${f.word} · ${f.reg.length}건` : f.word);
+    rows.push(`<li><button class="dr${i === 0 ? ' today' : ''}" data-day="${d}" aria-label="${longDate(d)} ${f.word} 바쁨 ${f.busy}">`
+      + `<span class="dn ${cls}">${label}<small>${md(d)}</small></span>${wx(f.cond, false, 32)}`
+      + `<span class="dw"><span>${esc(say)}</span>${barHTML(f.busy)}</span><span class="dv">${f.busy}</span></button></li>`);
+  }
+  return `<section class="panel"><h2 class="ph">${I.cal}열흘 예보<button class="more" data-action="climate">기후 달력</button></h2><ul class="days">${rows.join('')}</ul></section>`;
+}
+
+const tile = (label, icon, body, o = {}) => {
+  const act = o.action ? ` data-action="${o.action}"` : o.day ? ` data-day="${o.day}"` : '';
+  const role = act ? ` role="button" tabindex="0"` : '';
+  return `<section class="panel tile${o.wide ? ' wide' : ''}${act ? ' tap' : ''}"${act}${role}><h2 class="ph">${icon}${label}</h2><div class="tb">${body}</div></section>`;
+};
+
+function nextDuty(kind) {
+  for (let i = 0; i < 14; i++) {
+    const d = addDays(S.today, i);
+    const x = M.duty.get(d);
+    if (x && x[kind] && (kind === 'night' || x[kind].name)) return {date: d, v: x[kind]};
+  }
+  return null;
+}
+
+function tilesHTML() {
+  const t = S.today, g = S.grade, T = [];
+  if (S.mode === 'teacher') {
+    const p = nextDuty('pray');
+    if (p) {
+      const extra = [p.v.bible, hymnLabel(p.v.hymn)].filter(Boolean).join(' · ');
+      T.push(tile('기도', I.hands, `<span class="tv">${esc(p.v.name)}</span><span class="ts">${p.date === t ? '오늘' : relDay(p.date)}${extra ? ` · ${esc(extra)}` : ''}<br><b>순서 보기</b></span>`, {action: 'word'}));
+    }
+    const n = nextDuty('night');
+    if (n) T.push(tile('야자 감독', I.moon, `<span class="tv">${esc(n.v)}</span><span class="ts">${n.date === t ? '오늘' : relDay(n.date)}<br><b>이번 주 보기</b></span>`, {action: 'duty'}));
+  }
+
+  const fr = fronts(t, g);
+  T.push(tile('전선', I.front, fr.length
+    ? `<span class="tv">${fr.length}개 통과 중</span><ul class="tlist">${fr.slice(0, 3).map(it => `<li><span>${esc(keyTitle(it))}</span><small>~${md(it.end)}</small></li>`).join('')}</ul>`
+    : `<span class="tv">없음</span><span class="ts">여러 날 이어지는 일정이 지나가면 여기에 뜹니다.</span>`));
+
+  const clear = upcoming(addDays(t, 1), 0, it => it.hol, 1)[0];
+  T.push(tile('다음 맑은 날', I.sun, clear
+    ? `<span class="tv">${esc(clear.title)}</span><span class="ts">${shortDate(clear.date)}<br><b>${diffDays(t, clear.date)}일 뒤</b></span>`
+    : `<span class="tv">—</span><span class="ts">남은 휴일이 없습니다.</span>`, clear ? {day: clear.date} : {}));
+
+  const big = upcoming(addDays(t, 1), g, it => it.exam || it.fest, 4);
+  if (big.length) {
+    T.push(tile('다가오는 큰 날', I.star, big.map(x =>
+      `<span class="krow" data-day="${x.date}" role="button" tabindex="0">${wx(x.it.exam ? 'storm' : 'rainbow', false, 26)}<span class="kd">D-${diffDays(t, x.date)}</span><span class="kt">${esc(x.title)}<small>${shortDate(x.date)}</small></span></span>`).join(''), {wide: true}));
+  }
+
+  if (M.cc.length) {
+    const areas = [...new Set(M.cc.map(r => r.area))];
+    const sumArea = (a, gg) => M.cc.filter(r => r.area === a).reduce((s, r) => s + r.hours[gg - 1], 0);
+    const fmt = n => Number.isInteger(n) ? n : n.toFixed(1);
+    let body;
+    if (g) {
+      const parts = areas.map(a => ({a, v: sumArea(a, g)})).filter(x => x.v);
+      const tot = parts.reduce((s, x) => s + x.v, 0);
+      body = `<span class="tv num">${fmt(tot)}<small>시간</small></span>`
+        + `<span class="stack">${parts.map(x => `<i style="width:${tot ? x.v / tot * 100 : 0}%;background:${AREA_TONE[x.a] || '#8FA9CC'}"></i>`).join('')}</span>`
+        + `<span class="ts">${parts.map(x => `${esc(x.a)} ${fmt(x.v)}`).join(' · ')}</span>`;
+    } else {
+      const per = [1, 2, 3].map(gg => areas.reduce((s, a) => s + sumArea(a, gg), 0));
+      body = `<ul class="tlist" style="margin-top:2px">${per.map((v, i) => `<li><span>${i + 1}학년</span><b class="tv num" style="font-size:24px">${fmt(v)}<small>시간</small></b></li>`).join('')}</ul>`
+        + `<span class="ts">창체 누적 · <b>기록 보기</b></span>`;
+    }
+    T.push(tile('누적 강수량', I.drop, body, {action: 'cc'}));
+  }
+
+  if (M.classes.length) {
+    const list = g ? M.classes.filter(c => c.grade === g) : M.classes;
+    const sum = list.reduce((s, c) => s + c.count, 0);
+    T.push(tile('인구', I.people, `<span class="tv num">${sum}<small>명</small></span><span class="ts">${list.length}학급${g ? ` · 담임 ${esc(list.slice(0, 2).map(c => c.teacher).join(', '))}${list.length > 2 ? ' 외' : ''}` : ''}<br><b>학급 보기</b></span>`, {action: 'classes'}));
+  }
+  return `<div class="tiles">${T.join('')}</div>`;
+}
+
+function footHTML() {
+  const st = planSrc();
+  const src = st.at ? `${st.cached ? '저장본 · ' : ''}시트 발표 ${clock(st.at)}` : '';
+  return `<footer class="foot">`
+    + `<p>바쁨은 그날 일정 수와 쓰는 교시 수로 셉니다. 시험이 있으면 뇌우, 체육대회 같은 큰 행사는 무지개, 쉬는 날은 맑음입니다. 여러 날 이어지는 일정은 전선이라고 부릅니다.</p>`
+    + `<p>${src}${src ? ' · ' : ''}<a href="${SHEET_URL}" target="_blank" rel="noopener">원본 시트</a>${st.error && st.table ? ` · 연결하지 못해 저장본을 보여 줍니다. <a href="#" data-action="refresh">다시 받기</a>` : ''}</p>`
+    + `</footer>`;
+}
+
+function failHTML() {
+  if (S.loading || !S.lastLoad) return '';
+  return `<section class="panel"><div class="tb" style="padding-top:14px"><span class="tv" style="font-size:19px">시트를 읽지 못했습니다</span>`
+    + `<span class="ts">${esc(planSrc().error || '')}<br>시트가 ‘링크가 있는 모든 사용자’에게 보기로 공유되어 있어야 합니다.</span>`
+    + `<div class="btns"><button class="btn solid" data-action="refresh">다시 받기</button><a class="btn" href="${SHEET_URL}" target="_blank" rel="noopener">시트 열기</a></div></div></section>`;
+}
+
+/* ── 그리기: 전체 ─────────────────────────────────── */
+function paintSky(cond, night) {
+  const [a, b] = SKY[cond][night ? 'night' : 'day'];
+  const body = document.body;
+  body.className = `${cond}${night ? ' night' : ''}`;
+  body.style.setProperty('--s1', a);
+  body.style.setProperty('--s2', b);
+  document.documentElement.style.background = a;
+  $('#theme-color').setAttribute('content', a);
+}
+
+function render(swap) {
+  S.today = todayKey();
+  const f = ready() ? forecast(S.today) : null;
+  paintSky(f ? f.cond : 'cloudy', isNight());
+  let h = heroHTML(f, swap);
+  if (f) {
+    h += alertsHTML();
+    if (f.reg.length) h += periodPanel(f, 'main', '교시별 예보');
+    else {
+      const nd = nextSchoolDay(S.today, S.grade);
+      if (nd) h += periodPanel(forecast(nd), 'main', `${relDay(nd)} ${md(nd)} 교시별 예보`);
+    }
+    h += tenDayHTML() + tilesHTML();
+  } else h += failHTML();
+  h += footHTML();
+  $('#main').innerHTML = h;
+  if (swap) $('.hero').style.setProperty('--dx', swap > 0 ? '24px' : '-24px');
+  paintDots();
+  if (S.sheet) paintSheet();
+}
+
+function paintDots() {
+  $('#dots').innerHTML = [0, 1, 2, 3].map(g =>
+    `<button data-grade="${g}" aria-label="${g ? `${g}학년` : '전체 학년'}" aria-current="${S.grade === g}"></button>`).join('');
+}
+
+function setGrade(g) {
+  if (g === S.grade) return;
+  const dir = g > S.grade ? 1 : -1;
+  S.grade = g;
+  S.pSel = 'all';
+  savePrefs();
+  render(dir);
+}
+
+/* ── 아래서 올라오는 판 ─────────────────────────────── */
+function openSheet(kind, arg) {
+  const wasOpen = !!S.sheet;
+  S.sheet = {kind, arg};
+  if (kind === 'day') S.sheetP = 'all';
+  paintSheet();
+  const el = $('#sheet'), bg = $('#sheet-bg');
+  if (!wasOpen) {
+    el.hidden = false; bg.hidden = false;
+    document.documentElement.classList.add('locked');
+    requestAnimationFrame(() => { el.classList.add('open'); bg.classList.add('open'); el.focus({preventScroll: true}); });
+    history.pushState({sheet: 1}, '');
+  }
+  $('#sheet-body').scrollTop = 0;
+}
+
+function hideSheet() {
+  if (!S.sheet) return;
+  S.sheet = null; S.word = null;
+  const el = $('#sheet'), bg = $('#sheet-bg');
+  el.classList.remove('open'); bg.classList.remove('open');
+  document.documentElement.classList.remove('locked');
+  setTimeout(() => { if (!S.sheet) { el.hidden = true; bg.hidden = true; } }, reduced() ? 0 : 300);
+}
+function closeSheet() { if (history.state && history.state.sheet) history.back(); else hideSheet(); }
+
+function paintSheet() {
+  const {kind, arg} = S.sheet;
+  const el = $('#sheet');
+  let title = '', body = '', tone = 'cloudy';
+  if (kind === 'day') ({title, body, tone} = daySheet(arg));
+  else if (kind === 'climate') { title = `기후 달력 · ${S.grade ? `${S.grade}학년` : '전체'}`; body = climateSheet(); tone = 'clear'; }
+  else if (kind === 'places') { title = '학년'; body = placesSheet(); tone = ready() ? forecast(S.today).cond : 'cloudy'; }
+  else if (kind === 'word') { title = '기도 순서'; body = wordSheet(); tone = 'partly'; }
+  else if (kind === 'duty') { title = '야간자율학습 감독'; body = dutySheet(); tone = 'clear'; }
+  else if (kind === 'classes') { title = '인구 · 학급과 담임'; body = classesSheet(); tone = 'partly'; }
+  else if (kind === 'cc') { title = '누적 강수량 · 창체 기록'; body = ccSheet(); tone = 'rain'; }
+  const [a, b] = SKY[tone][isNight() ? 'night' : 'day'];
+  el.style.setProperty('--k1', a);
+  el.style.setProperty('--k2', b);
+  $('#sheet-title').textContent = title;
+  const focusQ = document.activeElement && document.activeElement.id === 'q';
+  $('#sheet-body').innerHTML = body;
+  if (focusQ && $('#q')) { const q = $('#q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+}
+
+function daySheet(date) {
+  if (!ready()) return {title: longDate(date), body: '', tone: 'cloudy'};
+  const f = forecast(date);
+  const fr = fronts(date, S.grade).filter(it => it.date !== date);
+  const du = S.mode === 'teacher' ? M.duty.get(date) : null;
+  let body = `<div class="dayhead">${wx(f.cond, false, 56)}<div class="dtx"><b>${f.word}${f.note ? ` · ${esc(f.note)}` : ''}</b>`
+    + `<span>${f.reg.length ? `일정 ${f.reg.length}건` : f.hol.length ? '쉬는 날' : '일정 없음'}${S.grade ? ` · ${S.grade}학년 기준` : ''}</span></div>`
+    + `<span class="dnum">${f.busy}<small>바쁨</small></span></div>`;
+  body += periodPanel(f, 'sheet', '교시별 예보');
+  if (fr.length) body += `<section class="panel"><h2 class="ph">${I.front}지나가는 전선</h2><ul class="items">${fr.map(it => itemHTML(it, {end: false, sub: `${shortDate(it.date)} ~ ${shortDate(it.end)}`})).join('')}</ul></section>`;
+  if (du && (du.pray?.name || du.night)) {
+    body += `<section class="panel"><h2 class="ph">${I.hands}당번</h2><ul class="items">`
+      + (du.pray?.name ? `<li class="it"><span class="it-d">기도</span><span class="it-t">${esc(du.pray.name)}</span>${du.pray.bible ? `<span class="it-b"><i>${esc(du.pray.bible)}</i></span>` : ''}</li>` : '')
+      + (du.night ? `<li class="it"><span class="it-d">야자 감독</span><span class="it-t">${esc(du.night)}</span></li>` : '') + `</ul></section>`;
+  }
+  body += `<div class="daynav"><button class="btn" data-day="${addDays(date, -1)}">‹ ${md(addDays(date, -1))}</button>`
+    + (date !== S.today ? `<button class="btn" data-day="${S.today}">오늘</button>` : '')
+    + `<button class="btn" data-day="${addDays(date, 1)}">${md(addDays(date, 1))} ›</button></div>`;
+  return {title: `${longDate(date)}${date === S.today ? ' · 오늘' : ''}`, body, tone: f.cond};
+}
+
+function climateSheet() {
+  if (!ready()) return '<p class="hint">시트를 받은 뒤에 볼 수 있습니다.</p>';
+  const first = M.dates[0], last = M.dates[M.dates.length - 1];
+  const months = [];
+  for (let d = new Date(toDate(first).getFullYear(), toDate(first).getMonth(), 1); keyOf(d) <= last; d.setMonth(d.getMonth() + 1)) {
+    months.push([d.getFullYear(), d.getMonth() + 1]);
+  }
+  const html = months.map(([y, m]) => {
+    const lead = new Date(y, m - 1, 1).getDay();
+    const n = new Date(y, m, 0).getDate();
+    const tally = {storm: 0, rainbow: 0, rain: 0};
+    let cells = '<span class="mc blank"></span>'.repeat(lead);
+    for (let d = 1; d <= n; d++) {
+      const k = ymd(y, m, d);
+      const has = M.byDate.has(k);
+      const f = has ? forecast(k) : null;
+      if (f && tally[f.cond] != null) tally[f.cond]++;
+      const cond = f ? f.cond : 'none';
+      cells += `<button class="mc w-${cond}${k === S.today ? ' today' : ''}" data-day="${k}" aria-label="${m}월 ${d}일 ${f ? f.word : '자료 없음'}">${d}</button>`;
+    }
+    const sum = [tally.storm && `뇌우 ${tally.storm}`, tally.rainbow && `무지개 ${tally.rainbow}`, tally.rain && `비 ${tally.rain}`].filter(Boolean).join(' · ');
+    return `<div class="mon"><h3>${m}월<small>${sum}</small></h3><div class="mgrid">${cells}</div></div>`;
+  }).join('');
+  const lg = ['clear', 'partly', 'cloudy', 'rain', 'storm', 'rainbow'].map(c => `<span><i class="mc w-${c}" style="aspect-ratio:auto"></i>${WORD[c]}</span>`).join('');
+  return `<div class="legend">${lg}</div><div class="months">${html}</div>`;
+}
+
+function placesSheet() {
+  let h = `<label class="search">${I.search}<span class="sr">일정 찾기</span><input id="q" type="search" placeholder="일정 찾기 · 예: 부장회의, 모의고사" value="${esc(S.q)}" autocomplete="off" enterkeyhint="search"></label>`;
+  h += `<div id="hits">${hitsHTML()}</div>`;
+  if (!S.q) {
+    h += `<div class="places">${[0, 1, 2, 3].map(g => {
+      const f = ready() ? forecast(S.today, g) : null;
+      const [a, b] = SKY[f ? f.cond : 'cloudy'][isNight() ? 'night' : 'day'];
+      const pop = M.classes.length ? M.classes.filter(c => !g || c.grade === g).reduce((s, c) => s + c.count, 0) : 0;
+      return `<button class="place-card" data-grade="${g}" aria-current="${S.grade === g}" style="--k1:${a};--k2:${b}">`
+        + `<span class="pc-l"><b>${g ? `${g}학년` : '보성여고'}</b><span>${f ? (f.reg.length ? `일정 ${f.reg.length}건` : f.note || '일정 없음') : '관측 중'}${pop ? ` · ${pop}명` : ''}</span></span>`
+        + `<span class="pc-r"><strong>${f ? f.busy : '--'}</strong><span>${f ? f.word : ''}</span></span></button>`;
+    }).join('')}</div>`;
+
+    const studentUrl = location.origin + location.pathname + '?for=student';
+    h += `<h3 class="group-h">보기</h3><div class="seg" role="group" aria-label="보기">`
+      + `<button data-action="mode" data-v="teacher" aria-pressed="${S.mode === 'teacher'}">교사용</button>`
+      + `<button data-action="mode" data-v="student" aria-pressed="${S.mode === 'student'}">학생용</button></div>`
+      + `<p class="hint">${S.mode === 'student' ? '학생용은 ‘(학생용)연중행사계획’ 시트로 예보합니다.' : '교사용은 연중행사계획에 기도·감독·공지·학급·창체 기록을 더해 예보합니다.'}</p>`
+      + `<div class="btns"><button class="btn" data-action="copy" data-url="${esc(studentUrl)}">학생용 주소 복사</button></div>`;
+
+    h += `<h3 class="group-h">관측소</h3><section class="panel" style="margin-top:0"><ul class="srcs">${NEED[S.mode].map(k => {
+      const st = S.src[k] || {};
+      let s, bad = false;
+      if (st.table) s = `${st.cached ? '저장본 ' : ''}${clock(st.at)}${st.error ? ' · 연결 안 됨' : ''}`;
+      else if (st.error) { s = esc(st.error); bad = true; }
+      else s = S.loading ? '받는 중' : '아직 없음';
+      if (st.parseError) { s += ' · 읽는 중 오류'; bad = true; }
+      return `<li><b>${esc(SRC[k].label)}</b><small${bad ? ' class="bad"' : ''}>${s}</small></li>`;
+    }).join('')}</ul></section>`
+      + `<div class="btns"><button class="btn solid" data-action="refresh">다시 받기</button><a class="btn" href="${SHEET_URL}" target="_blank" rel="noopener">원본 시트</a><button class="btn" data-action="forget">저장본 지우기</button></div>`
+      + `<p class="hint">예보는 ‘2026학년도 학사일정’ 구글 시트를 그대로 읽어 만듭니다. 시트를 고치면 여기도 바뀝니다.</p>`;
+  }
+  return h;
+}
+
+function hl(s) {
+  const q = S.q.toLowerCase(), lo = s.toLowerCase();
+  let out = '', i = 0, j;
+  while ((j = lo.indexOf(q, i)) >= 0) { out += esc(s.slice(i, j)) + '<mark>' + esc(s.slice(j, j + q.length)) + '</mark>'; i = j + q.length; }
+  return out + esc(s.slice(i));
+}
+
+function hitsHTML() {
+  if (!S.q) return '';
+  if (!ready()) return '<p class="hits-note">시트를 받은 뒤에 찾을 수 있습니다.</p>';
+  const q = S.q.toLowerCase(), hits = [];
+  for (const d of M.dates) for (const it of itemsOn(d)) if (it.raw.toLowerCase().includes(q)) hits.push(it);
+  if (!hits.length) return `<p class="hits-note">‘${esc(S.q)}’이(가) 들어간 일정이 없습니다.</p>`;
+  const list = hits.slice(0, 80).map(it => `<li><button class="hit" data-day="${it.date}"><span class="hd">${md(it.date)} ${WD[dow(it.date)]}</span>`
+    + `<span>${it.dept ? `<span class="it-d">${hl(it.dept)}</span>` : ''}<span class="it-t">${hl(it.text)}</span></span></button></li>`).join('');
+  return `<p class="hits-note">${hits.length}건${hits.length > 80 ? ' 중 80건' : ''}</p><ul class="hits">${list}</ul>`;
+}
+
+function hymnLabel(h) { return h ? (/[장찬]/.test(h) ? h : `찬송 ${h}장`) : ''; }
+
+function wordSheet() {
+  const t = S.today;
+  const rows = [];
+  for (let i = 0; i < 21 && rows.length < 8; i++) {
+    const d = addDays(t, i), p = M.duty.get(d)?.pray;
+    if (p && p.name) rows.push(`<li class="it"><span class="it-d">${relDay(d)} · ${shortDate(d)}</span><span class="it-t">${esc(p.name)}</span>${p.bible || p.hymn ? `<span class="it-b">${[p.bible, hymnLabel(p.hymn)].filter(Boolean).map(x => `<i>${esc(x)}</i>`).join('')}</span>` : ''}</li>`);
+  }
+  let h = `<section class="panel" style="margin-top:4px"><ul class="items">${rows.join('') || '<li class="it none">앞으로 3주 안에 순서가 없습니다.</li>'}</ul></section>`;
+  const next = nextDuty('pray');
+  const p = next && next.v;
+  if (p && (p.bible || p.hymn)) {
+    const w = S.word;
+    if (!w || w.date !== next.date) {
+      h += `<div class="btns"><button class="btn solid" data-action="read-word">${relDay(next.date)} 말씀·찬송 펼치기</button></div>`;
+    } else {
+      if (p.bible) h += `<section class="panel word"><h2 class="ph">말씀 · ${esc(p.bible)}</h2><div class="tb" style="padding-top:10px">${
+        w.verses == null ? '<p>불러오는 중…</p>' : w.verses.length ? w.verses.map(v => `<p><sup>${esc(v.n)}</sup>${esc(v.t)}</p>`).join('')
+          : '<p>본문을 찾지 못했습니다. 성경 칸을 ‘시 23:1-6’처럼 적으면 찾아옵니다.</p>'}</div></section>`;
+      if (p.hymn) h += `<section class="panel word"><h2 class="ph">${esc(hymnLabel(p.hymn))}</h2><div class="tb" style="padding-top:10px">${
+        w.lyrics == null ? '<p>불러오는 중…</p>' : w.lyrics ? w.lyrics.split(/\s*(?=\(\d+\))/).map(v => `<p>${esc(v.trim())}</p>`).join('') : '<p>가사를 찾지 못했습니다.</p>'}</div></section>`;
+    }
+  }
+  return h;
+}
+
+function parseRef(t) {
+  const m = String(t || '').match(/^\s*([가-힣]+)\s*(\d+)\s*(?:[:：]|장)\s*(\d+)\s*절?\s*(?:[-~–]\s*(\d+)\s*절?)?/);
+  if (!m) return null;
+  const from = +m[3];
+  return {book: m[1], ch: +m[2], from, to: Math.min(Math.max(m[4] ? +m[4] : from, from), from + 80)};
+}
+
+async function readWord() {
+  const next = nextDuty('pray');
+  if (!next) return;
+  const p = next.v;
+  const w = S.word = {date: next.date, verses: p.bible ? null : [], lyrics: p.hymn ? null : ''};
+  paintSheet();
+  const jobs = [];
+  const r = parseRef(p.bible);
+  if (p.bible && !r) w.verses = [];
+  if (r) {
+    jobs.push(gviz('성경 말씀', `select C, D, E where (A = '${r.book}' or B = '${r.book}') and C = ${r.ch} and D >= ${r.from} and D <= ${r.to} order by D`)
+      .then(t => { w.verses = t.rows.map(x => ({n: cText(x.c[1]), t: cText(x.c[2])})).filter(x => x.t); })
+      .catch(() => { w.verses = []; }));
+  }
+  const hn = (String(p.hymn || '').match(/\d{1,3}/) || [])[0];
+  if (p.hymn && !hn) w.lyrics = '';
+  if (hn) {
+    jobs.push(gviz('찬송가 가사', `select A, B where A = ${hn}`)
+      .catch(() => gviz('찬송가 가사', `select A, B where A = '${hn}'`))
+      .then(t => { w.lyrics = cText(t.rows[0]?.c?.[1]); })
+      .catch(() => { w.lyrics = ''; }));
+  }
+  await Promise.all(jobs);
+  if (S.word === w && S.sheet && S.sheet.kind === 'word') paintSheet();
+}
+
+function dutySheet() {
+  const rows = [];
+  for (let i = 0; i < 21 && rows.length < 10; i++) {
+    const d = addDays(S.today, i), n = M.duty.get(d)?.night;
+    if (n) rows.push(`<li class="it"><span class="it-d">${relDay(d)} · ${shortDate(d)}</span><span class="it-t">${esc(n)}</span></li>`);
+  }
+  return `<section class="panel" style="margin-top:4px"><ul class="items">${rows.join('') || '<li class="it none">앞으로 3주 안에 감독 순서가 없습니다.</li>'}</ul></section>`;
+}
+
+function classesSheet() {
+  const grades = [...new Set(M.classes.map(c => c.grade))].sort();
+  const all = M.classes.reduce((s, c) => s + c.count, 0);
+  const cols = grades.map(g => {
+    const list = M.classes.filter(c => c.grade === g);
+    return `<div class="cls-col${S.grade === g ? ' me' : ''}"><h3>${g}학년<small>${list.length}학급 · ${list.reduce((s, c) => s + c.count, 0)}명</small></h3><ol>`
+      + list.map(c => `<li><b>${c.cls}</b><span>${esc(c.teacher)}</span><small>${c.count || ''}</small></li>`).join('') + '</ol></div>';
+  }).join('');
+  return `<p class="hint" style="margin-top:0">전교 ${M.classes.length}학급 · ${all}명</p><section class="panel"><div class="cls-grid">${cols}</div></section>`;
+}
+
+function ccSheet() {
+  const g = S.grade;
+  const rows = M.cc.filter(r => !g || r.hours[g - 1]);
+  const list = rows.slice().reverse().map(r => {
+    const gs = [1, 2, 3].filter(x => r.hours[x - 1]);
+    const b = [gs.length && gs.length < 3 ? `${gs.join('·')}학년` : '', r.period ? `${r.period}교시` : ''].filter(Boolean);
+    return `<li class="it"><span class="it-d">${shortDate(r.date)} · ${esc(r.area)}</span><span class="it-t">${esc(r.text)}</span>${b.length ? `<span class="it-b">${b.map(x => `<i>${esc(x)}</i>`).join('')}</span>` : ''}</li>`;
+  }).join('');
+  return `<p class="hint" style="margin-top:0">창체누가기록 시트의 1·2·3 칸을 시간으로 더했습니다.${g ? ` ${g}학년 기록만 보여 줍니다.` : ' 학년을 고르면 그 학년 기록만 보여 줍니다.'}</p>`
+    + `<section class="panel"><ul class="items">${list || '<li class="it none">기록이 없습니다.</li>'}</ul></section>`;
+}
+
+/* ── 조작 ───────────────────────────────────────────── */
+document.addEventListener('click', e => {
+  const pc = e.target.closest('.pc');
+  if (pc) {
+    const ctx = pc.dataset.ctx, panel = pc.closest('.panel');
+    if (ctx === 'main') S.pSel = pc.dataset.p; else S.sheetP = pc.dataset.p;
+    const cell = periodCells(forecast(panel.dataset.date)).find(c => String(c.p) === pc.dataset.p);
+    panel.querySelectorAll('.pc').forEach(b => b.setAttribute('aria-selected', String(b === pc)));
+    $(`#items-${ctx}`).innerHTML = cellItems(cell);
+    return;
+  }
+  const gr = e.target.closest('[data-grade]');
+  if (gr) {
+    const g = +gr.dataset.grade;
+    setGrade(g);
+    if (S.sheet && S.sheet.kind === 'places') closeSheet();
+    return;
+  }
+  const day = e.target.closest('[data-day]');
+  if (day) { openSheet('day', day.dataset.day); return; }
+  const a = e.target.closest('[data-action]');
+  if (!a) return;
+  switch (a.dataset.action) {
+    case 'close': closeSheet(); break;
+    case 'refresh': e.preventDefault(); load(); if (S.sheet) paintSheet(); break;
+    case 'climate': case 'places': case 'word': case 'duty': case 'classes': case 'cc': openSheet(a.dataset.action); break;
+    case 'read-word': readWord(); break;
+    case 'mode': {
+      const v = a.dataset.v;
+      if (v === S.mode) break;
+      S.mode = v;
+      savePrefs();
+      primeFromCache(); rebuild(); render(); load();
+      break;
+    }
+    case 'copy': {
+      const url = a.dataset.url;
+      const done = () => { a.textContent = '복사했습니다'; setTimeout(() => { a.textContent = '학생용 주소 복사'; }, 1800); };
+      if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt('학생용 주소', url));
+      else prompt('학생용 주소', url);
+      break;
+    }
+    case 'forget':
+      Object.keys(SRC).forEach(k => store.del(CACHE + k));
+      a.textContent = '지웠습니다';
+      break;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.sheet) { closeSheet(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"]')) { e.preventDefault(); e.target.click(); return; }
+  if (S.sheet || e.target.closest('input')) return;
+  if (e.key === 'ArrowRight' && S.grade < 3) setGrade(S.grade + 1);
+  if (e.key === 'ArrowLeft' && S.grade > 0) setGrade(S.grade - 1);
+});
+
+let qTimer = 0;
+document.addEventListener('input', e => {
+  if (e.target.id !== 'q') return;
+  S.q = e.target.value.trim();
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => {
+    // 검색어가 생기거나 없어질 때는 학년 카드까지 다시 그린다
+    const hadCards = !!document.querySelector('.places');
+    if (hadCards === !S.q) paintSheet();
+    else $('#hits').innerHTML = hitsHTML();
+  }, 120);
+});
+
+addEventListener('popstate', () => { if (S.sheet) hideSheet(); });
+
+// 옆으로 밀면 학년이 바뀐다 (날씨 앱에서 도시를 넘기듯)
+let touch = null;
+document.addEventListener('touchstart', e => {
+  if (S.sheet || e.target.closest('.strip,input')) { touch = null; return; }
+  touch = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+}, {passive: true});
+document.addEventListener('touchend', e => {
+  if (!touch) return;
+  const dx = e.changedTouches[0].clientX - touch.x, dy = e.changedTouches[0].clientY - touch.y;
+  touch = null;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+  const g = S.grade + (dx < 0 ? 1 : -1);
+  if (g >= 0 && g <= 3) setGrade(g);
+}, {passive: true});
+
+// 판을 아래로 끌어내리면 닫힌다
+let drag = null;
+$('#sheet').addEventListener('touchstart', e => {
+  const body = $('#sheet-body');
+  if (e.target.closest('.sheet-body') && body.scrollTop > 0) { drag = null; return; }
+  drag = {y: e.touches[0].clientY, dy: 0};
+}, {passive: true});
+$('#sheet').addEventListener('touchmove', e => {
+  if (!drag) return;
+  drag.dy = Math.max(0, e.touches[0].clientY - drag.y);
+  if (drag.dy > 0) { $('#sheet').style.transition = 'none'; $('#sheet').style.transform = `translateY(${drag.dy}px)`; }
+}, {passive: true});
+$('#sheet').addEventListener('touchend', () => {
+  if (!drag) return;
+  const el = $('#sheet');
+  el.style.transition = ''; el.style.transform = '';
+  if (drag.dy > 110) closeSheet();
+  drag = null;
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (Date.now() - S.lastLoad > STALE) load();
+  else render();
+});
+setInterval(() => {
+  if (document.visibilityState !== 'visible' || S.sheet) return;
+  if (Date.now() - S.lastLoad > STALE) load();
+  else if (todayKey() !== S.today) render();
+}, 60000);
+
+primeFromCache();
+rebuild();
+render();
+load();
+</script>
+</body>
+</html>
