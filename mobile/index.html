@@ -103,7 +103,19 @@ a{color:var(--link)}
 .bubble b{display:block;margin-top:3px;font-size:16px;line-height:1.4}
 .bubble .tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .bubble .tg i{font-style:normal;font-size:11.5px;font-weight:800;line-height:19px;padding:0 8px;border-radius:999px;background:var(--sunk);color:var(--ink-2)}
-.date{margin:4px 0 0;font:400 40px/1.1 var(--display);letter-spacing:-.01em}
+.date{margin:0;font:400 clamp(32px,10vw,40px)/1.1 var(--display);letter-spacing:-.01em}
+#focus{touch-action:pan-y}
+.from-r{animation:from-r .34s cubic-bezier(.2,.8,.2,1) both}
+.from-l{animation:from-l .34s cubic-bezier(.2,.8,.2,1) both}
+@keyframes from-r{from{transform:translateX(56px);opacity:0}to{transform:none;opacity:1}}
+@keyframes from-l{from{transform:translateX(-56px);opacity:0}to{transform:none;opacity:1}}
+.dnav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:4px;margin-top:4px}
+.nb{width:44px;height:44px;border:2.5px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:2px 2px 0 var(--line)}
+.nb:active{transform:translate(2px,2px);box-shadow:none;background:var(--surface)}
+.eyebrow{margin:0 0 2px;font:400 15px/1.4 var(--display);color:var(--ink-3)}
+.eyebrow.away{display:inline-block;padding:0 10px;border-radius:999px;background:var(--note);color:#2A211D;border:2px solid var(--line)}
+.back-today{margin-top:14px;height:36px;font-size:13px}
+.wd.focus{box-shadow:inset 0 0 0 2.5px var(--line)}
 .date small{font-size:22px;color:var(--ink-2);margin-left:8px}
 .stage{margin:10px 0 0;display:flex;justify-content:center;align-items:center;gap:8px;font-size:16px;font-weight:800}
 .badge{display:inline-flex;align-items:center;height:30px;padding:0 13px;border-radius:999px;background:var(--c);color:#2A211D;border:2.5px solid var(--line);box-shadow:2px 2px 0 var(--line);font:400 17px/1 var(--display)}
@@ -225,7 +237,7 @@ button.chip:active{transform:translate(2px,2px);box-shadow:none}
 .x svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round}
 .sheet-body{overflow-y:auto;overscroll-behavior:contain;padding:4px 16px calc(28px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
 .dayhead{text-align:center;padding:0 0 4px}
-.dayhead .fl{width:176px;height:auto;margin:0 auto}
+.dayhead .fl{width:190px;height:auto;margin:0 auto 6px}
 .daynav{display:flex;gap:10px;margin-top:18px}
 .daynav .btn{flex:1}
 .search{display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;border-radius:14px;background:var(--surface);border:2.5px solid var(--line);box-shadow:3px 3px 0 var(--line)}
@@ -363,7 +375,7 @@ const S = {
   mode: forParam === 'student' || forParam === 'teacher' ? forParam : (prefs.mode === 'student' ? 'student' : 'teacher'),
   dept: typeof prefs.dept === 'string' ? prefs.dept : '',
   src: {}, loading: false, lastLoad: 0, today: todayKey(),
-  month: null, yearView: false, sheet: null, q: '', word: null, bloomed: '',
+  month: null, yearView: false, sheet: null, q: '', word: null, bloomed: '', focus: null, slide: '',
 };
 const savePrefs = () => store.set(PREFS, {mode: S.mode, dept: S.dept});
 if (forParam) savePrefs();
@@ -881,24 +893,40 @@ function flowerSVG(f, o = {}) {
       + mound(154, 80);
   }
   let labels = '';
+  const cr = R * .2 + 4;
+  let x0 = -cr, x1 = cr, y0 = -cr, y1 = cr;
+  const step = n === 2 ? 80 : 360 / n;
   order.forEach((it, k) => {
     const L = R * (0.86 + 0.14 * it.w / maxW);
     const W = Math.min(L * .44, (2 * Math.PI * R * .55 / n) * .62);
-    const a = n === 2 ? (k ? 32 : -32) : spin + k * 360 / n;
+    const a = n === 2 ? (k ? 40 : -40) : spin + k * step;
+    const rad = a * Math.PI / 180, cos = Math.cos(rad), sin = Math.sin(rad);
     const i = f.work.indexOf(it);
     g += petalG(L, W, it.c || deptColor(it.dept), o.detail, `data-ev="${i}" style="--a:${n1(a)}deg;--k:${k}"`);
+    // 꽃잎 끝과 양 옆 가장 넓은 곳으로 그림의 테두리를 잰다
+    for (const [px, py] of [[0, -L], [W * .95, -L * .55], [-W * .95, -L * .55]]) {
+      const X = px * cos - py * sin, Y = px * sin + py * cos;
+      x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+    }
     if (o.labels && it.dept) {
-      // 글자는 꽃잎을 따라 돌지 않고 늘 똑바로 선다
-      const t = short(it.dept), r = L * .56, rad = a * Math.PI / 180;
-      const fs = n1(Math.max(11, Math.min(t.length > 1 ? 22 : 28, W * (t.length > 1 ? .78 : 1.15))));
-      labels += `<g class="lb" data-ev="${i}" style="--k:${k}"><text x="${n1(Math.sin(rad) * r)}" y="${n1(-Math.cos(rad) * r)}" font-size="${fs}">${esc(t)}</text></g>`;
+      // 글자는 꽃잎을 따라 돌지 않고 늘 똑바로 선다. 크기는 꽃잎 폭과 옆 꽃잎까지의 거리 가운데 좁은 쪽에 맞춘다.
+      const t = short(it.dept), r = L * .6;
+      const gap = n > 1 ? 2 * r * Math.sin(step * Math.PI / 360) : Infinity;
+      const room = Math.min(W * 1.5, gap * .82) - 6;
+      const em = [...t].reduce((sum, ch) => sum + (/[0-9A-Za-z]/.test(ch) ? .62 : 1), 0);
+      const fs = n1(Math.max(9, Math.min(26, room / em)));
+      labels += `<g class="lb" data-ev="${i}" style="--k:${k}"><text x="${n1(sin * r)}" y="${n1(-cos * r)}" font-size="${fs}">${esc(t)}</text></g>`;
     }
   });
-  g += labels + centerG(R * .2 + 4, ['#FFD43B', '#F59F00'], o.detail, n);
+  g += labels + centerG(cr, ['#FFD43B', '#F59F00'], o.detail, n);
   if (f.busy >= PEAK && o.detail) {
     g += sparkG(R * 1.02, -R * .8, 17, 0) + sparkG(-R * 1.06, -R * .38, 12, 700) + sparkG(R * .92, R * .62, 10, 1400);
   }
-  return `<svg class="${cls}" viewBox="${o.stem ? '-118 -118 236 290' : '-112 -112 224 224'}"${label}>${g}</svg>`;
+  // 줄기 없는 꽃은 꽃잎이 한쪽으로 몰려도(한두 장) 그림 가운데에 오게 보는 창을 옮긴다.
+  // o.fit 이면 창을 꽃에 맞춰 좁혀 크게 보여 준다(1.5배까지).
+  const side = o.fit ? Math.min(224, Math.max(150, Math.max(x1 - x0, y1 - y0) + 44)) : 224;
+  const vb = o.stem ? '-118 -118 236 290' : `${n1((x0 + x1) / 2 - side / 2)} ${n1((y0 + y1) / 2 - side / 2)} ${n1(side)} ${n1(side)}`;
+  return `<svg class="${cls}" viewBox="${vb}"${label}>${g}</svg>`;
 }
 
 // 목록과 꽃잎이 같은 순서를 쓴다: 교시 없는 일정 → 교시 순
@@ -960,30 +988,41 @@ function stageLine(f) {
 }
 
 /* ── 그리기: 첫 화면 ─────────────────────────────── */
+// 첫 화면이 보여 주는 날. 옆으로 밀거나 ‹ › 로 옮긴다. 비어 있으면 오늘.
+const focusDay = () => S.focus || S.today;
+const AL = '<svg class="i" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></svg>';
+const AR = '<svg class="i" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></svg>';
+
 function heroHTML(f) {
-  const d = toDate(S.today);
-  const date = `<p class="date">${longDate(S.today)}<small>${WD[d.getDay()]}요일</small></p>`;
+  const k = focusDay();
+  const d = toDate(k);
+  const n = diffDays(S.today, k);
+  const away = n === 1 ? '내일' : n === -1 ? '어제' : n > 0 ? `${n}일 뒤` : `${-n}일 전`;
+  const date = `<div class="dnav"><button class="ib nb" data-action="prev-day" aria-label="전날">${AL}</button>`
+    + `<div><p class="eyebrow${n ? ' away' : ''}">${n ? away : '오늘'}</p><p class="date">${longDate(k)}<small>${WD[d.getDay()]}요일</small></p></div>`
+    + `<button class="ib nb" data-action="next-day" aria-label="다음 날">${AR}</button></div>`;
   if (!f) {
-    const blank = {date: S.today, work: [], memos: [], fronts: [], busy: 0, stage: '쉼', known: false};
+    const blank = {date: k, work: [], memos: [], fronts: [], busy: 0, stage: '쉼', known: false};
     return `<section class="hero">${flowerSVG(blank, {stem: true, label: false})}${date}`
       + `<p class="stage-sub">${S.loading || !S.lastLoad ? '시트를 읽는 중이에요' : '시트를 읽지 못했어요'}</p></section>`;
   }
-  const key = `${S.today}|${S.dept}|${S.mode}|${f.work.length}`;
+  const key = `${k}|${S.dept}|${S.mode}|${f.work.length}`;
   const anim = S.bloomed !== key;
   S.bloomed = key;
   let chips = '';
-  const du = S.mode === 'teacher' ? M.duty.get(S.today) : null;
+  const du = S.mode === 'teacher' ? M.duty.get(k) : null;
   if (du && du.pray && du.pray.name) {
-    const more = du.pray.bible || du.pray.hymn;
+    const more = n === 0 && (du.pray.bible || du.pray.hymn);
     chips += `<${more ? 'button' : 'span'} class="chip"${more ? ' data-action="word"' : ''}>기도 <b>${esc(du.pray.name)}</b>${du.pray.bible ? ` · ${esc(du.pray.bible)}` : ''}</${more ? 'button' : 'span'}>`;
   }
   if (du && du.night) chips += `<span class="chip">야자 감독 <b>${esc(du.night)}</b></span>`;
   return `<section class="hero" id="hero">${tapFlower(f, {stem: true, detail: true, anim})}${date}${stageLine(f)}`
-    + (chips ? `<div class="chips">${chips}</div>` : '') + `</section>`;
+    + (chips ? `<div class="chips">${chips}</div>` : '')
+    + (n ? `<button class="btn back-today" data-action="go-today">오늘로 돌아가기</button>` : '') + `</section>`;
 }
 
 function notesHTML() {
-  const t = S.today;
+  const t = focusDay();
   return M.notices.filter(n => n.start <= t && t <= n.end)
     .map(n => `<div class="note" role="note"><span>${esc(n.text)}</span><small>${md(n.end)}까지</small></div>`).join('');
 }
@@ -991,12 +1030,14 @@ function notesHTML() {
 function todayHTML(f) {
   if (!f) return sec('오늘', '', failHTML());
   let h = '';
+  const k = focusDay(), isToday = k === S.today;
   if (f.work.length || f.fronts.length || f.memos.length) {
-    h += sec(f.work.length ? '오늘의 꽃잎' : '오늘', f.work.length ? `${f.work.length}장 · 꽃잎을 누르면 일정이 나와요` : '', `<div class="card">${dayList(f, {link: true, go: true})}</div>`);
+    h += sec(f.work.length ? (isToday ? '오늘의 꽃잎' : '이날의 꽃잎') : (isToday ? '오늘' : '이날'),
+      f.work.length ? `${f.work.length}장 · 꽃잎을 누르면 일정이 나와요` : '', `<div class="card">${dayList(f, {link: true, go: true})}</div>`);
   }
-  // 오늘 할 일이 없으면 다음 수업일을 미리 보여 준다
-  const nd = !f.work.length && nextWorkDay(S.today);
-  if (nd) h += sec(`${longDate(nd)} ${WD[dow(nd)]}요일`, `다음 수업일 · ${diffDays(S.today, nd)}일 뒤`, `<div class="card">${dayList(day(nd), {go: true})}</div>`);
+  // 할 일이 없는 날이면 다음 수업일을 미리 보여 준다
+  const nd = !f.work.length && nextWorkDay(k);
+  if (nd) h += sec(`${longDate(nd)} ${WD[dow(nd)]}요일`, `다음 수업일 · ${diffDays(k, nd)}일 뒤`, `<div class="card">${dayList(day(nd), {go: true})}</div>`);
   return h;
 }
 
@@ -1006,7 +1047,7 @@ function weekHTML() {
     const d = addDays(S.today, i);
     const f = day(d);
     const wd = dow(d);
-    const cls = [wd === 0 ? 'sun' : wd === 6 ? 'sat' : '', i === 0 ? 'today' : ''].filter(Boolean).join(' ');
+    const cls = [wd === 0 ? 'sun' : wd === 6 ? 'sat' : '', i === 0 ? 'today' : '', i && d === S.focus ? 'focus' : ''].filter(Boolean).join(' ');
     h += `<button class="wd ${cls}" data-day="${d}" aria-label="${longDate(d)} ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}">`
       + `<span>${i === 0 ? '오늘' : WD[wd]}</span>${flowerSVG(f, {label: false})}<b>${toDate(d).getDate()}</b></button>`;
   }
@@ -1111,10 +1152,21 @@ function paintTop() {
 
 function render() {
   S.today = todayKey();
-  const f = ready() ? day(S.today) : null;
-  $('#main').innerHTML = heroHTML(f) + (f ? notesHTML() : '') + todayHTML(f)
+  if (S.focus === S.today) S.focus = null;
+  const f = ready() ? day(focusDay()) : null;
+  $('#main').innerHTML = `<div id="focus"${S.slide ? ` class="${S.slide}"` : ''}>` + heroHTML(f) + (f ? notesHTML() : '') + todayHTML(f) + `</div>`
     + (f ? weekHTML() + peaksHTML() + gardenHTML() : '') + footHTML();
+  S.slide = '';
   paintTop();
+}
+
+// 첫 화면의 날을 하루씩 옮긴다 (n = +1 다음 날, -1 전날)
+function moveDay(n) {
+  closeBubble();
+  const k = addDays(focusDay(), n);
+  S.focus = k === S.today ? null : k;
+  S.slide = n > 0 ? 'from-r' : 'from-l';
+  render();
 }
 
 function renderGarden() {
@@ -1170,7 +1222,7 @@ function daySheet(date) {
   if (!ready()) return {title, body: ''};
   const f = day(date);
   const du = S.mode === 'teacher' ? M.duty.get(date) : null;
-  let body = `<div class="dayhead">${tapFlower(f, {detail: true, anim: S.sheet.anim})}${stageLine(f)}</div>`;
+  let body = `<div class="dayhead${S.sheet.slide ? ` ${S.sheet.slide}` : ''}">${tapFlower(f, {detail: true, anim: S.sheet.anim, fit: true})}${stageLine(f)}</div>`;
   body += `<div class="card" style="margin-top:16px">${dayList(f)}</div>`;
   if (du && (du.pray?.name || du.night)) {
     body += `<div class="chips" style="justify-content:flex-start;margin-top:14px">`
@@ -1365,6 +1417,9 @@ document.addEventListener('click', e => {
   if (!a) return;
   switch (a.dataset.action) {
     case 'close': closeSheet(); break;
+    case 'prev-day': moveDay(-1); break;
+    case 'next-day': moveDay(1); break;
+    case 'go-today': closeBubble(); S.slide = S.focus > S.today ? 'from-l' : 'from-r'; S.focus = null; render(); break;
     case 'refresh': load(); break;
     case 'search': case 'more': case 'word': openSheet(a.dataset.action); break;
     case 'read-word': readWord(); break;
@@ -1402,8 +1457,18 @@ document.addEventListener('change', e => {
   render();
 });
 
+function sheetDay(n) {
+  if (!S.sheet || S.sheet.kind !== 'day') return;
+  closeBubble();
+  S.sheet = {kind: 'day', arg: addDays(S.sheet.arg, n), anim: true, slide: n > 0 ? 'from-r' : 'from-l'};
+  paintSheet();
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && S.sheet) closeSheet();
+  if (e.key === 'Escape' && S.sheet) { closeSheet(); return; }
+  if (e.target.closest('input,select,textarea') || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+  const n = e.key === 'ArrowRight' ? 1 : -1;
+  if (S.sheet) sheetDay(n); else moveDay(n);
 });
 
 let qTimer = 0;
@@ -1416,6 +1481,34 @@ document.addEventListener('input', e => {
 
 addEventListener('popstate', () => { if (S.sheet) hideSheet(); });
 addEventListener('scroll', () => $('#top').classList.toggle('lifted', scrollY > 4), {passive: true});
+
+// 첫 화면은 옆으로 밀어 하루씩 넘긴다. 미는 동안 손가락을 따라 움직인다.
+let sw = null;
+document.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  sw = !S.sheet && e.target.closest('#focus') ? {x: t.clientX, y: t.clientY, dx: 0, lock: null} : null;
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  if (!sw) return;
+  const t = e.touches[0];
+  const dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+  if (!sw.lock && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) sw.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+  if (sw.lock !== 'x') return;
+  sw.dx = dx;
+  const el = $('#focus');
+  el.style.transition = 'none';
+  el.style.transform = `translateX(${n1(dx * .6)}px)`;
+  el.style.opacity = String(1 - Math.min(.5, Math.abs(dx) / 700));
+}, {passive: true});
+document.addEventListener('touchend', () => {
+  if (!sw) return;
+  const s = sw;
+  sw = null;
+  if (s.lock !== 'x') return;
+  const el = $('#focus');
+  el.style.transition = 'transform .2s, opacity .2s'; el.style.transform = ''; el.style.opacity = '';
+  if (Math.abs(s.dx) > 60) moveDay(s.dx < 0 ? 1 : -1);
+});
 
 // 정원은 옆으로 밀어 달을 넘긴다
 let touch = null;
@@ -1437,19 +1530,23 @@ document.addEventListener('touchend', e => {
 // 판을 아래로 끌어내리면 닫힌다
 let drag = null;
 $('#sheet').addEventListener('touchstart', e => {
-  if (e.target.closest('.sheet-body') && $('#sheet-body').scrollTop > 0) { drag = null; return; }
-  drag = {y: e.touches[0].clientY, dy: 0};
+  const t = e.touches[0];
+  drag = {x: t.clientX, y: t.clientY, dx: 0, dy: 0, lock: null, top: !(e.target.closest('.sheet-body') && $('#sheet-body').scrollTop > 0)};
 }, {passive: true});
 $('#sheet').addEventListener('touchmove', e => {
   if (!drag) return;
-  drag.dy = Math.max(0, e.touches[0].clientY - drag.y);
-  if (drag.dy > 0) { $('#sheet').style.transition = 'none'; $('#sheet').style.transform = `translateY(${drag.dy}px)`; }
+  const t = e.touches[0];
+  drag.dx = t.clientX - drag.x;
+  drag.dy = t.clientY - drag.y;
+  if (!drag.lock && (Math.abs(drag.dx) > 10 || Math.abs(drag.dy) > 10)) drag.lock = Math.abs(drag.dx) > Math.abs(drag.dy) * 1.2 ? 'x' : 'y';
+  if (drag.lock === 'y' && drag.top && drag.dy > 0) { $('#sheet').style.transition = 'none'; $('#sheet').style.transform = `translateY(${drag.dy}px)`; }
 }, {passive: true});
 $('#sheet').addEventListener('touchend', () => {
   if (!drag) return;
   const el = $('#sheet');
   el.style.transition = ''; el.style.transform = '';
-  if (drag.dy > 110) closeSheet();
+  if (drag.lock === 'y' && drag.top && drag.dy > 110) closeSheet();
+  if (drag.lock === 'x' && Math.abs(drag.dx) > 60) sheetDay(drag.dx < 0 ? 1 : -1);
   drag = null;
 });
 
