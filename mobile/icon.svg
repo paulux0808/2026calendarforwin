@@ -1,14 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1D5CA6"/>
-      <stop offset="1" stop-color="#4B8ED6"/>
-    </linearGradient>
+    <radialGradient id="pollen"><stop offset="0" stop-color="#FFE7A0"/><stop offset=".7" stop-color="#F5BE45"/><stop offset="1" stop-color="#E29A1E"/></radialGradient>
+    <linearGradient id="a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#D9577E"/><stop offset="1" stop-color="#FFD0DD"/></linearGradient>
+    <linearGradient id="b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4E6FD6"/><stop offset="1" stop-color="#CCD8FF"/></linearGradient>
+    <linearGradient id="c" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E0873A"/><stop offset="1" stop-color="#FFE1B8"/></linearGradient>
+    <linearGradient id="d" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8E5CD0"/><stop offset="1" stop-color="#E6D5FF"/></linearGradient>
+    <linearGradient id="e" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1797A6"/><stop offset="1" stop-color="#BDF0F2"/></linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
-  <circle cx="206" cy="206" r="74" fill="#FFD45C"/>
-  <g stroke="#FFD45C" stroke-width="18" stroke-linecap="round">
-    <path d="M206 92v-26M206 346v-26M92 206H66M346 206h-26M125 125l-18-18M305 305l-18-18M125 287l-18 18M287 125l18-18"/>
+  <rect width="512" height="512" rx="112" fill="#F3F5F4"/>
+  <g transform="translate(256 256) scale(2)" stroke="#fff" stroke-width="1.5" paint-order="stroke">
+    <path d="M0 0C19 -8.4 39.9 -35.3 31.2 -65.5C23.6 -85.7 -23.6 -85.7 -31.2 -65.5C-39.9 -35.3 -19 -8.4 0 0Z" fill="url(#a)"/>
+    <path d="M0 0C19 -8.4 39.9 -35.3 31.2 -65.5C23.6 -85.7 -23.6 -85.7 -31.2 -65.5C-39.9 -35.3 -19 -8.4 0 0Z" fill="url(#b)" transform="rotate(72)"/>
+    <path d="M0 0C19 -8.4 39.9 -35.3 31.2 -65.5C23.6 -85.7 -23.6 -85.7 -31.2 -65.5C-39.9 -35.3 -19 -8.4 0 0Z" fill="url(#c)" transform="rotate(144)"/>
+    <path d="M0 0C19 -8.4 39.9 -35.3 31.2 -65.5C23.6 -85.7 -23.6 -85.7 -31.2 -65.5C-39.9 -35.3 -19 -8.4 0 0Z" fill="url(#d)" transform="rotate(216)"/>
+    <path d="M0 0C19 -8.4 39.9 -35.3 31.2 -65.5C23.6 -85.7 -23.6 -85.7 -31.2 -65.5C-39.9 -35.3 -19 -8.4 0 0Z" fill="url(#e)" transform="rotate(288)"/>
+    <circle r="19" fill="url(#pollen)" stroke="none"/>
   </g>
-  <path d="M170 396h190a72 72 0 0 0 12-143 98 98 0 0 0-186-17 80 80 0 0 0-16 160z" fill="#fff"/>
 </svg>

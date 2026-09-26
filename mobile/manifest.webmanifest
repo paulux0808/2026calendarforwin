@@ -1,13 +1,13 @@
 {
-  "name": "학교 예보 · 보성여고 학사일정",
-  "short_name": "학교 예보",
-  "description": "보성여고 학사일정을 날씨 예보처럼 봅니다.",
+  "name": "꽃달력 · 보성여고 학사일정",
+  "short_name": "꽃달력",
+  "description": "보성여고 학사일정. 하루는 꽃 한 송이, 일정은 꽃잎 한 장.",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1D5CA6",
-  "theme_color": "#1D5CA6",
+  "background_color": "#F3F5F4",
+  "theme_color": "#F3F5F4",
   "icons": [
     {
       "src": "icon.svg",
