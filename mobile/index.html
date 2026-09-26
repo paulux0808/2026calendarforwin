@@ -112,7 +112,7 @@ main,.dock,.sheet,.sheet-bg{position:relative;z-index:1}
 .it-t{font-size:15px;font-weight:500}
 .it-b{display:inline-flex;flex-wrap:wrap;gap:4px;margin-left:6px;vertical-align:1px}
 .it-b i{font-style:normal;font-size:11.5px;font-weight:600;line-height:18px;padding:0 7px;border-radius:999px;background:rgba(255,255,255,.16);color:var(--t1);white-space:nowrap}
-.it.hol .it-t{color:#FFE08A}
+.it.note .it-t{color:#FFE08A}
 .it.none{color:var(--t3);font-size:14px}
 
 /* 열흘 예보 */
@@ -304,11 +304,16 @@ const TIMEOUT = 15000;
 const STALE = 5 * 60 * 1000;
 
 /* ── 예보 규칙 ─────────────────────────────────────── */
-// 시험은 뇌우, 큰 행사는 무지개, 쉬는 날은 맑음. 나머지는 일정 수로 구름의 양을 정한다.
-const EXAM = /(중간고사|기말고사|지필평가|정기고사|모의고사|학력평가|모의평가|대학수학능력시험|수능)/;
-const FEST = /(체육대회|축제|학예회|합창대회|수학여행|현장체험학습|수련회|졸업식|입학식|개학식|방학식|종업식)/;
-const NOT_EVENT = /(출제|제출|검토|원안|계획|협의|인쇄|감독|채점|확인|이의|성적|결과|분석|준비|연수|회의|입력|마감|신청|접수|원서|응원|배부|설명회|평가회|안내)/;
-const HOLIDAY = /(공휴일|대체\s*휴일|휴업일|재량\s*휴업|신정|설날|설\s*연휴|삼일절|3\.1절|어린이날|석가탄신일|부처님\s*오신\s*날|현충일|광복절|추석|개천절|한글날|성탄절|선거일|개교기념일)/;
+// 일정 이름의 뜻은 읽지 않는다. 날씨는 시트의 수와 모양에서만 나온다.
+//  · 일정 하나의 무게 = 한 해에 몇 날 나오는가(드물수록 무겁다) × 차지하는 교시 수
+//  · 바쁨 = 올해 수업일 가운데 그날보다 가벼운 날의 비율
+//  · 날씨 = 바쁨이 놓인 구간. 할 일이 없으면 맑음, 뇌우 다음 수업일이 가벼우면 무지개
+//  · 시트는 할 일마다 [부서]를 붙인다. 부서 없는 줄(공휴일 이름 같은)은 달력 메모로 둔다.
+const BANDS = [[30, 'partly'], [65, 'cloudy'], [90, 'rain'], [101, 'storm']];
+const PERIOD_SHARE = 0.15;  // 교시 하나를 차지할 때마다 더하는 무게
+const CHAIN_SHARE = 0.25;   // 같은 일정이 수업일마다 연달아 나올 때 하루마다 더하는 무게 (5일까지)
+const REACH_SHARE = 0.25;   // 전체 보기에서 학년이 하나 더 적힐 때마다 더하는 무게
+const FRONT_SHARE = 0.5;    // "~10/2" 처럼 기간이 적힌 일정이 둘째 날부터 남기는 무게
 const WORD = {clear: '맑음', partly: '구름 조금', cloudy: '흐림', rain: '비', storm: '뇌우', rainbow: '무지개'};
 const SKY = {
   clear:   {day: ['#1D5CA6', '#4B8ED6'], night: ['#0A142C', '#1C2E57']},
@@ -318,7 +323,7 @@ const SKY = {
   storm:   {day: ['#261E3C', '#4A3D6A'], night: ['#130E22', '#2D2346']},
   rainbow: {day: ['#2366A5', '#69A2D8'], night: ['#0E1A36', '#253A66']},
 };
-const AREA_TONE = {'자율': '#9CC8F5', '동아리': '#6FA3E8', '봉사': '#4A7FD0', '진로': '#2F5FB5'};
+const RAIN_TONES = ['#A9D0F7', '#72A6EA', '#4A7FD0', '#2F5FB5', '#C4DEF9', '#5B92DE'];
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
 const CIRCLED = {'①': 1, '②': 2, '③': 3};
 
@@ -352,7 +357,7 @@ const I = {
   sun: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>',
   drop: '<svg viewBox="0 0 16 16"><path d="M8 1.8s4.5 5 4.5 8a4.5 4.5 0 0 1-9 0c0-3 4.5-8 4.5-8z"/></svg>',
   people: '<svg viewBox="0 0 16 16"><circle cx="6" cy="5.5" r="2.3"/><path d="M1.8 13.5c.4-2.4 2.1-3.8 4.2-3.8s3.8 1.4 4.2 3.8"/><path d="M10.7 3.4a2.2 2.2 0 1 1 0 4.3M12.2 9.9c1.2.6 1.9 1.8 2.1 3.6"/></svg>',
-  star: '<svg viewBox="0 0 16 16"><path d="m8 1.8 1.8 4 4.3.4-3.3 2.9 1 4.2L8 11.1l-3.8 2.2 1-4.2-3.3-2.9 4.3-.4z"/></svg>',
+  bolt: '<svg viewBox="0 0 16 16"><path d="M9.2 1.8 3.8 9h3.9l-1 5.2L12.2 7H8.3z"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>',
 };
 
@@ -528,7 +533,8 @@ function splitCell(text) {
   return parts;
 }
 
-function findGrades(s) {
+// 적혀 있는 학년들 (①②③ 또는 "2, 3학년")
+function markedGrades(s) {
   const set = new Set();
   for (const ch of s) if (CIRCLED[ch]) set.add(CIRCLED[ch]);
   if (!set.size) {
@@ -538,7 +544,7 @@ function findGrades(s) {
       else nums.forEach(n => set.add(n));
     }
   }
-  return set.size && set.size < 3 ? [...set].sort() : null;
+  return [...set].sort();
 }
 
 const PERIOD_TOKEN = /^(\d)\s*(?:[~\-–]\s*(\d))?\s*(?:교시)?$/;
@@ -594,22 +600,63 @@ function parseItem(src, date) {
   if (m) { dept = m[1].trim(); s = s.slice(m[0].length); }
   m = s.match(/^<([^>]{1,10})>\s*/);
   if (m) { cat = m[1].trim(); s = s.slice(m[0].length); }
-  const text = cleanText(s) || s;
+  const marked = markedGrades(s);
   return {
-    date, dept, cat, raw: src, text,
-    grades: findGrades(s),
+    date, dept, cat, raw: src,
+    text: cleanText(s) || s,
+    // 같은 일정인지 가르는 열쇠: 괄호·숫자·기호·띄어쓰기를 뺀 글자 ("1학기 중간고사 2일차" = "2학기 중간고사 1일차")
+    key: s.replace(/\([^)]*\)/g, '').replace(/[\p{N}\p{P}\p{S}\s]/gu, '') || s,
+    grades: marked.length && marked.length < 3 ? marked : null,
+    reach: marked.length,
     periods: findPeriods(s),
     end: findEnd(s, date),
-    // 부서가 붙은 줄은 "[교무부]재량휴업일" 처럼 쉬는 날이 분명할 때만 휴일로 본다
-    hol: HOLIDAY.test(s) && (!dept || /휴업|공휴일|대체\s*휴일/.test(s)),
-    exam: EXAM.test(text) && !NOT_EVENT.test(text),
-    fest: FEST.test(text) && !NOT_EVENT.test(text),
+    note: !dept,
+    w: 0,
   };
 }
 
 /* ── 모델 ───────────────────────────────────────────── */
 function emptyModel() {
-  return {byDate: new Map(), dates: [], duty: new Map(), notices: [], classes: [], cc: [], year: null, total: 0};
+  return {byDate: new Map(), dates: [], index: new Map(), score: [], dist: [], duty: new Map(), notices: [], classes: [], cc: [], year: null, total: 0};
+}
+
+// 일정마다 무게를 매기고, 학년별로 날마다의 점수와 그 분포를 만든다
+function weigh(m) {
+  const keysAt = m.dates.map(d => new Set(m.byDate.get(d).filter(it => !it.note).map(it => it.key)));
+  const days = new Map();
+  let workDays = 0;
+  for (const keys of keysAt) {
+    if (keys.size) workDays++;
+    for (const k of keys) days.set(k, (days.get(k) || 0) + 1);
+  }
+  const ranged = [];
+  m.dates.forEach((date, i) => {
+    for (const it of m.byDate.get(date)) {
+      if (it.note) continue;
+      // 앞뒤 수업일에 같은 일정이 몇 날 이어지는가
+      let run = 1;
+      for (let j = i - 1; j >= 0 && keysAt[j].has(it.key); j--) run++;
+      for (let j = i + 1; j < keysAt.length && keysAt[j].has(it.key); j++) run++;
+      it.w = Math.log2(1 + workDays / days.get(it.key))
+        * (1 + PERIOD_SHARE * (it.periods ? it.periods.length : 0))
+        * (1 + CHAIN_SHARE * (Math.min(run, 5) - 1));
+      if (it.end) ranged.push(it);
+    }
+  });
+  m.score = [0, 1, 2, 3].map(g => {
+    const map = new Map();
+    for (const date of m.dates) {
+      const list = m.byDate.get(date);
+      let s = 0;
+      for (const it of list) if (!it.note && gradeOk(it, g)) s += it.w * (g ? 1 : 1 + REACH_SHARE * Math.max(0, it.reach - 1));
+      // 부서 없는 줄만 있는 날(쉬는 날)에는 기간 일정도 지나가지 않는다
+      const rest = list.length > 0 && list.every(it => it.note);
+      if (!rest) for (const it of ranged) if (it.date < date && it.end >= date && gradeOk(it, g)) s += FRONT_SHARE * it.w;
+      map.set(date, s);
+    }
+    return map;
+  });
+  m.dist = m.score.map(map => [...map.values()].filter(s => s > 0).sort((a, b) => a - b));
 }
 
 function parsePlan(t, m) {
@@ -710,8 +757,10 @@ function rebuild() {
   };
   run(S.mode === 'student' ? 'planS' : 'plan', parsePlan);
   m.dates = [...m.byDate.keys()].sort();
+  m.dates.forEach((d, i) => m.index.set(d, i));
   m.year = m.dates.length ? toDate(m.dates[0]).getFullYear() : null;
   for (const list of m.byDate.values()) m.total += list.length;
+  weigh(m);
   if (S.mode === 'teacher') {
     run('notice', parseNotice);
     run('pray', parsePray);
@@ -728,53 +777,84 @@ const ready = () => !!planSrc().table;
 /* ── 예보 계산 ─────────────────────────────────────── */
 const gradeOk = (it, g) => !g || !it.grades || it.grades.includes(g);
 const itemsOn = (date, g = S.grade) => (M.byDate.get(date) || []).filter(it => gradeOk(it, g));
-const keyTitle = it => it.text.replace(/\([^)]*\)/g, '').replace(/\s*\d+\s*일\s*차/g, '').replace(/\s{2,}/g, ' ').trim();
+const scoreOf = (date, g) => (M.score[g] && M.score[g].get(date)) || 0;
+const topShare = busy => `상위 ${Math.max(1, 100 - busy)}%`;
+
+// 점수가 0 보다 큰 날들 가운데 이 점수 이하인 날의 비율 (1–99)
+function busyOf(date, g) {
+  const s = scoreOf(date, g), sorted = M.dist[g] || [];
+  if (!s || !sorted.length) return 0;
+  let lo = 0, hi = sorted.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (sorted[mid] <= s) lo = mid + 1; else hi = mid; }
+  return Math.min(99, Math.max(1, Math.round(lo / sorted.length * 100)));
+}
+const bandOf = busy => busy ? BANDS.find(([cut]) => busy < cut)[1] : 'clear';
 
 function forecast(date, g = S.grade) {
   const items = itemsOn(date, g);
-  const hol = items.filter(it => it.hol);
-  const reg = items.filter(it => !it.hol);
-  const exam = reg.find(it => it.exam);
-  const fest = reg.find(it => it.fest);
-  const periods = [...new Set(reg.flatMap(it => it.periods || []))].sort((a, b) => a - b);
-  const wd = dow(date);
-  let cond, note = '';
-  if (exam) { cond = 'storm'; note = keyTitle(exam); }
-  else if (hol.length) { cond = 'clear'; note = keyTitle(hol[0]); }
-  else if (fest) { cond = 'rainbow'; note = keyTitle(fest); }
-  else if (!reg.length) { cond = 'clear'; note = wd === 0 || wd === 6 ? '주말' : ''; }
-  else cond = reg.length <= 2 ? 'partly' : reg.length <= 5 ? 'cloudy' : 'rain';
-  const busy = Math.min(99, reg.length * 9 + periods.length * 5 + (exam ? 55 : 0) + (fest ? 15 : 0));
-  return {date, items, reg, hol, cond, word: WORD[cond], note, busy, periods};
+  const work = items.filter(it => !it.note);
+  const notes = items.filter(it => it.note);
+  const busy = busyOf(date, g);
+  let cond = bandOf(busy);
+  let note = notes.map(it => it.text).join(' · ');
+  if ((cond === 'clear' || cond === 'partly') && M.index.has(date)) {
+    const prev = M.dates[M.index.get(date) - 1];
+    if (prev && diffDays(prev, date) <= 4 && bandOf(busyOf(prev, g)) === 'storm') { cond = 'rainbow'; note = note || '뇌우 뒤 갠 날'; }
+  }
+  if (!note && !work.length && (dow(date) === 0 || dow(date) === 6)) note = '주말';
+  // 그날 가장 무거운(드문) 일정이 날씨 옆에 붙는 이름이 된다
+  const head = work.reduce((a, it) => (!a || it.w > a.w ? it : a), null);
+  const periods = [...new Set(work.flatMap(it => it.periods || []))].sort((a, b) => a - b);
+  return {date, items, work, notes, cond, word: WORD[cond], note, head, label: note || (head ? head.text : ''), busy, periods};
 }
 
 function prevSchoolDay(date, g) {
   for (let i = M.dates.length - 1; i >= 0; i--) {
     const d = M.dates[i];
-    if (d < date && itemsOn(d, g).some(it => !it.hol)) return diffDays(d, date) <= 7 ? d : null;
+    if (d < date && scoreOf(d, g) > 0) return diffDays(d, date) <= 7 ? d : null;
   }
   return null;
 }
 function nextSchoolDay(date, g) {
-  for (const d of M.dates) if (d > date && itemsOn(d, g).some(it => !it.hol)) return d;
+  for (const d of M.dates) if (d > date && itemsOn(d, g).some(it => !it.note)) return d;
   return null;
 }
-function upcoming(from, g, pred, limit, within = 400) {
-  const out = [], seen = new Set();
+
+// 뇌우가 수업일 사이로 이어지면 한 구간으로 묶는다
+function stormRuns(from, g, limit, within = 400) {
   const until = addDays(from, within);
+  const runs = [];
   for (const d of M.dates) {
-    if (d < from) continue;
-    if (d > until) break;
+    if (d < from || d > until || bandOf(busyOf(d, g)) !== 'storm') continue;
+    const last = runs[runs.length - 1];
+    if (last && M.index.get(d) === M.index.get(last.end) + 1) { last.end = d; last.days.push(d); }
+    else runs.push({start: d, end: d, days: [d]});
+  }
+  return runs.slice(0, limit).map(r => ({...r, title: runTitle(r.days, g)}));
+}
+
+// 구간 이름: 여러 날에 되풀이된 일정이 있으면 그 글자들의 공통 앞부분("2학기 중간고사 1일차"·"2일차" → "2학기 중간고사"),
+// 없으면 구간에서 가장 바쁜 날의 이름
+function runTitle(days, g) {
+  const byKey = new Map();
+  for (const d of days) {
     for (const it of itemsOn(d, g)) {
-      if (!pred(it)) continue;
-      const t = keyTitle(it);
-      if (seen.has(t)) continue;
-      seen.add(t);
-      out.push({date: d, title: t, it});
-      if (out.length >= limit) return out;
+      if (it.note) continue;
+      if (!byKey.has(it.key)) byKey.set(it.key, []);
+      byKey.get(it.key).push(it);
     }
   }
-  return out;
+  const repeated = [...byKey.values()]
+    .filter(list => new Set(list.map(it => it.date)).size > 1)
+    .sort((a, b) => Math.max(...b.map(it => it.w)) - Math.max(...a.map(it => it.w)))[0];
+  if (repeated) {
+    let p = repeated[0].text;
+    for (const it of repeated) { let i = 0; while (i < p.length && p[i] === it.text[i]) i++; p = p.slice(0, i); }
+    p = p.replace(/[\s\p{N}\p{P}]+$/u, '');
+    return p.length >= 2 ? p : repeated[0].text;
+  }
+  const top = days.reduce((a, d) => (scoreOf(d, g) > scoreOf(a, g) ? d : a), days[0]);
+  return forecast(top, g).label;
 }
 function fronts(date, g) {
   const out = [];
@@ -797,7 +877,7 @@ function itemHTML(it, o = {}) {
   if (it.periods && o.periods !== false) b.push(periodLabel(it.periods));
   if (it.end && o.end !== false) b.push(`~${md(it.end)}`);
   const head = [it.dept, it.cat].filter(Boolean).map(esc).join(' · ');
-  return `<li class="it${it.hol ? ' hol' : ''}">${head ? `<span class="it-d">${head}</span>` : ''}`
+  return `<li class="it${it.note ? ' note' : ''}">${head ? `<span class="it-d">${head}</span>` : ''}`
     + `<span class="it-t">${esc(it.text)}</span>${b.length ? `<span class="it-b">${b.map(x => `<i>${x}</i>`).join('')}</span>` : ''}`
     + (o.sub ? `<span class="it-d" style="margin-top:2px">${o.sub}</span>` : '') + `</li>`;
 }
@@ -805,14 +885,10 @@ function itemHTML(it, o = {}) {
 function periodCells(f) {
   const max = Math.max(7, ...f.periods);
   const cells = [{p: 'all', label: '하루', items: f.items, cond: f.cond}];
-  // 교시 표기 없는 시험·행사는 하루 전체에 걸린다
-  const allDay = f.reg.filter(it => !it.periods);
-  const baseExam = allDay.some(it => it.exam), baseFest = allDay.some(it => it.fest);
+  // 교시마다 겹친 일정 수로 구름의 양을 정한다
   for (let p = 1; p <= max; p++) {
-    const its = f.reg.filter(it => it.periods && it.periods.includes(p));
-    const cond = baseExam || its.some(it => it.exam) ? 'storm' : baseFest || its.some(it => it.fest) ? 'rainbow'
-      : !its.length ? 'clear' : its.length === 1 ? 'partly' : its.length === 2 ? 'cloudy' : 'rain';
-    cells.push({p, label: `${p}교시`, items: its, cond});
+    const its = f.work.filter(it => it.periods && it.periods.includes(p));
+    cells.push({p, label: `${p}교시`, items: its, cond: ['clear', 'partly', 'cloudy'][its.length] || 'rain'});
   }
   return cells;
 }
@@ -820,7 +896,7 @@ function periodCells(f) {
 function cellItems(cell) {
   if (!cell.items.length) return `<li class="it none">${cell.p === 'all' ? '예정된 일정이 없습니다.' : '이 시간엔 일정이 없습니다.'}</li>`;
   const list = cell.p === 'all'
-    ? [...cell.items].sort((a, b) => (b.hol - a.hol) || ((a.periods ? a.periods[0] : 0) - (b.periods ? b.periods[0] : 0)))
+    ? [...cell.items].sort((a, b) => (b.note - a.note) || ((a.periods ? a.periods[0] : 0) - (b.periods ? b.periods[0] : 0)))
     : cell.items;
   return list.map(it => itemHTML(it, {periods: cell.p === 'all' || it.periods.length > 1})).join('');
 }
@@ -848,30 +924,31 @@ function heroHTML(f, swap) {
       + `<p class="big"><span>–</span></p><p class="cond">${S.loading || !S.lastLoad ? '관측 중' : '관측 자료 없음'}</p></header>`;
   }
   let line;
-  if (f.reg.length) line = `일정 ${f.reg.length}건` + (f.periods.length ? ` · ${f.periods[0]}교시부터 ${f.periods[f.periods.length - 1]}교시까지` : '');
-  else line = f.hol.length ? '쉬는 날입니다' : '예정된 일정이 없습니다';
+  if (f.work.length) line = `일정 ${f.work.length}건 · 올해 수업일 중 ${topShare(f.busy)}`;
+  else if (f.busy) line = `이어지는 일정만 있습니다 · ${topShare(f.busy)}`;
+  else line = '할 일이 없습니다';
   let cmp = '';
-  const prev = f.reg.length ? prevSchoolDay(S.today, S.grade) : null;
+  const prev = f.busy ? prevSchoolDay(S.today, S.grade) : null;
   if (prev) {
-    const d = f.busy - forecast(prev).busy;
+    const d = f.busy - busyOf(prev, S.grade);
     cmp = d === 0 ? '지난 수업일과 비슷합니다' : `지난 수업일보다 ${Math.abs(d)} ${d > 0 ? '바쁩니다' : '여유롭습니다'}`;
   }
   return `<header class="${cls}"><h1 class="place">${place}</h1><p class="when">${when}</p>`
-    + `<p class="big" aria-label="바쁨 지수 ${f.busy}"><span>${f.busy}</span><span class="unit">바쁨</span></p>`
-    + `<p class="cond">${f.word}${f.note ? ` <small>· ${esc(f.note)}</small>` : ''}</p>`
+    + `<p class="big" aria-label="바쁨 ${f.busy}"><span>${f.busy}</span><span class="unit">바쁨</span></p>`
+    + `<p class="cond">${f.word}${f.label ? ` <small>· ${esc(f.label)}</small>` : ''}</p>`
     + `<p class="hl">${line}</p>${cmp ? `<p class="hl">${cmp}</p>` : ''}</header>`;
 }
 
 function alertsHTML() {
   const t = S.today;
   const rows = [];
-  const ex = upcoming(t, S.grade, it => it.exam, 1, 14)[0];
-  if (ex) {
-    const n = diffDays(t, ex.date);
-    rows.push(`<button class="alert" data-day="${ex.date}">${wx('storm', false, 28)}<span><b>${n === 0 ? '시험 특보 발효 중' : '시험 특보'}</b>${esc(ex.title)} · ${n === 0 ? '오늘' : `${shortDate(ex.date)} · D-${n}`}</span></button>`);
+  const run = stormRuns(t, S.grade, 1, 14)[0];
+  if (run) {
+    const n = diffDays(t, run.start);
+    const len = run.days.length > 1 ? ` · ${run.days.length}일` : '';
+    rows.push(`<button class="alert" data-day="${run.start}">${wx('storm', false, 28)}<span><b>${n === 0 ? '뇌우 특보 발효 중' : '뇌우 특보'}</b>`
+      + `${esc(run.title || '바쁜 날')} · ${n === 0 ? '오늘부터' : `${shortDate(run.start)} · D-${n}`}${len}</span></button>`);
   }
-  const fe = upcoming(addDays(t, 1), S.grade, it => it.fest, 1, 7)[0];
-  if (fe) rows.push(`<button class="alert" data-day="${fe.date}">${wx('rainbow', false, 28)}<span><b>무지개 예보</b>${esc(fe.title)} · ${relDay(fe.date)} · D-${diffDays(t, fe.date)}</span></button>`);
   for (const n of M.notices.filter(n => n.start <= t && t <= n.end)) {
     rows.push(`<div class="alert note">${wx('partly', false, 28)}<span><b>통보 · ${md(n.end)}까지</b>${esc(n.text)}</span></div>`);
   }
@@ -885,9 +962,9 @@ function tenDayHTML() {
     const d = addDays(t, i);
     const f = forecast(d);
     const wd = dow(d);
-    const cls = f.hol.length || wd === 0 ? 'sun' : wd === 6 ? 'sat' : '';
+    const cls = wd === 0 ? 'sun' : wd === 6 ? 'sat' : '';
     const label = i === 0 ? '오늘' : i === 1 ? '내일' : WD[wd];
-    const say = f.note || (f.reg.length ? `${f.word} · ${f.reg.length}건` : f.word);
+    const say = f.label || f.word;
     rows.push(`<li><button class="dr${i === 0 ? ' today' : ''}" data-day="${d}" aria-label="${longDate(d)} ${f.word} 바쁨 ${f.busy}">`
       + `<span class="dn ${cls}">${label}<small>${md(d)}</small></span>${wx(f.cond, false, 32)}`
       + `<span class="dw"><span>${esc(say)}</span>${barHTML(f.busy)}</span><span class="dv">${f.busy}</span></button></li>`);
@@ -924,18 +1001,21 @@ function tilesHTML() {
 
   const fr = fronts(t, g);
   T.push(tile('전선', I.front, fr.length
-    ? `<span class="tv">${fr.length}개 통과 중</span><ul class="tlist">${fr.slice(0, 3).map(it => `<li><span>${esc(keyTitle(it))}</span><small>~${md(it.end)}</small></li>`).join('')}</ul>`
+    ? `<span class="tv">${fr.length}개 통과 중</span><ul class="tlist">${fr.slice(0, 3).map(it => `<li><span>${esc(it.text)}</span><small>~${md(it.end)}</small></li>`).join('')}</ul>`
     : `<span class="tv">없음</span><span class="ts">여러 날 이어지는 일정이 지나가면 여기에 뜹니다.</span>`));
 
-  const clear = upcoming(addDays(t, 1), 0, it => it.hol, 1)[0];
+  // 시트에 줄은 있는데 할 일이 없는 다음 날
+  const clear = M.dates.find(d => d > t && !scoreOf(d, g));
+  const cf = clear && forecast(clear, g);
   T.push(tile('다음 맑은 날', I.sun, clear
-    ? `<span class="tv">${esc(clear.title)}</span><span class="ts">${shortDate(clear.date)}<br><b>${diffDays(t, clear.date)}일 뒤</b></span>`
-    : `<span class="tv">—</span><span class="ts">남은 휴일이 없습니다.</span>`, clear ? {day: clear.date} : {}));
+    ? `<span class="tv">${esc(cf.note || '할 일 없는 날')}</span><span class="ts">${shortDate(clear)}<br><b>${diffDays(t, clear)}일 뒤</b></span>`
+    : `<span class="tv">—</span><span class="ts">시트에 남은 맑은 날이 없습니다.</span>`, clear ? {day: clear} : {}));
 
-  const big = upcoming(addDays(t, 1), g, it => it.exam || it.fest, 4);
-  if (big.length) {
-    T.push(tile('다가오는 큰 날', I.star, big.map(x =>
-      `<span class="krow" data-day="${x.date}" role="button" tabindex="0">${wx(x.it.exam ? 'storm' : 'rainbow', false, 26)}<span class="kd">D-${diffDays(t, x.date)}</span><span class="kt">${esc(x.title)}<small>${shortDate(x.date)}</small></span></span>`).join(''), {wide: true}));
+  const runs = stormRuns(addDays(t, 1), g, 4);
+  if (runs.length) {
+    T.push(tile('다가오는 뇌우', I.bolt, runs.map(r =>
+      `<span class="krow" data-day="${r.start}" role="button" tabindex="0">${wx('storm', false, 26)}<span class="kd">D-${diffDays(t, r.start)}</span>`
+      + `<span class="kt">${esc(r.title || '바쁜 날')}<small>${shortDate(r.start)}${r.days.length > 1 ? `부터 ${r.days.length}일` : ''}</small></span></span>`).join(''), {wide: true}));
   }
 
   if (M.cc.length) {
@@ -947,7 +1027,7 @@ function tilesHTML() {
       const parts = areas.map(a => ({a, v: sumArea(a, g)})).filter(x => x.v);
       const tot = parts.reduce((s, x) => s + x.v, 0);
       body = `<span class="tv num">${fmt(tot)}<small>시간</small></span>`
-        + `<span class="stack">${parts.map(x => `<i style="width:${tot ? x.v / tot * 100 : 0}%;background:${AREA_TONE[x.a] || '#8FA9CC'}"></i>`).join('')}</span>`
+        + `<span class="stack">${parts.map((x, i) => `<i style="width:${tot ? x.v / tot * 100 : 0}%;background:${RAIN_TONES[i % RAIN_TONES.length]}"></i>`).join('')}</span>`
         + `<span class="ts">${parts.map(x => `${esc(x.a)} ${fmt(x.v)}`).join(' · ')}</span>`;
     } else {
       const per = [1, 2, 3].map(gg => areas.reduce((s, a) => s + sumArea(a, gg), 0));
@@ -969,7 +1049,9 @@ function footHTML() {
   const st = planSrc();
   const src = st.at ? `${st.cached ? '저장본 · ' : ''}시트 발표 ${clock(st.at)}` : '';
   return `<footer class="foot">`
-    + `<p>바쁨은 그날 일정 수와 쓰는 교시 수로 셉니다. 시험이 있으면 뇌우, 체육대회 같은 큰 행사는 무지개, 쉬는 날은 맑음입니다. 여러 날 이어지는 일정은 전선이라고 부릅니다.</p>`
+    + `<p>예보는 일정 이름의 뜻을 읽지 않고 시트의 수와 모양으로만 셉니다. 일정마다 한 해에 며칠 나오는지로 무게를 매겨 매주 있는 일은 가볍게, 드문 일은 무겁게, 교시를 차지하면 조금 더 무겁게 봅니다. `
+    + `바쁨은 올해 수업일 가운데 그날보다 가벼운 날의 비율입니다. 상위 ${100 - BANDS[2][0]}%는 뇌우, ${100 - BANDS[1][0]}%까지 비, ${100 - BANDS[0][0]}%까지 흐림, 나머지는 구름 조금입니다. `
+    + `할 일이 없으면 맑음, 뇌우 다음 수업일이 가벼우면 무지개입니다. 날씨 옆 이름은 그날 가장 드문 일정이고, 여러 날 이어지는 일정은 전선이라고 부릅니다.</p>`
     + `<p>${src}${src ? ' · ' : ''}<a href="${SHEET_URL}" target="_blank" rel="noopener">원본 시트</a>${st.error && st.table ? ` · 연결하지 못해 저장본을 보여 줍니다. <a href="#" data-action="refresh">다시 받기</a>` : ''}</p>`
     + `</footer>`;
 }
@@ -999,7 +1081,7 @@ function render(swap) {
   let h = heroHTML(f, swap);
   if (f) {
     h += alertsHTML();
-    if (f.reg.length) h += periodPanel(f, 'main', '교시별 예보');
+    if (f.work.length) h += periodPanel(f, 'main', '교시별 예보');
     else {
       const nd = nextSchoolDay(S.today, S.grade);
       if (nd) h += periodPanel(forecast(nd), 'main', `${relDay(nd)} ${md(nd)} 교시별 예보`);
@@ -1078,8 +1160,9 @@ function daySheet(date) {
   const f = forecast(date);
   const fr = fronts(date, S.grade).filter(it => it.date !== date);
   const du = S.mode === 'teacher' ? M.duty.get(date) : null;
-  let body = `<div class="dayhead">${wx(f.cond, false, 56)}<div class="dtx"><b>${f.word}${f.note ? ` · ${esc(f.note)}` : ''}</b>`
-    + `<span>${f.reg.length ? `일정 ${f.reg.length}건` : f.hol.length ? '쉬는 날' : '일정 없음'}${S.grade ? ` · ${S.grade}학년 기준` : ''}</span></div>`
+  const facts = [f.work.length ? `일정 ${f.work.length}건` : '할 일 없음', f.busy ? topShare(f.busy) : '', S.grade ? `${S.grade}학년 기준` : ''].filter(Boolean);
+  let body = `<div class="dayhead">${wx(f.cond, false, 56)}<div class="dtx"><b>${f.word}${f.label ? ` · ${esc(f.label)}` : ''}</b>`
+    + `<span>${facts.join(' · ')}</span></div>`
     + `<span class="dnum">${f.busy}<small>바쁨</small></span></div>`;
   body += periodPanel(f, 'sheet', '교시별 예보');
   if (fr.length) body += `<section class="panel"><h2 class="ph">${I.front}지나가는 전선</h2><ul class="items">${fr.map(it => itemHTML(it, {end: false, sub: `${shortDate(it.date)} ~ ${shortDate(it.end)}`})).join('')}</ul></section>`;
@@ -1130,7 +1213,7 @@ function placesSheet() {
       const [a, b] = SKY[f ? f.cond : 'cloudy'][isNight() ? 'night' : 'day'];
       const pop = M.classes.length ? M.classes.filter(c => !g || c.grade === g).reduce((s, c) => s + c.count, 0) : 0;
       return `<button class="place-card" data-grade="${g}" aria-current="${S.grade === g}" style="--k1:${a};--k2:${b}">`
-        + `<span class="pc-l"><b>${g ? `${g}학년` : '보성여고'}</b><span>${f ? (f.reg.length ? `일정 ${f.reg.length}건` : f.note || '일정 없음') : '관측 중'}${pop ? ` · ${pop}명` : ''}</span></span>`
+        + `<span class="pc-l"><b>${g ? `${g}학년` : '보성여고'}</b><span>${f ? (f.work.length ? `일정 ${f.work.length}건` : f.note || '할 일 없음') : '관측 중'}${pop ? ` · ${pop}명` : ''}</span></span>`
         + `<span class="pc-r"><strong>${f ? f.busy : '--'}</strong><span>${f ? f.word : ''}</span></span></button>`;
     }).join('')}</div>`;
 
