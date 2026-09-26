@@ -17,7 +17,9 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap">
+<!-- 글꼴은 화면을 막지 않게 받는다: 먼저 시스템 글꼴로 그리고, 받는 대로 바꾼다 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap"></noscript>
 <style>
 /* ── 토큰 ───────────────────────────────────────────── */
 :root{
@@ -1345,7 +1347,11 @@ function openBubble(pt) {
 }
 
 /* ── 조작 ───────────────────────────────────────────── */
+// 학사일정 화면 위에 겹쳐 열렸으면 제목을 눌러 겹친 창을 닫는다. 따로 열었으면 링크대로 학사일정으로 간다.
+const EMBED = window.parent !== window;
+
 document.addEventListener('click', e => {
+  if (EMBED && e.target.closest('.logo a')) { e.preventDefault(); parent.postMessage({kkot: 'close'}, '*'); return; }
   const pt = e.target.closest('.flw .pt');
   if (pt) { openBubble(pt); return; }
   if (!e.target.closest('.bubble')) closeBubble();

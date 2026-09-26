@@ -145,7 +145,12 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
 .row{display:flex;align-items:center;gap:8px;padding:0 12px;min-height:44px}
 .row-2{min-height:40px;border-top:1px solid var(--line);flex-wrap:wrap;padding-top:5px;padding-bottom:5px}
 .wm{font-size:var(--f-lg);font-weight:800;letter-spacing:-.03em;margin-right:4px}
-a.wm{color:inherit;text-decoration:none}
+a.wm{color:inherit;text-decoration:none;cursor:pointer}
+#kkot{position:fixed;inset:0;z-index:1000;width:100%;height:100%;border:0;background:#E6F4FF}
+@media (prefers-color-scheme: dark){#kkot{background:#152331}}
+#kkot[hidden]{display:none}
+html.kkot-on,html.kkot-on body{overflow:hidden}
+@media print{#kkot{display:none!important}}
 .tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{
@@ -1853,6 +1858,42 @@ loading = true;
 jumpToday = ["calendar", "plan", "student"].includes(S.view);
 draw();
 reload();
+</script>
+<script>
+/* 제목 '학사일정'을 누르면 꽃달력이 이 화면 위로 열리고, 꽃달력의 제목을 누르면 다시 여기로 돌아온다.
+   주소 끝의 #kkot 이 열린 상태다. 휴대폰의 뒤로 가기로도 돌아온다. */
+(() => {
+  const link = document.querySelector('a.wm');
+  if (!link) return;
+  let frame = null;
+  const show = () => {
+    if (!frame) {
+      frame = document.createElement('iframe');
+      frame.id = 'kkot';
+      frame.title = '꽃달력';
+      frame.src = 'mobile/';
+      document.body.appendChild(frame);
+    }
+    frame.hidden = false;
+    document.documentElement.classList.add('kkot-on');
+    frame.focus();
+  };
+  const hide = () => {
+    if (frame) frame.hidden = true;
+    document.documentElement.classList.remove('kkot-on');
+  };
+  link.addEventListener('click', e => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;  // 새 탭으로 열기는 그대로 둔다
+    e.preventDefault();
+    if (location.hash !== '#kkot') location.hash = 'kkot';
+  });
+  addEventListener('hashchange', () => (location.hash === '#kkot' ? show() : hide()));
+  addEventListener('message', e => {
+    if (!frame || e.source !== frame.contentWindow || !e.data || e.data.kkot !== 'close') return;
+    if (location.hash === '#kkot') history.back(); else hide();
+  });
+  if (location.hash === '#kkot') show();
+})();
 </script>
 </body>
 </html>
