@@ -75,9 +75,9 @@ a{color:var(--link)}
 .logo a{display:flex;align-items:center;gap:6px;color:inherit;text-decoration:none}
 .logo svg{width:30px;height:30px;flex:none}
 .gsel{position:relative;display:inline-flex;flex:none}
-.gsel select{appearance:none;-webkit-appearance:none;height:38px;padding:0 32px 0 14px;border:2.5px solid var(--line);border-radius:999px;background:var(--surface);box-shadow:2px 2px 0 var(--line);font-weight:800;font-size:14px;color:var(--ink)}
+.gsel select{appearance:none;-webkit-appearance:none;max-width:132px;text-overflow:ellipsis;height:38px;padding:0 32px 0 14px;border:2.5px solid var(--line);border-radius:999px;background:var(--surface);box-shadow:2px 2px 0 var(--line);font-weight:800;font-size:14px;color:var(--ink)}
 .gsel::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:translateY(-70%) rotate(45deg);pointer-events:none}
-.gsel.on select{background:var(--yellow);color:#2A211D}
+.gsel.on select{background:var(--c,var(--yellow));color:#2A211D}
 .gsel.on::after{border-color:#2A211D}
 .ib{position:relative;width:40px;height:40px;border:0;background:none;border-radius:12px;display:grid;place-items:center;color:var(--ink);flex:none}
 .ib:active{background:var(--sunk)}
@@ -87,7 +87,20 @@ a{color:var(--link)}
 /* ── 오늘의 꽃 ──────────────────────────────────────── */
 .hero{text-align:center;padding:6px 0 4px}
 .hero .fl{width:min(62vw,244px);height:auto;margin:0 auto}
-.hero .fl .pt{cursor:pointer}
+.flw{position:relative}
+.flw .pt{cursor:pointer}
+.fl .lb text{font-family:var(--display);fill:#2A211D;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round;paint-order:stroke;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.fl.anim .lb{animation:sparkin .3s both;animation-delay:calc(var(--k) * 70ms + 480ms)}
+.fl .lb.dim{opacity:.25}
+.bubble{position:absolute;z-index:6;width:max-content;max-width:min(300px,calc(100% - 8px));padding:10px 14px 11px;border-radius:16px;background:var(--surface);border:2.5px solid var(--line);box-shadow:3px 3px 0 var(--line);text-align:left;animation:pop .28s cubic-bezier(.34,1.56,.64,1) both;transform-origin:var(--tx) 0}
+.bubble.up{transform-origin:var(--tx) 100%}
+.bubble::before{content:"";position:absolute;left:calc(var(--tx) - 8px);top:-10px;width:14px;height:14px;background:var(--surface);border-left:2.5px solid var(--line);border-top:2.5px solid var(--line);border-top-left-radius:3px;transform:rotate(45deg)}
+.bubble.up::before{top:auto;bottom:-10px;transform:rotate(225deg)}
+.bubble .bd{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--ink-2)}
+.bubble .bd i{width:13px;height:13px;border-radius:50%;background:var(--c);border:2px solid var(--line);flex:none}
+.bubble b{display:block;margin-top:3px;font-size:16px;line-height:1.4}
+.bubble .tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.bubble .tg i{font-style:normal;font-size:11.5px;font-weight:800;line-height:19px;padding:0 8px;border-radius:999px;background:var(--sunk);color:var(--ink-2)}
 .date{margin:4px 0 0;font:400 40px/1.1 var(--display);letter-spacing:-.01em}
 .date small{font-size:22px;color:var(--ink-2);margin-left:8px}
 .stage{margin:10px 0 0;display:flex;justify-content:center;align-items:center;gap:8px;font-size:16px;font-weight:800}
@@ -246,13 +259,8 @@ mark{background:var(--yellow);color:#2A211D;border-radius:3px;padding:0 1px}
 <header class="top" id="top">
   <div class="wrap">
     <h1 class="logo"><a href="../" title="원래 학사일정으로 돌아가기"><svg class="fl" viewBox="-112 -112 224 224" aria-hidden="true" id="logo"></svg>꽃달력</a></h1>
-    <label class="gsel" id="gsel"><span class="sr">학년</span>
-      <select id="grade">
-        <option value="0">전체 학년</option>
-        <option value="1">1학년</option>
-        <option value="2">2학년</option>
-        <option value="3">3학년</option>
-      </select>
+    <label class="gsel" id="gsel"><span class="sr">부서</span>
+      <select id="dept"><option value="">전체 부서</option></select>
     </label>
     <button class="ib" data-action="search" aria-label="일정 찾기"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
     <button class="ib" data-action="more" aria-label="설정과 자료" id="more-btn"><svg class="i" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></button>
@@ -301,9 +309,15 @@ const STAGE_COLOR = {
 };
 const PERIOD_SHARE = 0.15;  // 교시 하나를 차지할 때마다 더하는 무게
 const CHAIN_SHARE = 0.25;   // 같은 일정이 수업일마다 연달아 나올 때 하루마다 더하는 무게 (5일까지)
-const REACH_SHARE = 0.25;   // 전체 보기에서 학년이 하나 더 적힐 때마다 더하는 무게
+const REACH_SHARE = 0.25;   // ①②③ 처럼 학년이 하나 더 적힐 때마다 더하는 무게
 const FRONT_SHARE = 0.5;    // "~10/2" 처럼 기간이 적힌 일정이 둘째 날부터 남기는 무게
 const PEAK = 90;            // 이 백분위부터 '만개'
+// 부서마다 꽃잎 색 [꽃잎, 그늘]. 자주 나오는 부서부터 차례로 나눠 준다.
+const DEPT_COLORS = [
+  ['#FF5C7A', '#D6336C'], ['#4DABF7', '#1C7ED6'], ['#FFD43B', '#F59F00'], ['#B197FC', '#7950F2'],
+  ['#FF922B', '#E8590C'], ['#38D9A9', '#0CA678'], ['#F783AC', '#E64980'], ['#748FFC', '#4263EB'],
+  ['#3BC9DB', '#1098AD'], ['#A9E34B', '#74B816'], ['#E599F7', '#BE4BDB'], ['#FFC078', '#FD7E14'],
+];
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
 const CIRCLED = {'①': 1, '②': 2, '③': 3};
 
@@ -345,11 +359,11 @@ const prefs = store.get(PREFS) || {};
 const forParam = new URLSearchParams(location.search).get('for');
 const S = {
   mode: forParam === 'student' || forParam === 'teacher' ? forParam : (prefs.mode === 'student' ? 'student' : 'teacher'),
-  grade: [1, 2, 3].includes(prefs.grade) ? prefs.grade : 0,
+  dept: typeof prefs.dept === 'string' ? prefs.dept : '',
   src: {}, loading: false, lastLoad: 0, today: todayKey(),
   month: null, yearView: false, sheet: null, q: '', word: null, bloomed: '',
 };
-const savePrefs = () => store.set(PREFS, {mode: S.mode, grade: S.grade});
+const savePrefs = () => store.set(PREFS, {mode: S.mode, dept: S.dept});
 if (forParam) savePrefs();
 let M = emptyModel();
 
@@ -566,7 +580,7 @@ function parseItem(src, date) {
 
 /* ── 모델 ───────────────────────────────────────────── */
 function emptyModel() {
-  return {byDate: new Map(), dates: [], index: new Map(), score: [], dist: [], duty: new Map(), notices: [], year: null, total: 0};
+  return {byDate: new Map(), dates: [], index: new Map(), ranged: [], scores: new Map(), depts: [], color: new Map(), duty: new Map(), notices: [], year: null, total: 0};
 }
 
 function parsePlan(t, m) {
@@ -644,20 +658,25 @@ function weigh(m) {
       if (it.end) ranged.push(it);
     }
   });
-  m.score = [0, 1, 2, 3].map(g => {
-    const map = new Map();
-    for (const date of m.dates) {
-      const list = m.byDate.get(date);
-      let s = 0;
-      for (const it of list) if (!it.memo && gradeOk(it, g)) s += it.w * (g ? 1 : 1 + REACH_SHARE * Math.max(0, it.reach - 1));
-      // 부서 없는 줄만 있는 날(쉬는 날)에는 기간 일정도 지나가지 않는다
-      const rest = list.length > 0 && list.every(it => it.memo);
-      if (!rest) for (const it of ranged) if (it.date < date && it.end >= date && gradeOk(it, g)) s += FRONT_SHARE * it.w;
-      map.set(date, s);
-    }
-    return map;
-  });
-  m.dist = m.score.map(map => [...map.values()].filter(s => s > 0).sort((a, b) => a - b));
+  m.ranged = ranged;
+}
+
+// 부서 하나(''는 전체)로 거른 날마다의 점수와 그 분포. 처음 필요할 때 한 번 만든다.
+function scoresFor(dp) {
+  if (M.scores.has(dp)) return M.scores.get(dp);
+  const map = new Map();
+  for (const date of M.dates) {
+    const list = M.byDate.get(date);
+    let s = 0;
+    for (const it of list) if (!it.memo && deptOk(it, dp)) s += it.w * (1 + REACH_SHARE * Math.max(0, it.reach - 1));
+    // 부서 없는 줄만 있는 날(쉬는 날)에는 기간 일정도 지나가지 않는다
+    const rest = list.length > 0 && list.every(it => it.memo);
+    if (!rest) for (const it of M.ranged) if (it.date < date && it.end >= date && deptOk(it, dp)) s += FRONT_SHARE * it.w;
+    map.set(date, s);
+  }
+  const out = {map, dist: [...map.values()].filter(v => v > 0).sort((x, y) => x - y)};
+  M.scores.set(dp, out);
+  return out;
 }
 
 function rebuild() {
@@ -674,6 +693,11 @@ function rebuild() {
   m.year = m.dates.length ? toDate(m.dates[0]).getFullYear() : null;
   for (const list of m.byDate.values()) m.total += list.length;
   weigh(m);
+  const counts = new Map();
+  for (const list of m.byDate.values()) for (const it of list) if (it.dept) counts.set(it.dept, (counts.get(it.dept) || 0) + 1);
+  m.depts = [...counts].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0], 'ko')).map(([name, n]) => ({name, n}));
+  m.depts.forEach((d, i) => m.color.set(d.name, DEPT_COLORS[i % DEPT_COLORS.length]));
+  if (S.dept && m.dates.length && !m.color.has(S.dept)) S.dept = '';
   if (S.mode === 'teacher') {
     run('notice', parseNotice);
     run('pray', parsePray);
@@ -686,14 +710,24 @@ const planSrc = () => S.src[S.mode === 'student' ? 'planS' : 'plan'] || {};
 const ready = () => !!planSrc().table;
 
 /* ── 하루 계산 ─────────────────────────────────────── */
-const gradeOk = (it, g) => !g || !it.grades || it.grades.includes(g);
-const itemsOn = (date, g = S.grade) => (M.byDate.get(date) || []).filter(it => gradeOk(it, g));
-const scoreOf = (date, g = S.grade) => (M.score[g] && M.score[g].get(date)) || 0;
+// dp: 고른 부서('' 는 전체). 부서 없는 줄(쉬는 날 메모)은 어느 부서로 걸러도 남긴다.
+const deptOk = (it, dp) => !dp || it.memo || it.dept === dp;
+const itemsOn = (date, dp = S.dept) => (M.byDate.get(date) || []).filter(it => deptOk(it, dp));
+const scoreOf = (date, dp = S.dept) => scoresFor(dp).map.get(date) || 0;
 const topShare = busy => `올해 가장 활짝 핀 날 상위 ${Math.max(1, 100 - busy)}%`;
+const deptColor = dept => M.color.get(dept) || (dept ? DEPT_COLORS[Math.floor(hash(dept) * DEPT_COLORS.length)] : ['#DEE2E6', '#ADB5BD']);
+
+// 꽃잎에 적는 부서 줄임말: "1학년부" → "1", "교무부" → "교무", "기획위원" → "기획"
+function short(dept) {
+  const g = String(dept || '').match(/^([1-3])\s*학년/);
+  if (g) return g[1];
+  const s = String(dept || '').replace(/(부|실|과|팀|위원회|위원)$/, '');
+  return [...(s || dept || '')].slice(0, 2).join('');
+}
 
 // 점수가 0 보다 큰 날들 가운데 이 점수 이하인 날의 비율 (1–99)
-function busyOf(date, g = S.grade) {
-  const s = scoreOf(date, g), sorted = M.dist[g] || [];
+function busyOf(date, dp = S.dept) {
+  const s = scoreOf(date, dp), sorted = scoresFor(dp).dist;
   if (!s || !sorted.length) return 0;
   let lo = 0, hi = sorted.length;
   while (lo < hi) { const mid = (lo + hi) >> 1; if (sorted[mid] <= s) lo = mid + 1; else hi = mid; }
@@ -701,49 +735,49 @@ function busyOf(date, g = S.grade) {
 }
 const stageOf = busy => busy ? STAGES.find(([cut]) => busy < cut)[1] : '쉼';
 
-function fronts(date, g = S.grade) {
+function fronts(date, dp = S.dept) {
   const out = [];
-  for (const d of M.dates) {
-    if (d >= date) break;
-    for (const it of M.byDate.get(d)) if (it.end && it.end >= date && gradeOk(it, g)) out.push(it);
+  for (const k of M.dates) {
+    if (k >= date) break;
+    for (const it of M.byDate.get(k)) if (it.end && it.end >= date && deptOk(it, dp)) out.push(it);
   }
   return out;
 }
 
-function day(date, g = S.grade) {
-  const items = itemsOn(date, g);
+function day(date, dp = S.dept) {
+  const items = itemsOn(date, dp);
   const work = items.filter(it => !it.memo);
   const memos = items.filter(it => it.memo);
-  const busy = busyOf(date, g);
+  const busy = busyOf(date, dp);
   const head = work.reduce((a, it) => (!a || it.w > a.w ? it : a), null);
   const periods = [...new Set(work.flatMap(it => it.periods || []))].sort((a, b) => a - b);
-  return {date, g, items, work, memos, busy, stage: stageOf(busy), head, fronts: fronts(date, g), periods, known: M.byDate.has(date)};
+  return {date, dp, items, work, memos, busy, stage: stageOf(busy), head, fronts: fronts(date, dp), periods, known: M.byDate.has(date)};
 }
 
-function nextWorkDay(date, g = S.grade) {
-  for (const d of M.dates) if (d > date && itemsOn(d, g).some(it => !it.memo)) return d;
+function nextWorkDay(date, dp = S.dept) {
+  for (const k of M.dates) if (k > date && itemsOn(k, dp).some(it => !it.memo)) return k;
   return null;
 }
 
 // 만개한 날이 수업일 사이로 이어지면 한 구간으로 묶는다
-function peakRuns(from, g, limit, within = 400) {
+function peakRuns(from, dp, limit, within = 400) {
   const until = addDays(from, within);
   const runs = [];
-  for (const d of M.dates) {
-    if (d < from || d > until || busyOf(d, g) < PEAK) continue;
+  for (const k of M.dates) {
+    if (k < from || k > until || busyOf(k, dp) < PEAK) continue;
     const last = runs[runs.length - 1];
-    if (last && M.index.get(d) === M.index.get(last.end) + 1) { last.end = d; last.days.push(d); }
-    else runs.push({start: d, end: d, days: [d]});
+    if (last && M.index.get(k) === M.index.get(last.end) + 1) { last.end = k; last.days.push(k); }
+    else runs.push({start: k, end: k, days: [k]});
   }
-  return runs.slice(0, limit).map(r => ({...r, title: runTitle(r.days, g)}));
+  return runs.slice(0, limit).map(r => ({...r, title: runTitle(r.days, dp)}));
 }
 
 // 구간 이름: 여러 날에 되풀이된 일정이 있으면 그 글자들의 공통 앞부분("2학기 중간고사 1일차"·"2일차" → "2학기 중간고사"),
 // 없으면 구간에서 가장 무거운 일정
-function runTitle(days, g) {
+function runTitle(days, dp) {
   const byKey = new Map();
-  for (const d of days) {
-    for (const it of itemsOn(d, g)) {
+  for (const k of days) {
+    for (const it of itemsOn(k, dp)) {
       if (it.memo) continue;
       if (!byKey.has(it.key)) byKey.set(it.key, []);
       byKey.get(it.key).push(it);
@@ -790,7 +824,7 @@ const mound = (y, w) => `<path d="M${-w} ${y}C${-w * .6} ${y - 22} ${w * .6} ${y
 function petalG(L, W, c, detail, attrs) {
   return `<g class="pt" ${attrs}><path d="${petalPath(L, W)}" fill="${c[0]}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`
     + `<path d="${petalPath(L * .5, W * .64)}" fill="${c[1]}"/>`
-    + (detail ? line(`M${n1(W * .3)} ${n1(-L * .84)}Q${n1(W * .6)} ${n1(-L * .72)} ${n1(W * .6)} ${n1(-L * .52)}`, SW * .8, 'rgba(255,255,255,.9)') : '')
+    + (detail ? line(`M${n1(W * .26)} ${n1(-L * .9)}Q${n1(W * .56)} ${n1(-L * .84)} ${n1(W * .64)} ${n1(-L * .7)}`, SW * .8, 'rgba(255,255,255,.9)') : '')
     + `</g>`;
 }
 function centerG(r, c, detail, n) {
@@ -809,7 +843,8 @@ function sproutG(s, ground) {
     + (ground ? mound(66, 58) : '') + `</g>`;
 }
 function budG(f) {
-  const c = colorOf(f.stage);
+  const lead = f.fronts.reduce((a, it) => (!a || it.w > a.w ? it : a), null);
+  const c = lead ? deptColor(lead.dept) : colorOf(f.stage);
   return stem('M0 70C3 40 -3 20 0 0')
     + leaf('M0 46C-18 46 -34 34 -36 14C-16 14 -4 26 0 46Z', 'M-3 40Q-16 30 -28 20', '0px 46px', true)
     + `<g class="pt" style="--a:0deg;--k:0"><path d="${petalPath(66, 32)}" fill="${c[0]}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`
@@ -819,8 +854,8 @@ function budG(f) {
 const seedG = () => `<circle r="7" fill="none" stroke="var(--ink-3)" stroke-width="3" opacity=".45"/>`;
 
 /**
- * f: day() 결과. o.stem: 줄기·잎·흙더미. o.detail: 반사광·반짝이. o.anim: 톡톡 피어나기.
- * 꽃잎 수 = 그날 일정 수. 꽃잎은 목록 순서대로 12시 방향부터 시계 방향으로 놓인다.
+ * f: day() 결과. o.stem: 줄기·잎·흙더미. o.detail: 반사광·반짝이. o.labels: 꽃잎에 부서 줄임말. o.anim: 톡톡 피어나기.
+ * 꽃잎 수 = 그날 일정 수, 꽃잎 색 = 부서. 꽃잎은 목록 순서대로 12시 방향부터 시계 방향으로 놓인다.
  */
 function flowerSVG(f, o = {}) {
   const cls = `fl${o.anim && !reduced() ? ' anim' : ''}`;
@@ -832,7 +867,6 @@ function flowerSVG(f, o = {}) {
     const g = f.busy ? budG(f) : sprout ? sproutG(o.stem ? 1.45 : 1, o.stem) : seedG();
     return `<svg class="${cls}" viewBox="${o.stem ? '-118 -100 236 210' : '-112 -112 224 224'}"${label}>${g}</svg>`;
   }
-  const c = colorOf(f.stage);
   const order = ordered(f);
   const maxW = Math.max(...order.map(it => it.w), 1e-9);
   const R = 100 * (0.62 + 0.38 * f.busy / 100);
@@ -844,13 +878,21 @@ function flowerSVG(f, o = {}) {
       + leaf('M1 104C22 102 44 88 50 62C26 62 8 76 1 104Z', 'M5 98Q26 86 42 70', '1px 104px', true)
       + mound(154, 80);
   }
+  let labels = '';
   order.forEach((it, k) => {
     const L = R * (0.86 + 0.14 * it.w / maxW);
     const W = Math.min(L * .44, (2 * Math.PI * R * .55 / n) * .62);
     const a = n === 2 ? (k ? 32 : -32) : spin + k * 360 / n;
-    g += petalG(L, W, c, o.detail, `data-ev="${f.work.indexOf(it)}" style="--a:${n1(a)}deg;--k:${k}"`);
+    const i = f.work.indexOf(it);
+    g += petalG(L, W, it.c || deptColor(it.dept), o.detail, `data-ev="${i}" style="--a:${n1(a)}deg;--k:${k}"`);
+    if (o.labels && it.dept) {
+      // 글자는 꽃잎을 따라 돌지 않고 늘 똑바로 선다
+      const t = short(it.dept), r = L * .56, rad = a * Math.PI / 180;
+      const fs = n1(Math.max(11, Math.min(t.length > 1 ? 22 : 28, W * (t.length > 1 ? .78 : 1.15))));
+      labels += `<g class="lb" data-ev="${i}" style="--k:${k}"><text x="${n1(Math.sin(rad) * r)}" y="${n1(-Math.cos(rad) * r)}" font-size="${fs}">${esc(t)}</text></g>`;
+    }
   });
-  g += centerG(R * .2 + 4, f.stage === '피는 중' ? ['#FF922B', '#E8590C'] : ['#FFD43B', '#F59F00'], o.detail, n);
+  g += labels + centerG(R * .2 + 4, ['#FFD43B', '#F59F00'], o.detail, n);
   if (f.busy >= PEAK && o.detail) {
     g += sparkG(R * 1.02, -R * .8, 17, 0) + sparkG(-R * 1.06, -R * .38, 12, 700) + sparkG(R * .92, R * .62, 10, 1400);
   }
@@ -860,7 +902,11 @@ function flowerSVG(f, o = {}) {
 // 목록과 꽃잎이 같은 순서를 쓴다: 교시 없는 일정 → 교시 순
 const ordered = f => [...f.work.filter(it => !it.periods), ...f.work.filter(it => it.periods).sort((a, b) => a.periods[0] - b.periods[0])];
 
-function petalGlyph(it, c) {
+// 여러 꽃잎을 누를 수 있는 꽃: 누르면 말풍선이 뜬다
+const tapFlower = (f, o) => `<div class="flw" data-date="${f.date}">${flowerSVG(f, {...o, labels: true})}</div>`;
+
+function petalGlyph(it) {
+  const c = deptColor(it.dept);
   if (it.memo) return `<svg class="gl" viewBox="-60 -60 120 120" aria-hidden="true"><g transform="translate(0 4) scale(.85)">${sproutG(1, false)}</g></svg>`;
   return `<svg class="gl" viewBox="-44 -100 88 106" aria-hidden="true"><path d="${petalPath(94, 40)}" fill="${c[0]}" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/><path d="${petalPath(46, 26)}" fill="${c[1]}"/></svg>`;
 }
@@ -882,8 +928,7 @@ function evHTML(it, o = {}) {
   const head = [it.dept, it.cat].filter(Boolean).map(esc).join(' · ');
   const text = o.hl ? hl(it.text) : esc(it.text);
   const attr = o.idx != null ? ` data-ev="${o.idx}"` : o.go ? ` data-day="${it.date}"` : '';
-  const c = o.color || colorOf(day(it.date).stage);
-  return `<li class="ev${it.memo ? ' memo' : ''}"${attr}>${petalGlyph(it, c)}`
+  return `<li class="ev${it.memo ? ' memo' : ''}"${attr}>${petalGlyph(it)}`
     + `<span>${o.date ? `<span class="dp">${shortDate(it.date)}${head ? ` · ${head}` : ''}</span>` : head ? `<span class="dp">${head}</span>` : ''}`
     + `<span class="tx">${text}</span>${tags.length ? `<span class="tg">${tags.map(x => `<i>${x}</i>`).join('')}</span>` : ''}`
     + (o.sub ? `<span class="sub">${o.sub}</span>` : '') + `</span>${o.ruler === false ? '<span></span>' : rulerHTML(it)}</li>`;
@@ -891,8 +936,7 @@ function evHTML(it, o = {}) {
 
 // 하루 목록: 쉬는 날 메모 → 꽃잎 순서(교시 없는 일정 → 교시 순) → 이어지는 일정
 function dayList(f, o = {}) {
-  const c = colorOf(f.stage);
-  const rows = [...f.memos.map(it => evHTML(it, {color: c})), ...ordered(f).map(it => evHTML(it, {color: c, idx: o.link ? f.work.indexOf(it) : null}))];
+  const rows = [...f.memos.map(it => evHTML(it)), ...ordered(f).map(it => evHTML(it, {idx: o.link ? f.work.indexOf(it) : null}))];
   let h = rows.length ? `<ul class="evs">${rows.join('')}</ul>` : '';
   if (f.fronts.length) {
     h += `<p class="sublabel">이어지는 일정</p><ul class="evs">${f.fronts.map(it =>
@@ -922,7 +966,7 @@ function heroHTML(f) {
     return `<section class="hero">${flowerSVG(blank, {stem: true, label: false})}${date}`
       + `<p class="stage-sub">${S.loading || !S.lastLoad ? '시트를 읽는 중이에요' : '시트를 읽지 못했어요'}</p></section>`;
   }
-  const key = `${S.today}|${S.grade}|${S.mode}|${f.work.length}`;
+  const key = `${S.today}|${S.dept}|${S.mode}|${f.work.length}`;
   const anim = S.bloomed !== key;
   S.bloomed = key;
   let chips = '';
@@ -932,7 +976,7 @@ function heroHTML(f) {
     chips += `<${more ? 'button' : 'span'} class="chip"${more ? ' data-action="word"' : ''}>기도 <b>${esc(du.pray.name)}</b>${du.pray.bible ? ` · ${esc(du.pray.bible)}` : ''}</${more ? 'button' : 'span'}>`;
   }
   if (du && du.night) chips += `<span class="chip">야자 감독 <b>${esc(du.night)}</b></span>`;
-  return `<section class="hero" id="hero">${flowerSVG(f, {stem: true, detail: true, anim})}${date}${stageLine(f)}`
+  return `<section class="hero" id="hero">${tapFlower(f, {stem: true, detail: true, anim})}${date}${stageLine(f)}`
     + (chips ? `<div class="chips">${chips}</div>` : '') + `</section>`;
 }
 
@@ -946,7 +990,7 @@ function todayHTML(f) {
   if (!f) return sec('오늘', '', failHTML());
   let h = '';
   if (f.work.length || f.fronts.length || f.memos.length) {
-    h += sec(f.work.length ? '오늘의 꽃잎' : '오늘', f.work.length ? `${f.work.length}장 · 꽃잎을 누르면 켜져요` : '', `<div class="card">${dayList(f, {link: true, go: true})}</div>`);
+    h += sec(f.work.length ? '오늘의 꽃잎' : '오늘', f.work.length ? `${f.work.length}장 · 꽃잎을 누르면 일정이 나와요` : '', `<div class="card">${dayList(f, {link: true, go: true})}</div>`);
   }
   // 오늘 할 일이 없으면 다음 수업일을 미리 보여 준다
   const nd = !f.work.length && nextWorkDay(S.today);
@@ -968,7 +1012,7 @@ function weekHTML() {
 }
 
 function peaksHTML() {
-  const runs = peakRuns(addDays(S.today, 1), S.grade, 3, 90);
+  const runs = peakRuns(addDays(S.today, 1), S.dept, 3, 90);
   if (!runs.length) return '';
   const rows = runs.map(r => {
     const top = r.days.reduce((a, d) => (scoreOf(d) > scoreOf(a) ? d : a), r.days[0]);
@@ -1036,7 +1080,7 @@ const legendHTML = () => `<div class="legend">${['쉼', ...STAGES.map(s => s[1])
 function footHTML() {
   const st = planSrc();
   return `<footer class="foot">`
-    + `<p>꽃잎 한 장이 일정 하나예요. 꽃의 색과 크기는 올해 수업일 가운데 그날이 얼마나 활짝 피었는지예요. 일정이 많을수록, 드문 일정일수록 활짝 핍니다. 가장 만개한 10%의 날엔 반짝이가 붙어요.</p>`
+    + `<p>꽃잎 한 장이 일정 하나, 꽃잎 색은 부서예요. 꽃잎을 누르면 그 일정이 나와요. 꽃의 크기는 올해 수업일 가운데 그날이 얼마나 활짝 피었는지예요. 일정이 많을수록, 드문 일정일수록 활짝 핍니다. 가장 만개한 10%의 날엔 반짝이가 붙어요.</p>`
     + `<p>${st.at ? `${st.cached ? '저장해 둔 ' : ''}시트 ${clock(st.at)}` : ''}${st.error && st.table ? ' · 연결하지 못해 저장본을 보여 줍니다 · <button data-action="refresh">다시 받기</button>' : ''}</p>`
     + `</footer>`;
 }
@@ -1050,8 +1094,12 @@ function failHTML() {
 
 /* ── 그리기: 전체 ─────────────────────────────────── */
 function paintTop() {
-  $('#grade').value = String(S.grade);
-  $('#gsel').classList.toggle('on', !!S.grade);
+  const sel = $('#dept');
+  const opts = '<option value="">전체 부서</option>' + M.depts.map(d => `<option value="${esc(d.name)}">${esc(d.name)}</option>`).join('');
+  if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }
+  sel.value = S.dept;
+  $('#gsel').classList.toggle('on', !!S.dept);
+  $('#gsel').style.setProperty('--c', S.dept ? deptColor(S.dept)[0] : '');
   const more = $('#more-btn');
   const dot = more.querySelector('.dot');
   const bad = NEED[S.mode].some(k => S.src[k]?.error);
@@ -1090,6 +1138,7 @@ function openSheet(kind, arg) {
 
 function hideSheet() {
   if (!S.sheet) return;
+  closeBubble();
   S.sheet = null; S.word = null;
   const el = $('#sheet'), bg = $('#scrim');
   el.classList.remove('open'); bg.classList.remove('open');
@@ -1119,7 +1168,7 @@ function daySheet(date) {
   if (!ready()) return {title, body: ''};
   const f = day(date);
   const du = S.mode === 'teacher' ? M.duty.get(date) : null;
-  let body = `<div class="dayhead">${flowerSVG(f, {detail: true, anim: S.sheet.anim})}${stageLine(f)}</div>`;
+  let body = `<div class="dayhead">${tapFlower(f, {detail: true, anim: S.sheet.anim})}${stageLine(f)}</div>`;
   body += `<div class="card" style="margin-top:16px">${dayList(f)}</div>`;
   if (du && (du.pray?.name || du.night)) {
     body += `<div class="chips" style="justify-content:flex-start;margin-top:14px">`
@@ -1147,7 +1196,7 @@ function searchSheet() {
 }
 
 function hitsHTML() {
-  if (!S.q) return `<p class="hint">일정 이름이나 부서로 찾아요.${S.grade ? ` 지금은 ${S.grade}학년 일정만 찾아요.` : ''}</p>`;
+  if (!S.q) return `<p class="hint">일정 이름이나 부서로 찾아요.${S.dept ? ` 지금은 ${esc(S.dept)} 일정만 찾아요.` : ''}</p>`;
   if (!ready()) return '<p class="hint">시트를 받은 뒤에 찾을 수 있어요.</p>';
   const q = S.q.toLowerCase(), hits = [];
   for (const d of M.dates) for (const it of itemsOn(d)) if (it.raw.toLowerCase().includes(q)) hits.push(it);
@@ -1164,7 +1213,7 @@ function moreSheet() {
     + `<div class="btns"><button class="btn" data-action="copy" data-url="${esc(studentUrl)}">학생용 주소 복사</button></div>`;
 
   const ex = (stage, busy, n, sub) => {
-    const work = Array.from({length: n}, (_, i) => ({w: 1, periods: null, i}));
+    const work = Array.from({length: n}, (_, i) => ({w: 1, periods: null, i, c: DEPT_COLORS[(i * 5 + n) % DEPT_COLORS.length]}));
     const f = {date: stage, work, memos: [], fronts: [], busy, stage, known: true};
     return `<div class="explain">${flowerSVG(f, {label: false, detail: true})}<span><b>${stage}</b><span>${sub}</span></span></div>`;
   };
@@ -1174,7 +1223,7 @@ function moreSheet() {
     + ex('피는 중', 50, 4, '30–65%')
     + ex('활짝', 80, 6, '65–90%')
     + ex('만개', 95, 8, '가장 만개한 10%. 반짝여요.')
-    + `</div><p class="hint">꽃잎 수는 그날 일정 수예요. 꽃의 색과 크기는 올해 수업일 가운데 그날이 얼마나 활짝 피었는지로 정해요. 일정이 많을수록, 한 해에 드물게 나오는 일정일수록 활짝 핍니다. 일정 이름의 뜻은 읽지 않아요.</p>`);
+    + `</div><p class="hint">꽃잎 수는 그날 일정 수, 꽃잎 색은 부서예요. 첫 화면 꽃잎에는 부서 줄임말(1학년부는 ‘1’, 교무부는 ‘교무’)이 적혀 있고, 누르면 그 일정이 나와요. 꽃의 크기와 단계는 올해 수업일 가운데 그날이 얼마나 활짝 피었는지로 정해요. 일정이 많을수록, 한 해에 드물게 나오는 일정일수록 활짝 핍니다. 일정 이름의 뜻은 읽지 않아요.</p>`);
 
   h += sec('자료', ready() ? `일정 ${M.total}건` : '', `<div class="card"><ul class="srcs">${NEED[S.mode].map(k => {
     const st = S.src[k] || {};
@@ -1248,25 +1297,60 @@ async function readWord() {
   if (S.word === w && S.sheet && S.sheet.kind === 'word') paintSheet();
 }
 
-/* ── 꽃잎 ↔ 목록 ───────────────────────────────────── */
-let litTimer = 0;
-function light(i, scroll) {
-  const hero = $('#hero');
-  if (!hero) return;
-  clearTimeout(litTimer);
-  hero.querySelectorAll('.pt').forEach(p => p.classList.toggle('dim', i != null && p.dataset.ev !== String(i)));
-  document.querySelectorAll('#main .ev[data-ev]').forEach(r => r.classList.toggle('lit', r.dataset.ev === String(i)));
-  const row = document.querySelector(`#main .ev[data-ev="${i}"]`);
-  if (scroll && row) row.scrollIntoView({block: 'center', behavior: reduced() ? 'auto' : 'smooth'});
-  if (i != null) litTimer = setTimeout(() => light(null), 2600);
+/* ── 꽃잎 말풍선 ───────────────────────────────────── */
+function closeBubble() {
+  document.querySelectorAll('.bubble').forEach(b => b.remove());
+  document.querySelectorAll('.fl .dim').forEach(p => p.classList.remove('dim'));
+  document.querySelectorAll('#main .ev.lit').forEach(r => r.classList.remove('lit'));
+}
+
+// 꽃잎 하나만 밝히고, 첫 화면이면 목록의 그 줄도 켠다
+function mark(w, i) {
+  w.querySelectorAll('.pt, .lb').forEach(p => p.classList.toggle('dim', p.dataset.ev !== String(i)));
+  if (w.closest('#hero')) document.querySelectorAll(`#main .ev[data-ev="${i}"]`).forEach(r => r.classList.add('lit'));
+}
+
+function openBubble(pt) {
+  const w = pt.closest('.flw');
+  const i = pt.dataset.ev;
+  const again = w.querySelector(`.bubble[data-ev="${i}"]`);
+  closeBubble();
+  if (again) return;
+  const it = day(w.dataset.date).work[+i];
+  if (!it) return;
+  mark(w, i);
+  const tags = [];
+  if (it.grades) tags.push(`${it.grades.join('·')}학년`);
+  if (it.periods) tags.push(periodLabel(it.periods));
+  if (it.end) tags.push(`~${md(it.end)}`);
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.dataset.ev = i;
+  b.setAttribute('role', 'status');
+  b.innerHTML = `<span class="bd"><i style="--c:${deptColor(it.dept)[0]}"></i>${esc([it.dept, it.cat].filter(Boolean).join(' · '))}</span>`
+    + `<b>${esc(it.text)}</b>${tags.length ? `<span class="tg">${tags.map(x => `<i>${x}</i>`).join('')}</span>` : ''}`;
+  b.style.visibility = 'hidden';
+  w.appendChild(b);
+  // 위쪽 꽃잎이면 꽃잎 아래로, 아래쪽 꽃잎이면 꽃잎 위로 띄운다
+  const wr = w.getBoundingClientRect(), pr = pt.getBoundingClientRect(), cr = w.querySelector('.ctr').getBoundingClientRect();
+  const cx = pr.left + pr.width / 2 - wr.left, cy = pr.top + pr.height / 2 - wr.top;
+  const upper = pr.top + pr.height / 2 <= cr.top + cr.height / 2;
+  const bw = b.offsetWidth, bh = b.offsetHeight;
+  const left = Math.max(4, Math.min(wr.width - bw - 4, cx - bw / 2));
+  b.style.left = `${left}px`;
+  b.style.top = `${upper ? cy + 16 : cy - bh - 16}px`;
+  b.style.setProperty('--tx', `${Math.max(18, Math.min(bw - 18, cx - left))}px`);
+  b.classList.toggle('up', !upper);
+  b.style.visibility = '';
 }
 
 /* ── 조작 ───────────────────────────────────────────── */
 document.addEventListener('click', e => {
-  const pt = e.target.closest('#hero .pt');
-  if (pt) { light(pt.dataset.ev, true); return; }
+  const pt = e.target.closest('.flw .pt');
+  if (pt) { openBubble(pt); return; }
+  if (!e.target.closest('.bubble')) closeBubble();
   const row = e.target.closest('#main .ev[data-ev]');
-  if (row) { light(row.dataset.ev, false); return; }
+  if (row) { const hero = $('#hero .flw'); if (hero) mark(hero, row.dataset.ev); return; }
   const mo = e.target.closest('[data-month]');
   if (mo) { S.month = mo.dataset.month; S.yearView = false; renderGarden(); $('#garden').scrollIntoView({block: 'start', behavior: reduced() ? 'auto' : 'smooth'}); return; }
   const dy = e.target.closest('[data-day]');
@@ -1305,8 +1389,9 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.id !== 'grade') return;
-  S.grade = +e.target.value;
+  if (e.target.id !== 'dept') return;
+  S.dept = e.target.value;
+  closeBubble();
   savePrefs();
   render();
 });
@@ -1373,8 +1458,8 @@ setInterval(() => {
   else if (todayKey() !== S.today) render();
 }, 60000);
 
-// 머리의 꽃: 꽃잎 다섯 장 '활짝'
-$('#logo').innerHTML = flowerSVG({date: 'logo', work: [1, 2, 3, 4, 5].map(() => ({w: 1, periods: null})), memos: [], fronts: [], busy: 100, stage: '만개'}, {label: false}).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+// 머리의 꽃: 다섯 색 꽃잎
+$('#logo').innerHTML = flowerSVG({date: 'logo', work: [0, 1, 2, 3, 4].map(i => ({w: 1, periods: null, c: DEPT_COLORS[i]})), memos: [], fronts: [], busy: 100, stage: '만개'}, {label: false}).replace(/^<svg[^>]*>|<\/svg>$/g, '');
 
 primeFromCache();
 rebuild();
