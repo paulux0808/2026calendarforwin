@@ -28,6 +28,7 @@
   --line:#2A211D;
   --link:#1C7ED6; --sun:#E03131; --sat:#1971C2;
   --yellow:#FFD43B; --note:#FFE066;
+  --sky1:#86CCFF; --sky2:#DDF1FF; --hill1:#8CE99A; --hill2:#51CF66; --cloud:#FFFFFF;
   --sans:"Nanum Gothic",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --display:"Jua","Nanum Gothic",-apple-system,sans-serif;
   color-scheme:light;
@@ -37,6 +38,8 @@
     --bg:#152331; --surface:#213243; --sunk:#2A3D50; --hair:#304559;
     --ink:#F3EEE8; --ink-2:#C4BAB2; --ink-3:#8FA0AE;
     --line:#060A0F; --link:#74C0FC; --sun:#FF8787; --sat:#74C0FC;
+    --sky1:#0F1E36; --sky2:#2A4468; --hill1:#2F9E44; --hill2:#2B8A3E;
+    --cloud:#C9D6E8;
     color-scheme:dark;
   }
 }
@@ -87,8 +90,32 @@ a{color:var(--link)}
 .ib:disabled{opacity:.3}
 
 /* ── 오늘의 꽃 ──────────────────────────────────────── */
-.hero{text-align:center;padding:6px 0 4px}
-.hero .fl{width:min(62vw,244px);height:auto;margin:0 auto}
+/* 하루 카드: 위는 꽃이 심긴 장면, 아래는 날짜 칸 */
+.daycard{margin-top:12px;background:var(--surface);border:2.5px solid var(--line);border-radius:26px;box-shadow:4px 4px 0 var(--line);overflow:hidden}
+.scene{position:relative;height:clamp(236px,68vw,272px);overflow:hidden}
+.scene .sky,.scene .front{position:absolute;left:0;width:100%;pointer-events:none}
+.scene .sky{top:0;height:100%}
+.scene .front{bottom:0;height:58px;z-index:2}
+.scene .flw{position:absolute;inset:0;z-index:1}
+.scene .flw .fl{position:absolute;left:50%;bottom:-6px;width:min(46vw,184px);height:auto;transform:translateX(-50%)}
+.scene .nb{position:absolute;top:44%;z-index:3;transform:translateY(-50%)}
+.scene .nb:active{transform:translate(2px,calc(-50% + 2px))}
+.scene .nb.l{left:10px}.scene .nb.r{right:10px}
+.cloud{animation:drift 22s ease-in-out infinite alternate}
+.cloud.c2{animation-duration:30s;animation-direction:alternate-reverse}
+@keyframes drift{from{transform:translateX(-14px)}to{transform:translateX(18px)}}
+.sky .moon,.sky .star{display:none}
+@media (prefers-color-scheme: dark){.sky .sunm{display:none}.sky .moon,.sky .star{display:inline}}
+.panel{padding:14px 18px 18px;border-top:2.5px solid var(--line);text-align:left}
+.prow{display:flex;align-items:center;gap:6px;min-height:34px}
+.prow .sp{flex:1}
+.pill{height:30px;padding:0 12px;border-radius:999px;border:2px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:800;color:var(--ink)}
+.pill:active{transform:translate(1px,1px)}
+.ib.share{width:38px;height:38px;border:2px solid var(--line);border-radius:50%;background:var(--surface)}
+.panel .date{margin-top:2px}
+.panel .stage{justify-content:flex-start;margin-top:8px}
+.panel .stage-sub{margin-top:4px}
+.panel .chips{justify-content:flex-start;margin-top:12px}
 .flw{position:relative}
 .flw .pt{cursor:pointer}
 .fl .lb text{font-family:var(--display);fill:#2A211D;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round;paint-order:stroke;text-anchor:middle;dominant-baseline:central;pointer-events:none}
@@ -115,13 +142,10 @@ button.act{background:var(--surface);color:var(--ink)}
 .from-l{animation:from-l .34s cubic-bezier(.2,.8,.2,1) both}
 @keyframes from-r{from{transform:translateX(56px);opacity:0}to{transform:none;opacity:1}}
 @keyframes from-l{from{transform:translateX(-56px);opacity:0}to{transform:none;opacity:1}}
-.dnav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:4px;margin-top:4px}
-.nb{width:44px;height:44px;border:2.5px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:2px 2px 0 var(--line)}
-.nb:active{transform:translate(2px,2px);box-shadow:none;background:var(--surface)}
-.eyebrow{margin:0 0 2px;font:400 15px/1.4 var(--display);color:var(--ink-3)}
-.eyebrow.away{display:inline-block;padding:0 10px;border-radius:999px;background:var(--note);color:#2A211D;border:2px solid var(--line)}
-.back-today{margin-top:14px;height:36px;font-size:13px}
-.wd.focus{box-shadow:inset 0 0 0 2.5px var(--line)}
+.nb{width:44px;height:44px;border:2.5px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:2px 2px 0 var(--line);color:var(--ink)}
+.nb:active{box-shadow:none;background:var(--surface)}
+.eyebrow{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;background:var(--sunk);font:400 15px/1 var(--display);color:var(--ink-2)}
+.eyebrow.away{background:var(--note);color:#2A211D;border:2px solid var(--line)}
 .date small{font-size:22px;color:var(--ink-2);margin-left:8px}
 .stage{margin:10px 0 0;display:flex;justify-content:center;align-items:center;gap:8px;font-size:16px;font-weight:800}
 .badge{display:inline-flex;align-items:center;height:30px;padding:0 13px;border-radius:999px;background:var(--c);color:#2A211D;border:2.5px solid var(--line);box-shadow:2px 2px 0 var(--line);font:400 17px/1 var(--display)}
@@ -165,16 +189,17 @@ button.chip:active{transform:translate(2px,2px);box-shadow:none}
 .sublabel{margin:0;padding:12px 16px 0;font-size:12px;font-weight:800;color:var(--ink-3);border-top:2px solid var(--hair)}
 .sublabel + .evs .ev:first-child{border-top:0}
 
-/* 앞으로 7일 */
-.week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px 6px}
-.wd{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;border-radius:16px}
-.wd .fl{width:42px;height:42px}
-.wd span{font-size:12px;font-weight:700;color:var(--ink-3)}
-.wd b{font:400 17px var(--display)}
-.wd.sun b,.wd.sun span{color:var(--sun)}.wd.sat b,.wd.sat span{color:var(--sat)}
-.wd.today{background:var(--note);box-shadow:inset 0 0 0 2.5px var(--line)}
-.wd.today span,.wd.today b{color:#2A211D}
-.wd:active{background:var(--sunk)}
+/* 주간 막대: 보고 있는 날이 든 한 주 */
+.weekbar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px}
+.wb{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0 7px;border:2.5px solid transparent;background:none;border-radius:18px}
+.wb span{font-size:11.5px;font-weight:800;color:var(--ink-3)}
+.wb .fl{width:32px;height:32px}
+.wb b{font:400 16px/1.2 var(--display);color:var(--ink-2)}
+.wb.sun span,.wb.sun b{color:var(--sun)}.wb.sat span,.wb.sat b{color:var(--sat)}
+.wb.today b::after{content:"";display:block;width:5px;height:5px;margin:1px auto 0;border-radius:50%;background:currentColor}
+.wb.focus{background:var(--surface);border-color:var(--line);box-shadow:2px 2px 0 var(--line)}
+.wb.focus b{color:var(--ink)}
+.wb:active{background:var(--sunk)}
 
 /* 곧 만개 */
 .peaks{list-style:none;margin:0;padding:0}
@@ -201,6 +226,7 @@ button.chip:active{transform:translate(2px,2px);box-shadow:none}
 .cell .fl{width:40px;height:40px}
 .cell.sun .n{color:var(--sun)}.cell.sat .n{color:var(--sat)}
 .cell.today .n{background:var(--ink);color:var(--surface)}
+.cell.focus{box-shadow:inset 0 0 0 2.5px var(--line);background:var(--surface)}
 .cell.out{visibility:hidden}
 .cell.past .fl{opacity:.5}
 .cell:active{background:var(--sunk)}
@@ -242,10 +268,6 @@ button.chip:active{transform:translate(2px,2px);box-shadow:none}
 .x{width:36px;height:36px;border:2px solid var(--line);border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--ink)}
 .x svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round}
 .sheet-body{overflow-y:auto;overscroll-behavior:contain;padding:4px 16px calc(28px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
-.dayhead{text-align:center;padding:0 0 4px}
-.dayhead .fl{width:190px;height:auto;margin:0 auto 6px}
-.daynav{display:flex;gap:10px;margin-top:18px}
-.daynav .btn{flex:1}
 .search{display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;border-radius:14px;background:var(--surface);border:2.5px solid var(--line);box-shadow:3px 3px 0 var(--line)}
 .search .i{width:20px;height:20px;color:var(--ink-2)}
 .search input{flex:1;min-width:0;height:100%;border:0;background:none;outline:none;font-size:16px}
@@ -902,7 +924,7 @@ function flowerSVG(f, o = {}) {
   if (!n) {
     // 오늘 꽃(stem)은 할 일이 없는 날에도 새싹으로 보여 준다. 작은 꽃은 시트에 없는 날을 씨앗으로 둔다.
     const sprout = o.stem || f.memos.length || (f.known && ![0, 6].includes(dow(f.date)));
-    const g = f.busy ? budG(f) : sprout ? sproutG(o.stem ? 1.45 : 1, o.stem) : seedG();
+    const g = f.busy ? (o.stem ? stem('M0 60L0 112') : '') + budG(f) : sprout ? sproutG(o.stem ? 1.45 : 1, o.stem && o.ground !== false) : seedG();
     return `<svg class="${cls}" viewBox="${o.stem ? '-118 -100 236 210' : '-112 -112 224 224'}"${label}>${g}</svg>`;
   }
   const order = ordered(f);
@@ -914,7 +936,7 @@ function flowerSVG(f, o = {}) {
     g += stem(`M0 ${n1(R * .3)}C8 ${n1(R * .3 + 40)} -10 ${n1(R * .3 + 75)} 0 146`)
       + leaf('M-1 122C-28 124 -54 108 -62 80C-34 76 -10 92 -1 122Z', 'M-5 116Q-30 104 -52 86', '-1px 122px', false)
       + leaf('M1 104C22 102 44 88 50 62C26 62 8 76 1 104Z', 'M5 98Q26 86 42 70', '1px 104px', true)
-      + mound(154, 80);
+      + (o.ground === false ? stem('M0 140L0 172') : mound(154, 80));
   }
   let labels = '';
   const cr = R * .2 + 4;
@@ -1017,18 +1039,43 @@ const focusDay = () => S.focus || S.today;
 const AL = '<svg class="i" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></svg>';
 const AR = '<svg class="i" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></svg>';
 
+const SHARE = '<svg class="i" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg>';
+
+// 꽃이 심긴 만화 장면: 뒤(하늘·해·구름·먼 언덕) / 꽃 / 앞(가까운 언덕·풀)
+function sceneBack(k) {
+  const h = hash(k), x1 = n1(30 + h * 60), x2 = n1(210 + h * 70);
+  const cloud = (x, y, s, cls) => `<g class="cloud ${cls}"><path transform="translate(${x} ${y}) scale(${s})" d="M0 30C0 18 12 12 22 16C26 4 44 0 54 10C62 4 76 8 78 20C88 20 94 30 88 38L6 38C2 38 0 34 0 30Z" fill="var(--cloud)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/></g>`;
+  const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const r = a * Math.PI / 180; return `M${n1(344 + Math.cos(r) * 30)} ${n1(50 + Math.sin(r) * 30)}L${n1(344 + Math.cos(r) * 38)} ${n1(50 + Math.sin(r) * 38)}`; }).join('');
+  const stars = [[40, 30], [120, 60], [190, 24], [280, 44], [370, 110], [80, 110]].map(([x, y]) => `<circle class="star" cx="${x}" cy="${y}" r="2.4" fill="#FFE066"/>`).join('');
+  return `<svg class="sky" viewBox="0 0 400 270" preserveAspectRatio="xMidYMax slice" aria-hidden="true">`
+    + `<defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="1" style="stop-color:var(--sky2)"/></linearGradient></defs>`
+    + `<rect width="400" height="270" fill="url(#skyg)"/>${stars}`
+    + `<g class="sunm"><path d="${rays}" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/><circle cx="344" cy="50" r="22" fill="#FFD43B" stroke="${INK}" stroke-width="3.5"/></g>`
+    + `<path class="moon" d="M352 30a24 24 0 1 0 18 38a20 20 0 0 1 -18 -38z" fill="#FFE8A3" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`
+    + cloud(x1, 34, .9, 'c1') + cloud(x2, 84, .62, 'c2')
+    + `<path d="M-10 270V206C60 176 150 182 210 204C270 226 330 190 410 198V270Z" fill="var(--hill1)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/></svg>`;
+}
+function sceneFront() {
+  const tufts = [[48, 30], [118, 22], [300, 24], [352, 30]].map(([x, y]) => `M${x} ${y}l4 -9l3 9l4 -10l3 10`).join('');
+  return `<svg class="front" viewBox="0 0 400 58" preserveAspectRatio="none" aria-hidden="true">`
+    + `<path d="M-10 64V30C80 8 170 10 232 20C300 32 340 16 410 24V64Z" fill="var(--hill2)" stroke="${INK}" stroke-width="3.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`
+    + `<path d="${tufts}" fill="none" stroke="${INK}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
 function heroHTML(f) {
   const k = focusDay();
   const d = toDate(k);
   const n = diffDays(S.today, k);
   const away = n === 1 ? '내일' : n === -1 ? '어제' : n > 0 ? `${n}일 뒤` : `${-n}일 전`;
-  const date = `<div class="dnav"><button class="ib nb" data-action="prev-day" aria-label="전날">${AL}</button>`
-    + `<div><p class="eyebrow${n ? ' away' : ''}">${n ? away : '오늘'}</p><p class="date">${longDate(k)}<small>${WD[d.getDay()]}요일</small></p></div>`
-    + `<button class="ib nb" data-action="next-day" aria-label="다음 날">${AR}</button></div>`;
+  const arrows = `<button class="ib nb l" data-action="prev-day" aria-label="전날">${AL}</button><button class="ib nb r" data-action="next-day" aria-label="다음 날">${AR}</button>`;
+  const head = `<div class="prow"><span class="eyebrow${n ? ' away' : ''}">${n ? away : '오늘'}</span>`
+    + (n ? `<button class="pill" data-action="go-today">오늘로</button>` : '')
+    + `<span class="sp"></span>${f ? `<button class="ib share" data-action="share-day" data-date="${k}" aria-label="이날 공유">${SHARE}</button>` : ''}</div>`
+    + `<p class="date">${longDate(k)}<small>${WD[d.getDay()]}요일</small></p>`;
   if (!f) {
-    const blank = {date: k, work: [], memos: [], fronts: [], busy: 0, stage: '쉼', known: false};
-    return `<section class="hero">${flowerSVG(blank, {stem: true, label: false})}${date}`
-      + `<p class="stage-sub">${S.loading || !S.lastLoad ? '시트를 읽는 중이에요' : '시트를 읽지 못했어요'}</p></section>`;
+    const blank = {date: k, work: [], memos: [], fronts: [], busy: 0, stage: '쉼', known: true};
+    return `<section class="daycard hero"><div class="scene">${sceneBack(k)}<div class="flw">${flowerSVG(blank, {stem: true, ground: false, label: false, anim: true})}</div>${sceneFront()}</div>`
+      + `<div class="panel">${head}<p class="stage-sub">${S.loading || !S.lastLoad ? '시트를 읽는 중이에요' : '시트를 읽지 못했어요'}</p></div></section>`;
   }
   const key = `${k}|${S.dept}|${S.mode}|${f.work.length}`;
   const anim = S.bloomed !== key;
@@ -1040,9 +1087,22 @@ function heroHTML(f) {
     chips += `<${more ? 'button' : 'span'} class="chip"${more ? ' data-action="word"' : ''}>기도 <b>${esc(du.pray.name)}</b>${du.pray.bible ? ` · ${esc(du.pray.bible)}` : ''}</${more ? 'button' : 'span'}>`;
   }
   if (du && du.night) chips += `<span class="chip">야자 감독 <b>${esc(du.night)}</b></span>`;
-  return `<section class="hero" id="hero">${tapFlower(f, {stem: true, detail: true, anim})}${date}${stageLine(f)}`
-    + (chips ? `<div class="chips">${chips}</div>` : '')
-    + (n ? `<button class="btn back-today" data-action="go-today">오늘로 돌아가기</button>` : '') + `</section>`;
+  return `<section class="daycard hero" id="hero"><div class="scene">${sceneBack(k)}${tapFlower(f, {stem: true, ground: false, detail: true, anim})}${sceneFront()}${arrows}</div>`
+    + `<div class="panel">${head}${stageLine(f)}${chips ? `<div class="chips">${chips}</div>` : ''}</div></section>`;
+}
+
+// 보고 있는 날이 든 한 주(일~토). 누르면 그날로 간다.
+function weekbarHTML() {
+  const k = focusDay(), start = addDays(k, -dow(k));
+  let h = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i);
+    const f = day(d);
+    const cls = ['wb', i === 0 ? 'sun' : i === 6 ? 'sat' : '', d === S.today ? 'today' : '', d === k ? 'focus' : ''].filter(Boolean).join(' ');
+    h += `<button class="${cls}" data-day="${d}" aria-label="${longDate(d)} ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}"${d === k ? ' aria-current="date"' : ''}>`
+      + `<span>${WD[i]}</span>${flowerSVG(f, {label: false})}<b>${toDate(d).getDate()}</b></button>`;
+  }
+  return `<nav class="weekbar" aria-label="이 주">${h}</nav>`;
 }
 
 function notesHTML() {
@@ -1063,19 +1123,6 @@ function todayHTML(f) {
   const nd = !f.work.length && nextWorkDay(k);
   if (nd) h += sec(`${longDate(nd)} ${WD[dow(nd)]}요일`, `다음 수업일 · ${diffDays(k, nd)}일 뒤`, `<div class="card">${dayList(day(nd), {go: true})}</div>`);
   return h;
-}
-
-function weekHTML() {
-  let h = '';
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(S.today, i);
-    const f = day(d);
-    const wd = dow(d);
-    const cls = [wd === 0 ? 'sun' : wd === 6 ? 'sat' : '', i === 0 ? 'today' : '', i && d === S.focus ? 'focus' : ''].filter(Boolean).join(' ');
-    h += `<button class="wd ${cls}" data-day="${d}" aria-label="${longDate(d)} ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}">`
-      + `<span>${i === 0 ? '오늘' : WD[wd]}</span>${flowerSVG(f, {label: false})}<b>${toDate(d).getDate()}</b></button>`;
-  }
-  return sec('앞으로 7일', '', `<div class="card"><div class="week">${h}</div></div>`);
 }
 
 function peaksHTML() {
@@ -1112,7 +1159,7 @@ function gardenHTML() {
     const k = ymd(y, m, d);
     const f = day(k);
     const wd = dow(k);
-    const cls = ['cell', wd === 0 ? 'sun' : wd === 6 ? 'sat' : '', k === S.today ? 'today' : '', k < S.today ? 'past' : ''].filter(Boolean).join(' ');
+    const cls = ['cell', wd === 0 ? 'sun' : wd === 6 ? 'sat' : '', k === S.today ? 'today' : '', k < S.today ? 'past' : '', k === focusDay() ? 'focus' : ''].filter(Boolean).join(' ');
     cells += `<button class="${cls}" data-day="${k}" aria-label="${m}월 ${d}일 ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}"><span class="n">${d}</span>${flowerSVG(f, {label: false})}</button>`;
   }
   return `<section class="sec" id="garden"><div class="gh"><h2>${m}월<small>${y}</small></h2>${tog}`
@@ -1178,8 +1225,8 @@ function render() {
   S.today = todayKey();
   if (S.focus === S.today) S.focus = null;
   const f = ready() ? day(focusDay()) : null;
-  $('#main').innerHTML = `<div id="focus"${S.slide ? ` class="${S.slide}"` : ''}>` + heroHTML(f) + (f ? notesHTML() : '') + todayHTML(f) + `</div>`
-    + (f ? weekHTML() + peaksHTML() + gardenHTML() : '') + footHTML();
+  $('#main').innerHTML = (f ? weekbarHTML() : '') + `<div id="focus"${S.slide ? ` class="${S.slide}"` : ''}>` + heroHTML(f) + (f ? notesHTML() : '') + todayHTML(f) + `</div>`
+    + (f ? peaksHTML() + gardenHTML() : '') + footHTML();
   S.slide = '';
   paintTop();
 }
@@ -1193,6 +1240,24 @@ function moveDay(n) {
   S.slide = n > 0 ? 'from-r' : 'from-l';
   render();
   syncUrl();
+}
+
+// 어디서든 날짜를 누르면 첫 화면의 하루 카드가 그날로 바뀐다.
+// 판(검색 등)이 열려 있으면 뒤로 가기로 판을 먼저 닫고, 닫힌 뒤에 옮긴다(주소가 되돌려지지 않게).
+let pendingDay = null;
+function goDay(k) {
+  closeBubble();
+  if (S.sheet && history.state && history.state.sheet) { pendingDay = k; history.back(); return; }
+  if (S.sheet) hideSheet();
+  const from = focusDay();
+  if (k !== from) {
+    buzz();
+    S.focus = k === S.today ? null : k;
+    S.slide = k > from ? 'from-r' : 'from-l';
+    render();
+    syncUrl();
+  }
+  window.scrollTo({top: 0, behavior: reduced() ? 'auto' : 'smooth'});
 }
 
 /* ── 날짜 주소 · 공유 · 캘린더 ─────────────────────── */
@@ -1336,10 +1401,9 @@ function hideSheet() {
 function closeSheet() { if (history.state && history.state.sheet) history.back(); else hideSheet(); }
 
 function paintSheet() {
-  const {kind, arg} = S.sheet;
+  const {kind} = S.sheet;
   let title = '', body = '';
-  if (kind === 'day') ({title, body} = daySheet(arg));
-  else if (kind === 'search') { title = '일정 찾기'; body = searchSheet(); }
+  if (kind === 'search') { title = '일정 찾기'; body = searchSheet(); }
   else if (kind === 'more') { title = '설정과 자료'; body = moreSheet(); }
   else if (kind === 'word') { title = '기도 순서'; body = wordSheet(); }
   $('#sheet-title').innerHTML = title;
@@ -1347,27 +1411,6 @@ function paintSheet() {
   $('#sheet-body').innerHTML = body;
   if (focusQ && $('#q')) { const q = $('#q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
   S.sheet.anim = false;
-}
-
-function daySheet(date) {
-  const n = diffDays(S.today, date);
-  const rel = n === 0 ? '오늘' : n === 1 ? '내일' : n === -1 ? '어제' : '';
-  const title = `${longDate(date)} ${WD[dow(date)]}요일${rel ? `<small>${rel}</small>` : ''}`;
-  if (!ready()) return {title, body: ''};
-  const f = day(date);
-  const du = S.mode === 'teacher' ? M.duty.get(date) : null;
-  let body = `<div class="dayhead${S.sheet.slide ? ` ${S.sheet.slide}` : ''}">${tapFlower(f, {detail: true, anim: S.sheet.anim, fit: true})}${stageLine(f)}</div>`;
-  body += `<div class="card" style="margin-top:16px">${dayList(f)}</div>`;
-  if (du && (du.pray?.name || du.night)) {
-    body += `<div class="chips" style="justify-content:flex-start;margin-top:14px">`
-      + (du.pray?.name ? `<span class="chip">기도 <b>${esc(du.pray.name)}</b>${du.pray.bible ? ` · ${esc(du.pray.bible)}` : ''}</span>` : '')
-      + (du.night ? `<span class="chip">야자 감독 <b>${esc(du.night)}</b></span>` : '') + '</div>';
-  }
-  body += `<div class="btns" style="justify-content:center"><button class="btn solid" data-action="share-day" data-date="${date}">이날 공유</button></div>`;
-  body += `<div class="daynav"><button class="btn" data-day="${addDays(date, -1)}">‹ ${md(addDays(date, -1))}</button>`
-    + (date !== S.today ? `<button class="btn" data-day="${S.today}">오늘</button>` : '')
-    + `<button class="btn" data-day="${addDays(date, 1)}">${md(addDays(date, 1))} ›</button></div>`;
-  return {title, body};
 }
 
 function hl(s) {
@@ -1533,7 +1576,7 @@ function openBubble(pt) {
   const bw = b.offsetWidth, bh = b.offsetHeight;
   const left = Math.max(4, Math.min(wr.width - bw - 4, cx - bw / 2));
   b.style.left = `${left}px`;
-  b.style.top = `${upper ? cy + 16 : cy - bh - 16}px`;
+  b.style.top = `${Math.max(4, Math.min(wr.height - bh - 4, upper ? cy + 16 : cy - bh - 16))}px`;
   b.style.setProperty('--tx', `${Math.max(18, Math.min(bw - 18, cx - left))}px`);
   b.classList.toggle('up', !upper);
   b.style.visibility = '';
@@ -1553,7 +1596,7 @@ document.addEventListener('click', e => {
   const mo = e.target.closest('[data-month]');
   if (mo) { S.month = mo.dataset.month; S.yearView = false; renderGarden(); $('#garden').scrollIntoView({block: 'start', behavior: reduced() ? 'auto' : 'smooth'}); return; }
   const dy = e.target.closest('[data-day]');
-  if (dy) { if (S.sheet && S.sheet.kind === 'day') { S.sheet = {kind: 'day', arg: dy.dataset.day, anim: true}; paintSheet(); $('#sheet-body').scrollTop = 0; } else openSheet('day', dy.dataset.day); return; }
+  if (dy) { goDay(dy.dataset.day); return; }
   const a = e.target.closest('[data-action]');
   if (!a) return;
   switch (a.dataset.action) {
@@ -1605,18 +1648,10 @@ document.addEventListener('change', e => {
   render();
 });
 
-function sheetDay(n) {
-  if (!S.sheet || S.sheet.kind !== 'day') return;
-  closeBubble();
-  S.sheet = {kind: 'day', arg: addDays(S.sheet.arg, n), anim: true, slide: n > 0 ? 'from-r' : 'from-l'};
-  paintSheet();
-}
-
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && S.sheet) { closeSheet(); return; }
   if (e.target.closest('input,select,textarea') || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-  const n = e.key === 'ArrowRight' ? 1 : -1;
-  if (S.sheet) sheetDay(n); else moveDay(n);
+  if (!S.sheet) moveDay(e.key === 'ArrowRight' ? 1 : -1);
 });
 
 let qTimer = 0;
@@ -1627,7 +1662,10 @@ document.addEventListener('input', e => {
   qTimer = setTimeout(() => { const h = $('#hits'); if (h) h.innerHTML = hitsHTML(); }, 120);
 });
 
-addEventListener('popstate', () => { if (S.sheet) hideSheet(); });
+addEventListener('popstate', () => {
+  if (S.sheet) hideSheet();
+  if (pendingDay) { const k = pendingDay; pendingDay = null; goDay(k); }
+});
 addEventListener('scroll', () => $('#top').classList.toggle('lifted', scrollY > 4), {passive: true});
 
 // 첫 화면은 옆으로 밀어 하루씩 넘긴다. 미는 동안 손가락을 따라 움직인다.
@@ -1694,7 +1732,6 @@ $('#sheet').addEventListener('touchend', () => {
   const el = $('#sheet');
   el.style.transition = ''; el.style.transform = '';
   if (drag.lock === 'y' && drag.top && drag.dy > 110) closeSheet();
-  if (drag.lock === 'x' && Math.abs(drag.dx) > 60) sheetDay(drag.dx < 0 ? 1 : -1);
   drag = null;
 });
 
