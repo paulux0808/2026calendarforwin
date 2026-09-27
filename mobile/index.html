@@ -27,8 +27,7 @@
   --ink:#2A211D; --ink-2:#5E534D; --ink-3:#8F857F;
   --line:#2A211D;
   --link:#1C7ED6; --sun:#E03131; --sat:#1971C2;
-  --yellow:#FFD43B; --note:#FFE066;
-  --sky1:#86CCFF; --sky2:#DDF1FF; --hill1:#8CE99A; --hill2:#51CF66; --cloud:#FFFFFF;
+  --yellow:#FFD43B; --note:#FFE066; --soil:#EEE3D6;
   --sans:"Nanum Gothic",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --display:"Jua","Nanum Gothic",-apple-system,sans-serif;
   color-scheme:light;
@@ -37,9 +36,7 @@
   :root{
     --bg:#152331; --surface:#213243; --sunk:#2A3D50; --hair:#304559;
     --ink:#F3EEE8; --ink-2:#C4BAB2; --ink-3:#8FA0AE;
-    --line:#060A0F; --link:#74C0FC; --sun:#FF8787; --sat:#74C0FC;
-    --sky1:#0F1E36; --sky2:#2A4468; --hill1:#2F9E44; --hill2:#2B8A3E;
-    --cloud:#C9D6E8;
+    --line:#060A0F; --link:#74C0FC; --sun:#FF8787; --sat:#74C0FC; --soil:#31465A;
     color-scheme:dark;
   }
 }
@@ -92,20 +89,70 @@ a{color:var(--link)}
 /* ── 오늘의 꽃 ──────────────────────────────────────── */
 /* 하루 카드: 위는 꽃이 심긴 장면, 아래는 날짜 칸 */
 .daycard{margin-top:12px;background:var(--surface);border:2.5px solid var(--line);border-radius:26px;box-shadow:4px 4px 0 var(--line);overflow:hidden}
-.scene{position:relative;height:clamp(236px,68vw,272px);overflow:hidden}
+.scene{position:relative;height:clamp(236px,68vw,272px);overflow:hidden;
+  --sky1:#74C0FC;--sky2:#A5D8FF;--sky3:#E7F5FF;--sunc:#FFD43B;--cloud:#FFFFFF;--cloud-sh:#D0EBFF;
+  --hill1:#8CE99A;--hill2:#51CF66;--hill-lit:#D3F9D8;--tree:#40C057;--tree-lit:#B2F2BB}
+/* 땅: 봄엔 벚나무, 가을엔 누런 언덕과 단풍, 겨울엔 눈 덮인 언덕 */
+.scene[data-season="spring"]{--tree:#FFC9DE;--tree-lit:#FFF0F6}
+.scene[data-season="autumn"]{--hill1:#C5E57E;--hill2:#94C94A;--hill-lit:#E9F7C4;--tree:#FF922B;--tree-lit:#FFD8A8}
+.scene[data-season="winter"]{--hill1:#DCEAF7;--hill2:#F1F7FC;--hill-lit:#FFFFFF;--tree:#E3EFFA;--tree-lit:#FFFFFF}
+.scene[data-season="winter"] .daisy{display:none}
+/* 하늘: 새벽 · 낮 · 노을 · 밤. 어두운 화면에선 늘 밤. */
+.scene[data-sky="dawn"]{--sky1:#9DA7FF;--sky2:#FFC9DE;--sky3:#FFE8CC;--sunc:#FFA94D;--cloud:#FFF7FA;--cloud-sh:#FFD3E2}
+.scene[data-sky="dusk"]{--sky1:#6C72D9;--sky2:#F783AC;--sky3:#FFC078;--sunc:#FF922B;--cloud:#FFEAF1;--cloud-sh:#F5A3C0}
+.scene[data-sky="night"]{--sky1:#0E1B33;--sky2:#1D3358;--sky3:#34507C;--cloud:#C9D6E8;--cloud-sh:#8FA3BF;--hill1:#37B24D;--hill2:#2B8A3E;--hill-lit:#69DB7C;--tree:#2B8A3E;--tree-lit:#51CF66}
+.scene[data-sky="night"][data-season="winter"]{--hill1:#5C7899;--hill2:#7690B0;--hill-lit:#A9BDD6;--tree:#8DA4C0;--tree-lit:#C3D2E4}
+@media (prefers-color-scheme: dark){
+  .scene[data-sky]{--sky1:#0B1628;--sky2:#172B4A;--sky3:#2A4468;--cloud:#B9C7DB;--cloud-sh:#7F93AF;--hill1:#2F9E44;--hill2:#2B8A3E;--hill-lit:#51CF66;--tree:#2B8A3E;--tree-lit:#51CF66}
+  .scene[data-sky][data-season="winter"]{--hill1:#4E6784;--hill2:#637D9B;--hill-lit:#94AAC4;--tree:#7D93AE;--tree-lit:#B3C3D7}
+}
 .scene .sky,.scene .front{position:absolute;left:0;width:100%;pointer-events:none}
 .scene .sky{top:0;height:100%}
-.scene .front{bottom:0;height:58px;z-index:2}
+.scene .front{bottom:0;height:auto;aspect-ratio:400/58;z-index:2}
 .scene .flw{position:absolute;inset:0;z-index:1}
-.scene .flw .fl{position:absolute;left:50%;bottom:-6px;width:min(46vw,184px);height:auto;transform:translateX(-50%)}
+.scene .flw.open{z-index:4}
+.scene .flw .fl{position:absolute;left:50%;bottom:-6px;width:min(46vw,184px);height:auto;transform:translateX(-50%);transform-origin:50% 100%;animation:sway 7s ease-in-out infinite}
+.scene .flw.open .fl{animation-play-state:paused}
+@keyframes sway{0%,100%{transform:translateX(-50%) rotate(-1.1deg)}50%{transform:translateX(-50%) rotate(1.1deg)}}
 .scene .nb{position:absolute;top:44%;z-index:3;transform:translateY(-50%)}
 .scene .nb:active{transform:translate(2px,calc(-50% + 2px))}
 .scene .nb.l{left:10px}.scene .nb.r{right:10px}
 .cloud{animation:drift 22s ease-in-out infinite alternate}
 .cloud.c2{animation-duration:30s;animation-direction:alternate-reverse}
 @keyframes drift{from{transform:translateX(-14px)}to{transform:translateX(18px)}}
+.sky .rays{transform-box:fill-box;transform-origin:center;animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sky .star{transform-box:fill-box;transform-origin:center;animation:twinkle2 2.6s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes twinkle2{50%{transform:scale(.45);opacity:.6}}
 .sky .moon,.sky .star{display:none}
+.scene[data-sky="night"] .sunm{display:none}
+.scene[data-sky="night"] .moon,.scene[data-sky="night"] .star{display:inline}
 @media (prefers-color-scheme: dark){.sky .sunm{display:none}.sky .moon,.sky .star{display:inline}}
+/* 계절: 떨어지는 꽃잎·낙엽·눈, 여름밤 반딧불 */
+.fx{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.fx i{position:absolute;left:var(--x);top:-28px;width:var(--s);height:var(--s);animation:fall var(--t) linear var(--d) infinite}
+.fx i svg{display:block;width:100%;height:100%;overflow:visible;animation:flutter calc(var(--t) / 3) ease-in-out var(--d) infinite alternate}
+@keyframes fall{to{transform:translate(var(--dx),320px)}}
+@keyframes flutter{from{transform:translateX(-9px) rotate(-40deg)}to{transform:translateX(9px) rotate(40deg)}}
+.fx.summer{display:none}
+.scene[data-sky="night"] .fx.summer{display:block}
+@media (prefers-color-scheme: dark){.fx.summer{display:block}}
+.fx.summer i{top:var(--y);width:7px;height:7px;border-radius:50%;background:#FFF3BF;box-shadow:0 0 7px 3px rgba(255,224,102,.7);animation:hover var(--t) ease-in-out var(--d) infinite alternate,blink 2.2s ease-in-out var(--d) infinite}
+@keyframes hover{to{transform:translate(var(--dx),-28px)}}
+@keyframes blink{50%{opacity:.2}}
+/* 나비: 꽃 위로 둥글게 난다 */
+.bfly{position:absolute;left:calc(50% - 16px);top:44%;width:32px;height:28px;z-index:1;pointer-events:none;animation:flit 13s ease-in-out infinite}
+.bfly.b2{width:26px;animation-duration:17s;animation-delay:-7s;animation-direction:reverse}
+.bfly .wg{animation:flap .2s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleX(.3)}}
+@keyframes flit{
+  0%,100%{transform:translate(-104px,6px) rotate(-10deg)}
+  22%{transform:translate(-78px,-58px) rotate(8deg)}
+  42%{transform:translate(-4px,-92px) rotate(-6deg)}
+  62%{transform:translate(78px,-60px) rotate(12deg)}
+  80%{transform:translate(104px,-4px) rotate(-4deg)}
+  90%{transform:translate(20px,-40px) rotate(6deg)}
+}
 .panel{padding:14px 18px 18px;border-top:2.5px solid var(--line);text-align:left}
 .prow{display:flex;align-items:center;gap:6px;min-height:34px}
 .prow .sp{flex:1}
@@ -190,16 +237,19 @@ button.chip:active{transform:translate(2px,2px);box-shadow:none}
 .sublabel + .evs .ev:first-child{border-top:0}
 
 /* 주간 막대: 보고 있는 날이 든 한 주 */
-.weekbar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px}
-.wb{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0 7px;border:2.5px solid transparent;background:none;border-radius:18px}
-.wb span{font-size:11.5px;font-weight:800;color:var(--ink-3)}
-.wb .fl{width:32px;height:32px}
-.wb b{font:400 16px/1.2 var(--display);color:var(--ink-2)}
+.weekbar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:6px;padding:5px;background:var(--surface);border:2.5px solid var(--line);border-radius:22px;box-shadow:4px 4px 0 var(--line)}
+.wb{position:relative;display:flex;flex-direction:column;align-items:center;gap:0;padding:5px 0 4px;border:2px solid transparent;background:none;border-radius:16px}
+.wb span{font-size:11px;font-weight:800;color:var(--ink-3)}
+.wb .fl{width:38px;height:38px;margin:1px 0}
+.wb b{font:400 16px/1.25 var(--display);color:var(--ink-2)}
 .wb.sun span,.wb.sun b{color:var(--sun)}.wb.sat span,.wb.sat b{color:var(--sat)}
-.wb.today b::after{content:"";display:block;width:5px;height:5px;margin:1px auto 0;border-radius:50%;background:currentColor}
-.wb.focus{background:var(--surface);border-color:var(--line);box-shadow:2px 2px 0 var(--line)}
-.wb.focus b{color:var(--ink)}
+.wb.today b::after{content:"";display:block;width:5px;height:5px;margin:0 auto;border-radius:50%;background:currentColor}
+.wb:not(.today) b::after{content:"";display:block;height:5px}
+.wb.focus{background:var(--yellow);border-color:var(--line)}
+.wb.focus span,.wb.focus b{color:#2A211D}
 .wb:active{background:var(--sunk)}
+.fl .soil{fill:var(--soil)}
+.wb.focus .soil{fill:rgba(42,33,29,.12);stroke:none}
 
 /* 곧 만개 */
 .peaks{list-style:none;margin:0;padding:0}
@@ -292,6 +342,7 @@ mark{background:var(--yellow);color:#2A211D;border-radius:3px;padding:0 1px}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
+  .fx:not(.summer),.bfly{display:none}
 }
 </style>
 </head>
@@ -874,44 +925,45 @@ function petalPath(L, W) {
     + `C${n1(-W * 1.05)} ${n1(-L * .42)} ${n1(-W * .5)} ${n1(-L * .1)} 0 0Z`;
 }
 const line = (d, w, c = INK) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
-// 먹선을 두른 줄기: 굵은 먹 위에 가는 초록
-const stem = d => `<g class="stem">${line(d, 13)}${line(d, 6.5, GREEN[1])}</g>`;
-function leaf(d, rib, origin, light) {
-  return `<g class="leaf" style="transform-origin:${origin}"><path d="${d}" fill="${light ? GREEN[0] : GREEN[1]}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>${line(rib, 3, GREEN[2])}</g>`;
+// 먹선을 두른 줄기: 굵은 먹 위에 가는 초록. sw 는 먹선 굵기(작은 꽃일수록 굵게 그려야 화면에서 같은 굵기로 보인다).
+const stem = (d, sw = SW) => `<g class="stem">${line(d, 8.5 + sw)}${line(d, 2 + sw, GREEN[1])}</g>`;
+function leaf(d, rib, origin, light, sw = SW) {
+  return `<g class="leaf" style="transform-origin:${origin}"><path d="${d}" fill="${light ? GREEN[0] : GREEN[1]}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>${sw > SW ? '' : line(rib, 3, GREEN[2])}</g>`;
 }
 const mound = (y, w) => `<path d="M${-w} ${y}C${-w * .6} ${y - 22} ${w * .6} ${y - 22} ${w} ${y}Z" fill="${GREEN[0]}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`;
 
-function petalG(L, W, c, detail, attrs) {
-  return `<g class="pt" ${attrs}><path d="${petalPath(L, W)}" fill="${c[0]}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`
+function petalG(L, W, c, detail, attrs, sw = SW) {
+  return `<g class="pt" ${attrs}><path d="${petalPath(L, W)}" fill="${c[0]}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>`
     + `<path d="${petalPath(L * .5, W * .64)}" fill="${c[1]}"/>`
     + (detail ? line(`M${n1(W * .26)} ${n1(-L * .9)}Q${n1(W * .56)} ${n1(-L * .84)} ${n1(W * .64)} ${n1(-L * .7)}`, SW * .8, 'rgba(255,255,255,.9)') : '')
     + `</g>`;
 }
-function centerG(r, c, detail, n) {
+function centerG(r, c, detail, n, sw = SW) {
   return `<g class="ctr" style="--n:${n}"><circle r="${n1(r)}" fill="${c[1]}"/><circle cy="${n1(-r * .16)}" r="${n1(r * .8)}" fill="${c[0]}"/>`
-    + `<circle r="${n1(r)}" fill="none" stroke="${INK}" stroke-width="${SW}"/>`
+    + `<circle r="${n1(r)}" fill="none" stroke="${INK}" stroke-width="${sw}"/>`
     + (detail ? `<ellipse cx="${n1(-r * .34)}" cy="${n1(-r * .4)}" rx="${n1(r * .24)}" ry="${n1(r * .15)}" transform="rotate(-30 ${n1(-r * .34)} ${n1(-r * .4)})" fill="#fff" opacity=".9"/>` : '')
     + `</g>`;
 }
 const sparkG = (x, y, s, d) => `<g class="spark live" style="--x:${n1(x)}px;--y:${n1(y)}px;--d:${d}ms">`
   + `<path d="M0 ${-s}Q0 0 ${s} 0Q0 0 0 ${s}Q0 0 ${-s} 0Q0 0 0 ${-s}Z" fill="#FFE066" stroke="${INK}" stroke-width="${SW * .75}" stroke-linejoin="round"/></g>`;
 
-function sproutG(s, ground) {
-  return `<g transform="scale(${s})">${stem('M0 58C2 32 -2 14 0 -4')}`
-    + leaf('M0 6C-24 8 -48 -8 -52 -38C-22 -38 -4 -20 0 6Z', 'M-4 0Q-22 -12 -40 -30', '0px 6px', false)
-    + leaf('M1 -4C22 -4 42 -20 44 -48C16 -46 2 -28 1 -4Z', 'M4 -10Q22 -22 36 -40', '1px -4px', true)
+function sproutG(s, ground, sw = SW) {
+  return `<g transform="scale(${s})">${stem('M0 58C2 32 -2 14 0 -4', sw)}`
+    + leaf('M0 6C-24 8 -48 -8 -52 -38C-22 -38 -4 -20 0 6Z', 'M-4 0Q-22 -12 -40 -30', '0px 6px', false, sw)
+    + leaf('M1 -4C22 -4 42 -20 44 -48C16 -46 2 -28 1 -4Z', 'M4 -10Q22 -22 36 -40', '1px -4px', true, sw)
     + (ground ? mound(66, 58) : '') + `</g>`;
 }
-function budG(f) {
+function budG(f, sw = SW) {
   const lead = f.fronts.reduce((a, it) => (!a || it.w > a.w ? it : a), null);
   const c = lead ? deptColor(lead.dept) : colorOf(f.stage);
-  return stem('M0 70C3 40 -3 20 0 0')
-    + leaf('M0 46C-18 46 -34 34 -36 14C-16 14 -4 26 0 46Z', 'M-3 40Q-16 30 -28 20', '0px 46px', true)
-    + `<g class="pt" style="--a:0deg;--k:0"><path d="${petalPath(66, 32)}" fill="${c[0]}" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`
+  return stem('M0 70C3 40 -3 20 0 0', sw)
+    + leaf('M0 46C-18 46 -34 34 -36 14C-16 14 -4 26 0 46Z', 'M-3 40Q-16 30 -28 20', '0px 46px', true, sw)
+    + `<g class="pt" style="--a:0deg;--k:0"><path d="${petalPath(66, 32)}" fill="${c[0]}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>`
     + `<path d="${petalPath(30, 22)}" fill="${c[1]}"/></g>`
-    + `<path d="M0 0C-14 -2 -22 -10 -24 -20C-10 -18 -2 -10 0 0C2 -10 10 -18 24 -20C22 -10 14 -2 0 0Z" fill="${GREEN[1]}" stroke="${INK}" stroke-width="${SW * .8}" stroke-linejoin="round"/>`;
+    + `<path d="M0 0C-14 -2 -22 -10 -24 -20C-10 -18 -2 -10 0 0C2 -10 10 -18 24 -20C22 -10 14 -2 0 0Z" fill="${GREEN[1]}" stroke="${INK}" stroke-width="${sw * .8}" stroke-linejoin="round"/>`;
 }
-const seedG = () => `<circle r="7" fill="none" stroke="var(--ink-3)" stroke-width="3" opacity=".45"/>`;
+// 아무것도 심기지 않은 날(주말·시트에 없는 날): 작은 흙자리
+const seedG = () => `<path class="soil" d="M-30 16C-24 -2 24 -2 30 16Z"/>`;
 
 /**
  * f: day() 결과. o.stem: 줄기·잎·흙더미. o.detail: 반사광·반짝이. o.labels: 꽃잎에 부서 줄임말. o.anim: 톡톡 피어나기.
@@ -920,11 +972,12 @@ const seedG = () => `<circle r="7" fill="none" stroke="var(--ink-3)" stroke-widt
 function flowerSVG(f, o = {}) {
   const cls = `fl${o.anim && !reduced() ? ' anim' : ''}`;
   const n = f.work.length;
+  const sw = o.sw || SW;
   const label = o.label === false ? ' aria-hidden="true"' : ` role="img" aria-label="${n ? `${f.stage}, 꽃잎 ${n}장` : f.stage}"`;
   if (!n) {
-    // 오늘 꽃(stem)은 할 일이 없는 날에도 새싹으로 보여 준다. 작은 꽃은 시트에 없는 날을 씨앗으로 둔다.
+    // 오늘 꽃(stem)은 할 일이 없는 날에도 새싹으로 보여 준다. 작은 꽃은 시트에 없는 날을 흙자리로 둔다.
     const sprout = o.stem || f.memos.length || (f.known && ![0, 6].includes(dow(f.date)));
-    const g = f.busy ? (o.stem ? stem('M0 60L0 112') : '') + budG(f) : sprout ? sproutG(o.stem ? 1.45 : 1, o.stem && o.ground !== false) : seedG();
+    const g = f.busy ? (o.stem ? stem('M0 60L0 112') : '') + budG(f, sw) : sprout ? sproutG(o.stem ? 1.45 : 1, o.stem && o.ground !== false, sw) : seedG();
     return `<svg class="${cls}" viewBox="${o.stem ? '-118 -100 236 210' : '-112 -112 224 224'}"${label}>${g}</svg>`;
   }
   const order = ordered(f);
@@ -948,7 +1001,7 @@ function flowerSVG(f, o = {}) {
     const a = n === 2 ? (k ? 40 : -40) : spin + k * step;
     const rad = a * Math.PI / 180, cos = Math.cos(rad), sin = Math.sin(rad);
     const i = f.work.indexOf(it);
-    g += petalG(L, W, it.c || deptColor(it.dept), o.detail, `data-ev="${i}" style="--a:${n1(a)}deg;--k:${k}"`);
+    g += petalG(L, W, it.c || deptColor(it.dept), o.detail, `data-ev="${i}" style="--a:${n1(a)}deg;--k:${k}"`, sw);
     // 꽃잎 끝과 양 옆 가장 넓은 곳으로 그림의 테두리를 잰다
     for (const [px, py] of [[0, -L], [W * .95, -L * .55], [-W * .95, -L * .55]]) {
       const X = px * cos - py * sin, Y = px * sin + py * cos;
@@ -964,7 +1017,7 @@ function flowerSVG(f, o = {}) {
       labels += `<g class="lb" data-ev="${i}" style="--k:${k}"><text x="${n1(sin * r)}" y="${n1(-cos * r)}" font-size="${fs}">${esc(t)}</text></g>`;
     }
   });
-  g += labels + centerG(cr, ['#FFD43B', '#F59F00'], o.detail, n);
+  g += labels + centerG(cr, ['#FFD43B', '#F59F00'], o.detail, n, sw);
   if (f.busy >= PEAK && o.detail) {
     g += sparkG(R * 1.02, -R * .8, 17, 0) + sparkG(-R * 1.06, -R * .38, 12, 700) + sparkG(R * .92, R * .62, 10, 1400);
   }
@@ -1041,25 +1094,80 @@ const AR = '<svg class="i" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></svg>'
 
 const SHARE = '<svg class="i" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg>';
 
-// 꽃이 심긴 만화 장면: 뒤(하늘·해·구름·먼 언덕) / 꽃 / 앞(가까운 언덕·풀)
-function sceneBack(k) {
-  const h = hash(k), x1 = n1(30 + h * 60), x2 = n1(210 + h * 70);
-  const cloud = (x, y, s, cls) => `<g class="cloud ${cls}"><path transform="translate(${x} ${y}) scale(${s})" d="M0 30C0 18 12 12 22 16C26 4 44 0 54 10C62 4 76 8 78 20C88 20 94 30 88 38L6 38C2 38 0 34 0 30Z" fill="var(--cloud)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/></g>`;
-  const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const r = a * Math.PI / 180; return `M${n1(344 + Math.cos(r) * 30)} ${n1(50 + Math.sin(r) * 30)}L${n1(344 + Math.cos(r) * 38)} ${n1(50 + Math.sin(r) * 38)}`; }).join('');
-  const stars = [[40, 30], [120, 60], [190, 24], [280, 44], [370, 110], [80, 110]].map(([x, y]) => `<circle class="star" cx="${x}" cy="${y}" r="2.4" fill="#FFE066"/>`).join('');
+// 꽃이 심긴 만화 장면: 뒤(하늘·해·구름·먼 언덕) / 계절 / 꽃 / 앞(가까운 언덕·풀)
+// 하늘은 지금 시각을 따른다. 해 뜨고 지는 시각은 서울 기준으로 계절에 맞춰 어림한다.
+function skyPhase(now = new Date()) {
+  const doy = (now - new Date(now.getFullYear(), 0, 0)) / 864e5;
+  const c = Math.cos(2 * Math.PI * (doy - 172) / 365);
+  const rise = 6.45 - 1.27 * c, set = 18.6 + 1.33 * c;
+  const h = now.getHours() + now.getMinutes() / 60;
+  return h < rise - .6 || h >= set + .6 ? 'night' : h < rise + .9 ? 'dawn' : h >= set - .9 ? 'dusk' : 'day';
+}
+const SUN_AT = {dawn: [98, 188, 26], day: [322, 62, 22], dusk: [312, 196, 28], night: [322, 62, 22]};
+const CLOUD = 'M0 30C0 18 12 12 22 16C26 4 44 0 54 10C62 4 76 8 78 20C88 20 94 30 88 38L6 38C2 38 0 34 0 30Z';
+
+function sceneBack(k, phase) {
+  const h = hash(k), x1 = n1(30 + h * 60), x2 = n1(196 + h * 64);
+  // 구름: 납작한 흰색 + 아랫단 그늘 + 먹선
+  const cloud = (x, y, s, cls) => `<g class="cloud ${cls}"><g transform="translate(${x} ${y}) scale(${s})"><path d="${CLOUD}" fill="var(--cloud)"/>`
+    + `<path d="M2 32C26 27 64 27 91 31C91 35 90 37 88 38L6 38C3 38 2 35 2 32Z" fill="var(--cloud-sh)"/>`
+    + `<path d="${CLOUD}" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/></g></g>`;
+  const [sx, sy, sr] = SUN_AT[phase];
+  const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const r = a * Math.PI / 180; return `M${n1(sx + Math.cos(r) * (sr + 8))} ${n1(sy + Math.sin(r) * (sr + 8))}L${n1(sx + Math.cos(r) * (sr + 16))} ${n1(sy + Math.sin(r) * (sr + 16))}`; }).join('');
+  const stars = [[40, 30], [120, 60], [190, 24], [262, 40], [372, 118], [80, 112], [236, 96]].map(([x, y], i) => `<path class="star" style="--d:${i * 430}ms" d="M${x} ${y - 4}Q${x} ${y} ${x + 4} ${y}Q${x} ${y} ${x} ${y + 4}Q${x} ${y} ${x - 4} ${y}Q${x} ${y} ${x} ${y - 4}Z" fill="#FFE066"/>`).join('');
+  // 먼 언덕의 동그란 나무
+  const tree = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${line('M0 4V-14', 8)}${line('M0 4V-14', 3.5, '#C08457')}`
+    + `<circle cy="-28" r="16" fill="var(--tree)" stroke="${INK}" stroke-width="3.5"/><path d="M-9 -33a10 10 0 0 1 7 -7" fill="none" stroke="var(--tree-lit)" stroke-width="3.5" stroke-linecap="round"/></g>`;
   return `<svg class="sky" viewBox="0 0 400 270" preserveAspectRatio="xMidYMax slice" aria-hidden="true">`
-    + `<defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="1" style="stop-color:var(--sky2)"/></linearGradient></defs>`
+    + `<defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset=".6" style="stop-color:var(--sky2)"/><stop offset="1" style="stop-color:var(--sky3)"/></linearGradient></defs>`
     + `<rect width="400" height="270" fill="url(#skyg)"/>${stars}`
-    + `<g class="sunm"><path d="${rays}" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/><circle cx="344" cy="50" r="22" fill="#FFD43B" stroke="${INK}" stroke-width="3.5"/></g>`
-    + `<path class="moon" d="M352 30a24 24 0 1 0 18 38a20 20 0 0 1 -18 -38z" fill="#FFE8A3" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`
-    + cloud(x1, 34, .9, 'c1') + cloud(x2, 84, .62, 'c2')
-    + `<path d="M-10 270V206C60 176 150 182 210 204C270 226 330 190 410 198V270Z" fill="var(--hill1)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/></svg>`;
+    + `<g class="sunm"><path class="rays" d="${rays}" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/><circle cx="${sx}" cy="${sy}" r="${sr}" fill="var(--sunc)" stroke="${INK}" stroke-width="3.5"/>`
+    + `<path d="M${sx - sr * .55} ${sy - sr * .2}a${sr * .6} ${sr * .6} 0 0 1 ${sr * .4} ${-sr * .38}" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".8"/></g>`
+    + `<g class="moon"><path d="M330 36a24 24 0 1 0 18 38a20 20 0 0 1 -18 -38z" fill="#FFE8A3" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><circle cx="318" cy="66" r="3" fill="#F5D77A"/><circle cx="326" cy="80" r="2" fill="#F5D77A"/></g>`
+    + cloud(x1, 30, .9, 'c1') + cloud(x2, 92, .6, 'c2')
+    + tree(54, 192, .9) + tree(350, 206, .72)
+    + `<path d="M-10 270V206C60 176 150 182 210 204C270 226 330 190 410 198V270Z" fill="var(--hill1)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`
+    + `<path d="M24 196C70 182 128 184 176 198" fill="none" stroke="var(--hill-lit)" stroke-width="4" stroke-linecap="round" opacity=".9"/></svg>`;
 }
 function sceneFront() {
-  const tufts = [[48, 30], [118, 22], [300, 24], [352, 30]].map(([x, y]) => `M${x} ${y}l4 -9l3 9l4 -10l3 10`).join('');
-  return `<svg class="front" viewBox="0 0 400 58" preserveAspectRatio="none" aria-hidden="true">`
-    + `<path d="M-10 64V30C80 8 170 10 232 20C300 32 340 16 410 24V64Z" fill="var(--hill2)" stroke="${INK}" stroke-width="3.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`
-    + `<path d="${tufts}" fill="none" stroke="${INK}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  // 풀포기: 가운데가 높은 세 가닥
+  const tuft = (x, y) => `<path d="M${x - 7} ${y}Q${x - 8} ${y - 7} ${x - 13} ${y - 11}Q${x - 4} ${y - 9} ${x - 2} ${y - 3}Q${x - 1} ${y - 11} ${x + 1} ${y - 16}Q${x + 4} ${y - 9} ${x + 3} ${y - 3}Q${x + 6} ${y - 9} ${x + 12} ${y - 10}Q${x + 8} ${y - 5} ${x + 7} ${y}Z" fill="var(--hill2)" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  // 들꽃: 동그란 꽃잎 다섯 장
+  const daisy = (x, y, c) => `<g class="daisy" transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map(a => { const r = a * Math.PI / 180; return `<circle cx="${n1(Math.sin(r) * 4.6)}" cy="${n1(-Math.cos(r) * 4.6)}" r="3.4" fill="${c}" stroke="${INK}" stroke-width="1.8"/>`; }).join('')}<circle r="2.6" fill="#FFD43B" stroke="${INK}" stroke-width="1.6"/></g>`;
+  return `<svg class="front" viewBox="0 0 400 58" aria-hidden="true">`
+    + `<path d="M-10 64V30C80 8 170 10 232 20C300 32 340 16 410 24V64Z" fill="var(--hill2)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`
+    + `<path d="M-4 36C80 15 168 17 228 27C296 38 338 23 404 30" fill="none" stroke="var(--hill-lit)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="70 16 34 22 90 14 50 30" opacity=".85"/>`
+    + tuft(46, 33) + tuft(124, 25) + tuft(296, 31) + tuft(356, 31)
+    + daisy(84, 36, '#fff') + daisy(262, 40, '#FFC9DE') + daisy(330, 42, '#fff') + `</svg>`;
+}
+
+// 계절(보고 있는 날의 달로 정한다)마다 땅 색이 바뀌고 무언가 내린다: 봄 꽃잎 · 여름밤 반딧불 · 가을 낙엽 · 겨울 눈
+const seasonOf = k => { const m = +k.slice(5, 7); return m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'; };
+const FALL_LEAF = ['#FF922B', '#FA5252', '#FCC419'];
+function fxHTML(k) {
+  const season = seasonOf(k), n = season === 'winter' ? 10 : 7;
+  let h = '';
+  for (let i = 0; i < n; i++) {
+    const r = j => hash(`${k}:${i}:${j}`);
+    const t = 8 + r(1) * 6;
+    const s = season === 'winter' ? 8 + r(3) * 6 : 12 + r(3) * 6;
+    const g = season === 'spring' ? `<svg viewBox="-12 -12 24 24"><path d="M0 10C-8 4 -8 -6 -3 -10L0 -7L3 -10C8 -6 8 4 0 10Z" fill="#FFC9DE" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/></svg>`
+      : season === 'autumn' ? `<svg viewBox="-12 -12 24 24"><path d="M0 -10C8 -5 8 5 0 10C-8 5 -8 -5 0 -10Z" fill="${FALL_LEAF[i % 3]}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -6V12" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/></svg>`
+      : season === 'winter' ? `<svg viewBox="-6 -6 12 12"><circle r="4.4" fill="#fff" stroke="${INK}" stroke-width="1.4"/></svg>` : '';
+    h += `<i style="--x:${n1(3 + (i + .15 + r(0) * .7) * 94 / n)}%;--y:${n1(14 + r(5) * 42)}%;--t:${n1(t)}s;--d:${n1(-r(2) * t)}s;--s:${n1(s)}px;--dx:${n1((r(4) - .5) * 70)}px">${g}</i>`;
+  }
+  return `<div class="fx ${season}" aria-hidden="true">${h}</div>`;
+}
+
+// 활짝 이상 핀 날엔 나비가 꽃 둘레를 난다(만개면 두 마리). 날개 색은 그날 꽃잎 색.
+function butterflyHTML(f) {
+  if (!f.work.length || f.busy < STAGES[1][0]) return '';
+  const cs = [...new Map(ordered(f).map(it => { const c = it.c || deptColor(it.dept); return [c[0], c]; })).values()];
+  const wing = c => `<path d="M-1 -2C-6 -18 -22 -22 -24 -12C-26 -2 -14 2 -1 0Z" fill="${c[0]}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`
+    + `<path d="M-1 1C-10 2 -18 8 -16 14C-13 20 -4 14 -1 4Z" fill="${c[1]}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/><circle cx="-15" cy="-11" r="2.6" fill="#fff" opacity=".9"/>`;
+  const one = (c, cls) => `<svg class="bfly ${cls}" viewBox="-26 -24 52 46" aria-hidden="true"><g class="wg">${wing(c)}</g><g class="wg"><g transform="scale(-1 1)">${wing(c)}</g></g>`
+    + `${line('M0 -7Q-3 -15 -8 -18M0 -7Q3 -15 8 -18', 2)}${line('M0 -6V12', 6)}</svg>`;
+  return one(cs[0], 'b1') + (f.busy >= PEAK ? one(cs[1] || cs[0], 'b2') : '');
 }
 
 function heroHTML(f) {
@@ -1072,9 +1180,10 @@ function heroHTML(f) {
     + (n ? `<button class="pill" data-action="go-today">오늘로</button>` : '')
     + `<span class="sp"></span>${f ? `<button class="ib share" data-action="share-day" data-date="${k}" aria-label="이날 공유">${SHARE}</button>` : ''}</div>`
     + `<p class="date">${longDate(k)}<small>${WD[d.getDay()]}요일</small></p>`;
+  const phase = skyPhase();
   if (!f) {
     const blank = {date: k, work: [], memos: [], fronts: [], busy: 0, stage: '쉼', known: true};
-    return `<section class="daycard hero"><div class="scene">${sceneBack(k)}<div class="flw">${flowerSVG(blank, {stem: true, ground: false, label: false, anim: true})}</div>${sceneFront()}</div>`
+    return `<section class="daycard hero"><div class="scene" data-sky="${phase}" data-season="${seasonOf(k)}">${sceneBack(k, phase)}${fxHTML(k)}<div class="flw">${flowerSVG(blank, {stem: true, ground: false, label: false, anim: true})}</div>${sceneFront()}</div>`
       + `<div class="panel">${head}<p class="stage-sub">${S.loading || !S.lastLoad ? '시트를 읽는 중이에요' : '시트를 읽지 못했어요'}</p></div></section>`;
   }
   const key = `${k}|${S.dept}|${S.mode}|${f.work.length}`;
@@ -1087,7 +1196,7 @@ function heroHTML(f) {
     chips += `<${more ? 'button' : 'span'} class="chip"${more ? ' data-action="word"' : ''}>기도 <b>${esc(du.pray.name)}</b>${du.pray.bible ? ` · ${esc(du.pray.bible)}` : ''}</${more ? 'button' : 'span'}>`;
   }
   if (du && du.night) chips += `<span class="chip">야자 감독 <b>${esc(du.night)}</b></span>`;
-  return `<section class="daycard hero" id="hero"><div class="scene">${sceneBack(k)}${tapFlower(f, {stem: true, ground: false, detail: true, anim})}${sceneFront()}${arrows}</div>`
+  return `<section class="daycard hero" id="hero"><div class="scene" data-sky="${phase}" data-season="${seasonOf(k)}">${sceneBack(k, phase)}${fxHTML(k)}${butterflyHTML(f)}${tapFlower(f, {stem: true, ground: false, detail: true, anim})}${sceneFront()}${arrows}</div>`
     + `<div class="panel">${head}${stageLine(f)}${chips ? `<div class="chips">${chips}</div>` : ''}</div></section>`;
 }
 
@@ -1100,7 +1209,7 @@ function weekbarHTML() {
     const f = day(d);
     const cls = ['wb', i === 0 ? 'sun' : i === 6 ? 'sat' : '', d === S.today ? 'today' : '', d === k ? 'focus' : ''].filter(Boolean).join(' ');
     h += `<button class="${cls}" data-day="${d}" aria-label="${longDate(d)} ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}"${d === k ? ' aria-current="date"' : ''}>`
-      + `<span>${WD[i]}</span>${flowerSVG(f, {label: false})}<b>${toDate(d).getDate()}</b></button>`;
+      + `<span>${WD[i]}</span>${flowerSVG(f, {label: false, sw: 10})}<b>${toDate(d).getDate()}</b></button>`;
   }
   return `<nav class="weekbar" aria-label="이 주">${h}</nav>`;
 }
@@ -1132,7 +1241,7 @@ function peaksHTML() {
     const top = r.days.reduce((a, d) => (scoreOf(d) > scoreOf(a) ? d : a), r.days[0]);
     const f = day(top);
     const more = r.days.length > 1 ? ` · ${r.days.length}일 이어져요` : ` · 꽃잎 ${f.work.length}장`;
-    return `<li><button class="peak" data-day="${r.start}">${flowerSVG(f, {label: false})}`
+    return `<li><button class="peak" data-day="${r.start}">${flowerSVG(f, {label: false, sw: 8})}`
       + `<span class="t">${longDate(r.start)} (${WD[dow(r.start)]})<small>${esc(r.title)}${more}</small></span>`
       + `<span class="dday">D-${diffDays(S.today, r.start)}</span></button></li>`;
   }).join('');
@@ -1160,7 +1269,7 @@ function gardenHTML() {
     const f = day(k);
     const wd = dow(k);
     const cls = ['cell', wd === 0 ? 'sun' : wd === 6 ? 'sat' : '', k === S.today ? 'today' : '', k < S.today ? 'past' : '', k === focusDay() ? 'focus' : ''].filter(Boolean).join(' ');
-    cells += `<button class="${cls}" data-day="${k}" aria-label="${m}월 ${d}일 ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}"><span class="n">${d}</span>${flowerSVG(f, {label: false})}</button>`;
+    cells += `<button class="${cls}" data-day="${k}" aria-label="${m}월 ${d}일 ${f.stage}${f.work.length ? ` 꽃잎 ${f.work.length}장` : ''}"><span class="n">${d}</span>${flowerSVG(f, {label: false, sw: 10})}</button>`;
   }
   return `<section class="sec" id="garden"><div class="gh"><h2>${m}월<small>${y}</small></h2>${tog}`
     + `<button class="ib" data-action="prev" aria-label="이전 달"${lo && S.month <= lo ? ' disabled' : ''}><svg class="i" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></svg></button>`
@@ -1447,10 +1556,10 @@ function moreSheet() {
   const ex = (stage, busy, n, sub) => {
     const work = Array.from({length: n}, (_, i) => ({w: 1, periods: null, i, c: DEPT_COLORS[(i * 5 + n) % DEPT_COLORS.length]}));
     const f = {date: stage, work, memos: [], fronts: [], busy, stage, known: true};
-    return `<div class="explain">${flowerSVG(f, {label: false, detail: true})}<span><b>${stage}</b><span>${sub}</span></span></div>`;
+    return `<div class="explain">${flowerSVG(f, {label: false, detail: true, sw: 7})}<span><b>${stage}</b><span>${sub}</span></span></div>`;
   };
   h += sec('꽃 읽는 법', '', `<div class="card">`
-    + `<div class="explain">${flowerSVG({date: 'rest', work: [], memos: [{}], fronts: [], busy: 0, stage: '쉼', known: true}, {label: false})}<span><b>쉼</b><span>할 일이 적히지 않은 날. 새싹이 돋아요.</span></span></div>`
+    + `<div class="explain">${flowerSVG({date: 'rest', work: [], memos: [{}], fronts: [], busy: 0, stage: '쉼', known: true}, {label: false, sw: 7})}<span><b>쉼</b><span>할 일이 적히지 않은 날. 새싹이 돋아요.</span></span></div>`
     + ex('봉오리', 20, 2, '올해 수업일 중 하위 30%')
     + ex('피는 중', 50, 4, '30–65%')
     + ex('활짝', 80, 6, '65–90%')
@@ -1538,6 +1647,7 @@ async function readWord() {
 /* ── 꽃잎 말풍선 ───────────────────────────────────── */
 function closeBubble() {
   document.querySelectorAll('.bubble').forEach(b => b.remove());
+  document.querySelectorAll('.flw.open').forEach(w => w.classList.remove('open'));
   document.querySelectorAll('.fl .dim').forEach(p => p.classList.remove('dim'));
   document.querySelectorAll('#main .ev.lit').forEach(r => r.classList.remove('lit'));
 }
@@ -1569,6 +1679,7 @@ function openBubble(pt) {
     + `<button class="act" data-action="share-ev" data-date="${it.date}" data-i="${i}">공유</button></span>`;
   b.style.visibility = 'hidden';
   w.appendChild(b);
+  w.classList.add('open');
   // 위쪽 꽃잎이면 꽃잎 아래로, 아래쪽 꽃잎이면 꽃잎 위로 띄운다
   const wr = w.getBoundingClientRect(), pr = pt.getBoundingClientRect(), cr = w.querySelector('.ctr').getBoundingClientRect();
   const cx = pr.left + pr.width / 2 - wr.left, cy = pr.top + pr.height / 2 - wr.top;
@@ -1747,7 +1858,7 @@ setInterval(() => {
 }, 60000);
 
 // 머리의 꽃: 다섯 색 꽃잎
-$('#logo').innerHTML = flowerSVG({date: 'logo', work: [0, 1, 2, 3, 4].map(i => ({w: 1, periods: null, c: DEPT_COLORS[i]})), memos: [], fronts: [], busy: 100, stage: '만개'}, {label: false}).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+$('#logo').innerHTML = flowerSVG({date: 'logo', work: [0, 1, 2, 3, 4].map(i => ({w: 1, periods: null, c: DEPT_COLORS[i]})), memos: [], fronts: [], busy: 100, stage: '만개'}, {label: false, sw: 9}).replace(/^<svg[^>]*>|<\/svg>$/g, '');
 
 addEventListener('hashchange', () => {
   const k = hashDate(location.hash);
