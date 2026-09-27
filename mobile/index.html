@@ -103,6 +103,12 @@ a{color:var(--link)}
 .bubble b{display:block;margin-top:3px;font-size:16px;line-height:1.4}
 .bubble .tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .bubble .tg i{font-style:normal;font-size:11.5px;font-weight:800;line-height:19px;padding:0 8px;border-radius:999px;background:var(--sunk);color:var(--ink-2)}
+.bubble .acts{display:flex;gap:6px;margin-top:9px}
+.act{display:inline-flex;align-items:center;height:30px;padding:0 11px;border-radius:999px;border:2px solid var(--line);background:var(--yellow);color:#2A211D;font-size:12.5px;font-weight:800;text-decoration:none;white-space:nowrap}
+button.act{background:var(--surface);color:var(--ink)}
+.act:active{transform:translate(1px,1px)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);padding:11px 16px;border-radius:14px;background:var(--ink);color:var(--surface);font-size:14px;font-weight:700;box-shadow:3px 3px 0 var(--line);transition:opacity .2s,transform .2s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
 .date{margin:0;font:400 clamp(32px,10vw,40px)/1.1 var(--display);letter-spacing:-.01em}
 #focus{touch-action:pan-y}
 .from-r{animation:from-r .34s cubic-bezier(.2,.8,.2,1) both}
@@ -289,6 +295,7 @@ mark{background:var(--yellow);color:#2A211D;border-radius:3px;padding:0 1px}
   <div class="sheet-top"><h2 id="sheet-title"></h2><button class="x" data-action="close" aria-label="닫기"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3 3 13"/></svg></button></div>
   <div class="sheet-body" id="sheet-body"></div>
 </section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 'use strict';
@@ -594,7 +601,7 @@ function parseItem(src, date) {
 
 /* ── 모델 ───────────────────────────────────────────── */
 function emptyModel() {
-  return {byDate: new Map(), dates: [], index: new Map(), ranged: [], scores: new Map(), depts: [], color: new Map(), duty: new Map(), notices: [], year: null, total: 0};
+  return {byDate: new Map(), dates: [], index: new Map(), ranged: [], scores: new Map(), depts: [], color: new Map(), skipped: [], duty: new Map(), notices: [], year: null, total: 0};
 }
 
 function parsePlan(t, m) {
@@ -602,7 +609,12 @@ function parsePlan(t, m) {
   for (const r of t.rows) {
     const c = r.c || [];
     const date = cellDate(c[h['날짜']]);
-    if (!date) continue;
+    if (!date) {
+      // 날짜 칸과 일정 칸이 다 차 있는데 날짜를 못 읽은 줄은 빠졌다고 알려 준다 (머리글·제목 줄은 뺀다)
+      const dt = cText(c[h['날짜']]), tx = cText(c[h['일정']]);
+      if (dt && tx && dt !== '날짜' && tx !== '일정') m.skipped.push(dt);
+      continue;
+    }
     const items = splitCell(cText(c[h['일정']])).map(s => parseItem(s, date)).filter(it => it.text);
     const list = m.byDate.get(date) || [];
     list.push(...items);
@@ -1175,10 +1187,120 @@ function render() {
 // 첫 화면의 날을 하루씩 옮긴다 (n = +1 다음 날, -1 전날)
 function moveDay(n) {
   closeBubble();
+  buzz();
   const k = addDays(focusDay(), n);
   S.focus = k === S.today ? null : k;
   S.slide = n > 0 ? 'from-r' : 'from-l';
   render();
+  syncUrl();
+}
+
+/* ── 날짜 주소 · 공유 · 캘린더 ─────────────────────── */
+// 따로 열면 …/mobile/#2026-10-05, 학사일정 위에 겹쳐 열면 …/#kkot/2026-10-05 가 그날을 가리킨다.
+const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
+const hashDate = h => (String(h || '').match(/(\d{4}-\d{2}-\d{2})/) || [])[1] || null;
+function dayUrl(k) {
+  try {
+    if (EMBED) return parent.location.href.split('#')[0] + '#kkot' + (k ? `/${k}` : '');
+  } catch {}
+  return location.href.split('#')[0] + (k ? `#${k}` : '');
+}
+// 보고 있는 날을 주소에 적어 둔다 (방문 기록은 늘리지 않는다)
+function syncUrl() {
+  const k = S.focus;
+  try {
+    if (EMBED) { if (parent.location.hash.startsWith('#kkot')) parent.history.replaceState(parent.history.state, '', dayUrl(k)); }
+    else history.replaceState(history.state, '', dayUrl(k));
+  } catch {}
+}
+function readUrl() {
+  const k = hashDate(location.hash);
+  S.focus = k && k !== todayKey() ? k : null;
+}
+
+let toastTimer = 0;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+async function share(title, text, url) {
+  if (navigator.share) {
+    try { await navigator.share({title, text, url}); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const all = `${text}\n${url}`;
+  try { await navigator.clipboard.writeText(all); toast('복사했어요. 붙여 넣어 보내세요'); }
+  catch { prompt('복사해서 보내세요', all); }
+}
+
+const evTags = it => [it.grades ? `${it.grades.join('·')}학년` : '', it.periods ? periodLabel(it.periods) : '', it.end ? `~${md(it.end)}` : ''].filter(Boolean);
+const ymd8 = k => k.replace(/-/g, '');
+const dayTitle = k => `${longDate(k)} (${WD[dow(k)]})`;
+
+// 구글 캘린더 '일정 추가' 화면으로 가는 주소. 종일 일정, 기간이 있으면 끝날까지.
+function gcalUrl(it) {
+  const end = addDays(it.end || it.date, 1);
+  const q = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${it.dept ? `[${it.dept}] ` : ''}${it.text}`,
+    dates: `${ymd8(it.date)}/${ymd8(end)}`,
+    details: [evTags(it).join(' · '), '보성여고 학사일정'].filter(Boolean).join('\n'),
+  });
+  return `https://calendar.google.com/calendar/render?${q}`;
+}
+
+// .ics 한 파일로 내보내기 (종일 일정). 긴 줄은 75바이트마다 접는다.
+function icsFile(items, name) {
+  const esc2 = t => String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  const enc = new TextEncoder();
+  const fold = line => {
+    let out = '', cur = '', n = 0;
+    for (const ch of line) {
+      const b = enc.encode(ch).length;
+      if (n + b > 73) { out += cur + '\r\n '; cur = ''; n = 1; }
+      cur += ch; n += b;
+    }
+    return out + cur;
+  };
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//bosung//kkot//KO', 'CALSCALE:GREGORIAN', `X-WR-CALNAME:${esc2(name)}`];
+  for (const it of items) {
+    lines.push('BEGIN:VEVENT',
+      `UID:${ymd8(it.date)}-${Math.floor(hash(it.raw + it.date) * 1e10)}@kkot`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${ymd8(it.date)}`,
+      `DTEND;VALUE=DATE:${ymd8(addDays(it.end || it.date, 1))}`,
+      `SUMMARY:${esc2(`${it.dept ? `[${it.dept}] ` : ''}${it.text}`)}`);
+    const d = evTags(it).join(' · ');
+    if (d) lines.push(`DESCRIPTION:${esc2(d)}`);
+    lines.push('END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  return lines.map(fold).join('\r\n') + '\r\n';
+}
+
+function exportIcs() {
+  const items = M.dates.flatMap(k => itemsOn(k).filter(it => !it.memo));
+  if (!items.length) { toast('내보낼 일정이 없어요'); return; }
+  const name = `꽃달력 ${S.dept || '전체'}`;
+  const blob = new Blob([icsFile(items, name)], {type: 'text/calendar;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bosung-kkot-${M.year || schoolYear()}.ics`;  // 한글 파일 이름은 버리는 브라우저가 있다. 캘린더 이름(X-WR-CALNAME)에 부서가 들어간다
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(`일정 ${items.length}개를 캘린더 파일로 받았어요`);
+}
+
+function shareDay(k) {
+  const f = day(k);
+  const lines = [...f.memos.map(it => `· ${it.text}`), ...ordered(f).map(it => `· ${it.dept ? `[${it.dept}] ` : ''}${it.text}${evTags(it).length ? ` (${evTags(it).join(', ')})` : ''}`)];
+  const text = `${dayTitle(k)} 학사일정${S.dept ? ` · ${S.dept}` : ''}\n${lines.join('\n') || '적힌 일정이 없어요'}`;
+  share(`${dayTitle(k)} 학사일정`, text, dayUrl(k));
 }
 
 function renderGarden() {
@@ -1241,6 +1363,7 @@ function daySheet(date) {
       + (du.pray?.name ? `<span class="chip">기도 <b>${esc(du.pray.name)}</b>${du.pray.bible ? ` · ${esc(du.pray.bible)}` : ''}</span>` : '')
       + (du.night ? `<span class="chip">야자 감독 <b>${esc(du.night)}</b></span>` : '') + '</div>';
   }
+  body += `<div class="btns" style="justify-content:center"><button class="btn solid" data-action="share-day" data-date="${date}">이날 공유</button></div>`;
   body += `<div class="daynav"><button class="btn" data-day="${addDays(date, -1)}">‹ ${md(addDays(date, -1))}</button>`
     + (date !== S.today ? `<button class="btn" data-day="${S.today}">오늘</button>` : '')
     + `<button class="btn" data-day="${addDays(date, 1)}">${md(addDays(date, 1))} ›</button></div>`;
@@ -1301,7 +1424,13 @@ function moreSheet() {
     return `<li><b>${esc(SRC[k].label)}</b><small${bad ? ' class="bad"' : ''}>${s}</small></li>`;
   }).join('')}</ul></div>`
     + `<div class="btns"><button class="btn solid" data-action="refresh">다시 받기</button><a class="btn" href="${SHEET_URL}" target="_blank" rel="noopener">원본 시트</a><button class="btn" data-action="forget">저장본 지우기</button></div>`
+    + (M.skipped.length ? `<p class="hint" style="color:var(--sun)">날짜를 읽지 못해 빠진 줄이 ${M.skipped.length}개 있어요: ${M.skipped.slice(0, 3).map(x => `‘${esc(x)}’`).join(', ')}${M.skipped.length > 3 ? ' …' : ''}. 시트의 날짜 칸을 ‘2026. 10. 5’처럼 적어 주세요.</p>` : '')
     + `<p class="hint">‘2026학년도 학사일정’ 구글 시트를 그대로 읽어요. 시트를 고치면 여기도 바뀝니다.</p>`);
+  if (ready()) {
+    h += sec('내 캘린더로', '', `<div class="card" style="padding:16px"><b>${S.dept ? esc(S.dept) : '전체 부서'} 일정 ${M.dates.reduce((n, k) => n + itemsOn(k).filter(it => !it.memo).length, 0)}개</b>`
+      + `<p class="hint" style="margin:6px 0 0">캘린더 파일(.ics)로 받아 휴대폰·구글 캘린더에 한꺼번에 넣어요. 머리의 부서를 고르면 그 부서 일정만 받아요. 꽃잎 하나만 넣으려면 꽃잎을 눌러 ‘캘린더에 추가’를 누르세요.</p>`
+      + `<div class="btns"><button class="btn solid" data-action="export-ics">캘린더 파일 받기</button></div></div>`);
+  }
   return h;
 }
 
@@ -1385,16 +1514,16 @@ function openBubble(pt) {
   const it = day(w.dataset.date).work[+i];
   if (!it) return;
   mark(w, i);
-  const tags = [];
-  if (it.grades) tags.push(`${it.grades.join('·')}학년`);
-  if (it.periods) tags.push(periodLabel(it.periods));
-  if (it.end) tags.push(`~${md(it.end)}`);
+  buzz();
+  const tags = evTags(it);
   const b = document.createElement('div');
   b.className = 'bubble';
   b.dataset.ev = i;
   b.setAttribute('role', 'status');
   b.innerHTML = `<span class="bd"><i style="--c:${deptColor(it.dept)[0]}"></i>${esc([it.dept, it.cat].filter(Boolean).join(' · '))}</span>`
-    + `<b>${esc(it.text)}</b>${tags.length ? `<span class="tg">${tags.map(x => `<i>${x}</i>`).join('')}</span>` : ''}`;
+    + `<b>${esc(it.text)}</b>${tags.length ? `<span class="tg">${tags.map(x => `<i>${x}</i>`).join('')}</span>` : ''}`
+    + `<span class="acts"><a class="act" href="${esc(gcalUrl(it))}" target="_blank" rel="noopener">캘린더에 추가</a>`
+    + `<button class="act" data-action="share-ev" data-date="${it.date}" data-i="${i}">공유</button></span>`;
   b.style.visibility = 'hidden';
   w.appendChild(b);
   // 위쪽 꽃잎이면 꽃잎 아래로, 아래쪽 꽃잎이면 꽃잎 위로 띄운다
@@ -1431,7 +1560,14 @@ document.addEventListener('click', e => {
     case 'close': closeSheet(); break;
     case 'prev-day': moveDay(-1); break;
     case 'next-day': moveDay(1); break;
-    case 'go-today': closeBubble(); S.slide = S.focus > S.today ? 'from-l' : 'from-r'; S.focus = null; render(); break;
+    case 'go-today': closeBubble(); S.slide = S.focus > S.today ? 'from-l' : 'from-r'; S.focus = null; render(); syncUrl(); break;
+    case 'share-day': shareDay(a.dataset.date); break;
+    case 'share-ev': {
+      const it = day(a.dataset.date).work[+a.dataset.i];
+      if (it) share(`${dayTitle(it.date)} ${it.text}`, `${dayTitle(it.date)} ${it.dept ? `[${it.dept}] ` : ''}${it.text}${evTags(it).length ? ` (${evTags(it).join(', ')})` : ''}`, dayUrl(it.date));
+      break;
+    }
+    case 'export-ics': exportIcs(); break;
     case 'refresh': load(); break;
     case 'search': case 'more': case 'word': openSheet(a.dataset.action); break;
     case 'read-word': readWord(); break;
@@ -1576,6 +1712,15 @@ setInterval(() => {
 // 머리의 꽃: 다섯 색 꽃잎
 $('#logo').innerHTML = flowerSVG({date: 'logo', work: [0, 1, 2, 3, 4].map(i => ({w: 1, periods: null, c: DEPT_COLORS[i]})), memos: [], fronts: [], busy: 100, stage: '만개'}, {label: false}).replace(/^<svg[^>]*>|<\/svg>$/g, '');
 
+addEventListener('hashchange', () => {
+  const k = hashDate(location.hash);
+  if ((k && k !== todayKey() ? k : null) === S.focus) return;
+  closeBubble();
+  readUrl();
+  render();
+});
+
+readUrl();
 primeFromCache();
 rebuild();
 render();

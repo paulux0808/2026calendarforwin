@@ -1861,18 +1861,26 @@ reload();
 </script>
 <script>
 /* 제목 '학사일정'을 누르면 꽃달력이 이 화면 위로 열리고, 꽃달력의 제목을 누르면 다시 여기로 돌아온다.
-   주소 끝의 #kkot 이 열린 상태다. 휴대폰의 뒤로 가기로도 돌아온다. */
+   주소 끝의 #kkot 이 열린 상태이고, #kkot/2026-10-05 처럼 날짜를 붙이면 그날로 연다. 휴대폰의 뒤로 가기로도 돌아온다. */
 (() => {
   const link = document.querySelector('a.wm');
   if (!link) return;
-  let frame = null;
+  let frame = null, pushed = false;
+  const open = () => location.hash.startsWith('#kkot');
+  const dateOf = () => (location.hash.match(/^#kkot\/(\d{4}-\d{2}-\d{2})/) || [])[1] || '';
   const show = () => {
+    const d = dateOf();
     if (!frame) {
       frame = document.createElement('iframe');
       frame.id = 'kkot';
       frame.title = '꽃달력';
-      frame.src = 'mobile/';
+      frame.src = 'mobile/' + (d ? '#' + d : '');
       document.body.appendChild(frame);
+    } else {
+      try {
+        const w = frame.contentWindow;
+        if ((w.location.hash || '').slice(1) !== d) w.location.replace(w.location.pathname + (d ? '#' + d : '#'));
+      } catch (e) {}
     }
     frame.hidden = false;
     document.documentElement.classList.add('kkot-on');
@@ -1885,14 +1893,15 @@ reload();
   link.addEventListener('click', e => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;  // 새 탭으로 열기는 그대로 둔다
     e.preventDefault();
-    if (location.hash !== '#kkot') location.hash = 'kkot';
+    if (!open()) { pushed = true; location.hash = 'kkot'; }
   });
-  addEventListener('hashchange', () => (location.hash === '#kkot' ? show() : hide()));
+  addEventListener('hashchange', () => (open() ? show() : hide()));
   addEventListener('message', e => {
     if (!frame || e.source !== frame.contentWindow || !e.data || e.data.kkot !== 'close') return;
-    if (location.hash === '#kkot') history.back(); else hide();
+    if (open() && pushed) { pushed = false; history.back(); }
+    else { history.replaceState(history.state, '', location.pathname + location.search); hide(); }
   });
-  if (location.hash === '#kkot') show();
+  if (open()) show();
 })();
 </script>
 </body>
