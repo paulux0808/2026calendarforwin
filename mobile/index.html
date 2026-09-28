@@ -115,6 +115,13 @@ a{color:var(--link)}
 .scene .front{bottom:0;height:auto;aspect-ratio:400/58;z-index:2}
 .scene .flw{position:absolute;inset:0;z-index:1}
 .scene .flw.open{z-index:4}
+/* 입체 장면: 캔버스가 뜨면 그림 꽃·땅은 숨기고 하늘만 뒤에 남긴다. 하늘은 기울기 따라 조금 밀린다. */
+.k3{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene.is3d .flw > .fl,.scene.is3d .sky .land,.scene.is3d .front{display:none}
+.scene.is3d .sky{transform:translate(var(--px,0),var(--py,0)) scale(1.08)}
+.lbs{position:absolute;inset:0;pointer-events:none}
+.lb3{position:absolute;left:0;top:0;font-family:var(--display);line-height:1;color:#2A211D;white-space:nowrap;pointer-events:auto;cursor:pointer;will-change:transform;text-shadow:2px 0 #fff,-2px 0 #fff,0 2px #fff,0 -2px #fff,1.5px 1.5px #fff,-1.5px 1.5px #fff,1.5px -1.5px #fff,-1.5px -1.5px #fff}
+.lb3.dim{opacity:.25!important}
 .scene .flw .fl{position:absolute;left:50%;bottom:-6px;width:min(46vw,184px);height:auto;transform:translateX(-50%);transform-origin:50% 100%;animation:sway 7s ease-in-out infinite}
 .scene .flw.open .fl{animation-play-state:paused}
 @keyframes sway{0%,100%{transform:translateX(-50%) rotate(-1.1deg)}50%{transform:translateX(-50%) rotate(1.1deg)}}
@@ -1132,10 +1139,10 @@ function sceneBack(k, phase) {
     + `<g class="sunm"><path class="rays" d="${rays}" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/><circle cx="${sx}" cy="${sy}" r="${sr}" fill="var(--sunc)" stroke="${INK}" stroke-width="3.5"/>`
     + `<path d="M${sx - sr * .55} ${sy - sr * .2}a${sr * .6} ${sr * .6} 0 0 1 ${sr * .4} ${-sr * .38}" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".8"/></g>`
     + `<g class="moon"><path d="M330 36a24 24 0 1 0 18 38a20 20 0 0 1 -18 -38z" fill="#FFE8A3" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><circle cx="318" cy="66" r="3" fill="#F5D77A"/><circle cx="326" cy="80" r="2" fill="#F5D77A"/></g>`
-    + cloud(x1, 30, .9, 'c1') + cloud(x2, 92, .6, 'c2')
+    + `<g class="land">` + cloud(x1, 30, .9, 'c1') + cloud(x2, 92, .6, 'c2')
     + tree(54, 192, .9) + tree(350, 206, .72)
     + `<path d="M-10 270V206C60 176 150 182 210 204C270 226 330 190 410 198V270Z" fill="var(--hill1)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`
-    + `<path d="M24 196C70 182 128 184 176 198" fill="none" stroke="var(--hill-lit)" stroke-width="4" stroke-linecap="round" opacity=".9"/></svg>`;
+    + `<path d="M24 196C70 182 128 184 176 198" fill="none" stroke="var(--hill-lit)" stroke-width="4" stroke-linecap="round" opacity=".9"/></g></svg>`;
 }
 function sceneFront() {
   // 풀포기: 가운데가 높은 세 가닥
@@ -1197,6 +1204,7 @@ function heroHTML(f) {
   const key = `${k}|${S.dept}|${S.mode}|${f.work.length}`;
   const anim = S.bloomed !== key;
   S.bloomed = key;
+  S.bloomAnim = anim;
   let chips = '';
   const du = S.mode === 'teacher' ? M.duty.get(k) : null;
   if (du && du.pray && du.pray.name) {
@@ -1347,6 +1355,7 @@ function render() {
     + (f ? peaksHTML() + gardenHTML() : '') + footHTML();
   S.slide = '';
   paintTop();
+  if (K3.on) K3.mount();
 }
 
 // 첫 화면의 날을 하루씩 옮긴다 (n = +1 다음 날, -1 전날)
@@ -1657,6 +1666,7 @@ async function readWord() {
 function closeBubble() {
   document.querySelectorAll('.bubble').forEach(b => b.remove());
   document.querySelectorAll('.flw.open').forEach(w => w.classList.remove('open'));
+  if (K3.on) K3.dim(null);
   document.querySelectorAll('.fl .dim').forEach(p => p.classList.remove('dim'));
   document.querySelectorAll('#main .ev.lit').forEach(r => r.classList.remove('lit'));
 }
@@ -1664,12 +1674,17 @@ function closeBubble() {
 // 꽃잎 하나만 밝히고, 첫 화면이면 목록의 그 줄도 켠다
 function mark(w, i) {
   w.querySelectorAll('.pt, .lb').forEach(p => p.classList.toggle('dim', p.dataset.ev !== String(i)));
+  if (K3.on && w.querySelector('.k3')) K3.dim(i);
   if (w.closest('#hero')) document.querySelectorAll(`#main .ev[data-ev="${i}"]`).forEach(r => r.classList.add('lit'));
 }
 
 function openBubble(pt) {
-  const w = pt.closest('.flw');
-  const i = pt.dataset.ev;
+  const w = pt.closest('.flw'), cr = w.querySelector('.ctr').getBoundingClientRect();
+  showBubble(w, pt.dataset.ev, pt.getBoundingClientRect(), cr.top + cr.height / 2);
+}
+// pr: 꽃잎이 화면에 차지하는 네모, midY: 꽃 가운데 높이
+function showBubble(w, i, pr, midY) {
+  i = String(i);
   const again = w.querySelector(`.bubble[data-ev="${i}"]`);
   closeBubble();
   if (again) return;
@@ -1690,9 +1705,9 @@ function openBubble(pt) {
   w.appendChild(b);
   w.classList.add('open');
   // 위쪽 꽃잎이면 꽃잎 아래로, 아래쪽 꽃잎이면 꽃잎 위로 띄운다
-  const wr = w.getBoundingClientRect(), pr = pt.getBoundingClientRect(), cr = w.querySelector('.ctr').getBoundingClientRect();
+  const wr = w.getBoundingClientRect();
   const cx = pr.left + pr.width / 2 - wr.left, cy = pr.top + pr.height / 2 - wr.top;
-  const upper = pr.top + pr.height / 2 <= cr.top + cr.height / 2;
+  const upper = pr.top + pr.height / 2 <= midY;
   const bw = b.offsetWidth, bh = b.offsetHeight;
   const left = Math.max(4, Math.min(wr.width - bw - 4, cx - bw / 2));
   b.style.left = `${left}px`;
@@ -1700,6 +1715,406 @@ function openBubble(pt) {
   b.style.setProperty('--tx', `${Math.max(18, Math.min(bw - 18, cx - left))}px`);
   b.classList.toggle('up', !upper);
   b.style.visibility = '';
+}
+
+/* ── 입체 장면 (만화 렌더링) ─────────────────────── */
+// 하루 카드의 꽃과 땅을 입체로 세우고 셀 음영으로 칠한다: 밝은 면과 그늘 두 톤 + 흰 반사광, 뒤집은 껍질로 두른 먹선.
+// 폰을 기울이면(자이로) 카메라가 조금 돌아 입체가 보인다. 컴퓨터에선 마우스, 아무 입력이 없으면 천천히 흔들린다.
+// three.js 는 첫 화면을 그린 뒤에 받는다. 받지 못하거나 WebGL 이 없으면 그림(SVG) 장면이 그대로 남는다.
+const K3 = {on: false};
+
+const TOON_VS = `varying vec3 vN; varying vec3 vV;
+void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`;
+const TOON_FS = `uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uLight; uniform float uSpec; uniform float uOpacity;
+varying vec3 vN; varying vec3 vV;
+void main(){
+  vec3 n = normalize(vN); if (!gl_FrontFacing) n = -n;
+  float d = dot(n, uLight);
+  vec3 c = d > 0.1 ? uLit : uShade;
+  if (uSpec > 0.0) { float s = dot(n, normalize(uLight + vV)); if (s > 0.985) c = mix(c, vec3(1.0), uSpec); }
+  gl_FragColor = vec4(c, uOpacity);
+}`;
+// 먹선: 뒷면을 법선 방향으로 화면에서 늘 같은 굵기(uW px)만큼 부풀린다
+const INK_VS = `uniform float uW; uniform vec2 uRes;
+void main(){
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vec4 clip = projectionMatrix * mv;
+  vec2 p = (projectionMatrix * vec4(normalMatrix * normal, 0.0)).xy * uRes;
+  float l = length(p);
+  if (l > 1e-5) clip.xy += p / l * uW * 2.0 / uRes * clip.w;
+  gl_Position = clip;
+}`;
+const INK_FS = `uniform vec3 uInk; uniform float uOpacity; void main(){ gl_FragColor = vec4(uInk, uOpacity); }`;
+
+function load3d() {
+  if (K3.tried) return;
+  K3.tried = true;
+  try { const c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) return; } catch { return; }
+  import('./three.module.min.js').then(init3d).catch(() => {});
+}
+
+function init3d(T) {
+  T.ColorManagement.enabled = false;          // 시트 색·CSS 색을 그대로 쓴다
+  const renderer = new T.WebGLRenderer({alpha: true, antialias: true});
+  renderer.outputColorSpace = T.LinearSRGBColorSpace;
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  const canvas = renderer.domElement;
+  canvas.className = 'k3';
+  const scene = new T.Scene();
+  const camera = new T.PerspectiveCamera(30, 1, .1, 60);
+  const light = {value: new T.Vector3()};
+  const res = {value: new T.Vector2(1, 1)};
+  const LIGHT = new T.Vector3(-.5, .8, .55).normalize();
+  const col = c => new T.Color(c);
+  const shadeOf = (c, k = .3) => col(c).lerp(col('#22375E'), k);
+
+  function toon(geo, lit, shade, o = {}) {
+    const m = new T.Mesh(geo, new T.ShaderMaterial({vertexShader: TOON_VS, fragmentShader: TOON_FS,
+      uniforms: {uLit: {value: col(lit)}, uShade: {value: col(shade)}, uLight: light, uSpec: {value: o.spec || 0}, uOpacity: {value: 1}}}));
+    const ink = new T.Mesh(geo, new T.ShaderMaterial({vertexShader: INK_VS, fragmentShader: INK_FS, side: T.BackSide,
+      uniforms: {uW: {value: (o.ink || 2.6) * renderer.getPixelRatio()}, uRes: res, uInk: {value: col(INK)}, uOpacity: {value: 1}}}));
+    const g = new T.Group();
+    g.add(ink, m);
+    g.userData = {m, ink};
+    return g;
+  }
+  const paint = (g, lit, shade) => { g.userData.m.material.uniforms.uLit.value.set(lit); g.userData.m.material.uniforms.uShade.value.set(shade); };
+  const fade = (g, a) => { for (const x of [g.userData.m, g.userData.ink]) { x.material.uniforms.uOpacity.value = a; x.material.transparent = a < 1; x.material.depthWrite = a >= 1; } };
+
+  // 꽃잎·잎·봉오리: 길이 L, 반폭 W 인 납작한 덩어리. 가로로 오목(cup)하게, 끝은 tip 이 작을수록 둥글다.
+  function lobe(L, W, o = {}) {
+    const nu = 24, nv = 18, pos = [], idx = [];
+    for (let i = 0; i <= nu; i++) {
+      const u = i / nu;
+      const w = W * Math.pow(Math.sin(Math.PI * Math.pow(u, o.bias || .72)), o.tip || .55);
+      const t = w * (o.thick || .2) + .004;
+      for (let j = 0; j < nv; j++) {
+        const v = j / nv * Math.PI * 2, x = w * Math.cos(v);
+        pos.push(x, u * L, t * Math.sin(v) + (o.cup || 0) * (x / W) * (x / W) * W - (o.bend || 0) * u * u * L);
+      }
+    }
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+      const a = i * nv + j, b = i * nv + (j + 1) % nv;
+      idx.push(a, a + nv, b, b, a + nv, b + nv);
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    g.computeBoundingBox();
+    return g;
+  }
+  const SPHERE = new T.SphereGeometry(1, 40, 24), BEAD = new T.SphereGeometry(1, 16, 10);
+
+  // 땅: 먼 언덕 둘, 나무 둘, 구름 둘, 앞 언덕과 풀포기·들꽃
+  const land = new T.Group();
+  const hillA = toon(SPHERE, '#8CE99A', '#6BBF7F', {ink: 2.4}), hillB = toon(SPHERE, '#8CE99A', '#6BBF7F', {ink: 2.4});
+  hillA.scale.set(7.5, 2.6, 3); hillA.position.set(-3.6, -3.05, -8);
+  hillB.scale.set(8, 2.5, 3); hillB.position.set(4.6, -3.2, -9.5);
+  land.add(hillA, hillB);
+  // 앞 언덕: 가운데 큰 둔덕 + 양옆 작은 둔덕. 풀·들꽃은 이 겉면 위에 심는다.
+  const MOUNDS = [[0, -1.62, .6, 9, 1.9, 3.4], [-3.3, -1.1, -.4, 3.4, 1.45, 2.2], [3.5, -1.2, -.7, 3.2, 1.4, 2.1]];
+  const grounds = MOUNDS.map(([x, y, z, sx, sy, sz]) => { const g = toon(SPHERE, '#51CF66', '#3FA553', {ink: 2.6}); g.scale.set(sx, sy, sz); g.position.set(x, y, z); land.add(g); return g; });
+  const surf = (x, z) => Math.max(...MOUNDS.map(([cx, cy, cz, sx, sy, sz]) => { const q = 1 - ((x - cx) / sx) ** 2 - ((z - cz) / sz) ** 2; return q > 0 ? cy + sy * Math.sqrt(q) : -9; }));
+  const trees = [[-4.1, -.62, -6.6, .9], [4.9, -.95, -8.2, .75]].map(([x, y, z, s]) => {
+    const t = new T.Group();
+    const trunk = toon(new T.CylinderGeometry(.08, .11, .7, 10, 1, true), '#C08457', '#8B5A2B', {ink: 2.2});
+    trunk.position.y = .35;
+    const crown = toon(SPHERE, '#40C057', '#2B8A3E', {ink: 2.2, spec: .5});
+    crown.scale.setScalar(.5); crown.position.y = .95;
+    t.add(trunk, crown); t.position.set(x, y, z); t.scale.setScalar(s);
+    t.userData.crown = crown;
+    land.add(t);
+    return t;
+  });
+  const PUFFS = [[0, 0, .55], [.55, .1, .44], [-.55, -.04, .4], [1, -.1, .3], [.15, .38, .4], [-1, -.12, .26]];
+  const clouds = [0, 1].map(() => {
+    const c = new T.Group();
+    for (const [x, y, r] of PUFFS) { const p = toon(BEAD, '#fff', '#D0EBFF', {ink: 2.4}); p.scale.set(r, r * .86, r * .8); p.position.set(x, y, 0); c.add(p); }
+    land.add(c);
+    return c;
+  });
+  const GRASS = lobe(.3, .045, {tip: 1, bias: 1, thick: .6, bend: .15});
+  const tufts = [[-1.7, .1], [-.8, .45], [1.0, .35], [1.9, -.1], [-2.9, -.6]].map(([x, z]) => {
+    const g = new T.Group();
+    [[-.06, .45, .75], [0, 0, 1], [.06, -.45, .85]].forEach(([dx, rz, s]) => { const b = toon(GRASS, '#51CF66', '#2F9E44', {ink: 1.6}); b.position.set(dx, -.02, 0); b.rotation.z = rz; b.scale.setScalar(s); g.add(b); });
+    g.position.set(x, surf(x, z), z);
+    land.add(g);
+    return g;
+  });
+  const daisies = [[-1.25, .55, '#fff'], [.6, .75, '#FFC9DE'], [1.45, .5, '#fff'], [-2.3, -.2, '#FFC9DE']].map(([x, z, c]) => {
+    const y = surf(x, z) + .04;
+    const g = new T.Group();
+    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, p = toon(BEAD, c, shadeOf(c, .2), {ink: 1.5}); p.scale.set(.055, .055, .03); p.position.set(Math.sin(a) * .065, Math.cos(a) * .065, 0); g.add(p); }
+    const mid = toon(BEAD, '#FFD43B', '#F59F00', {ink: 1.5}); mid.scale.set(.045, .045, .035); mid.position.z = .02; g.add(mid);
+    g.position.set(x, y, z); g.rotation.x = -.5;
+    land.add(g);
+    return g;
+  });
+  scene.add(land);
+
+  // 꽃(또는 봉오리·새싹). 날이 바뀔 때마다 새로 세운다.
+  let plant = null, petals = [], hub = null, bloom = null, head = null;
+  const HEAD_Y = 1.62;
+  function clearPlant() {
+    if (!plant) return;
+    plant.traverse(o => { if (o.isMesh) { o.material.dispose(); if (o.geometry !== SPHERE && o.geometry !== BEAD) o.geometry.dispose(); } });
+    scene.remove(plant);
+    plant = null; petals = []; hub = null; head = null;
+  }
+  function stemTo(y, bend = .08) {
+    const curve = new T.CatmullRomCurve3([new T.Vector3(0, -.5, 0), new T.Vector3(bend, y * .35, .02), new T.Vector3(-bend * .8, y * .7, 0), new T.Vector3(0, y, -.04)]);
+    return toon(new T.TubeGeometry(curve, 40, .055, 10, false), '#40C057', '#2B8A3E', {ink: 2.4});
+  }
+  function leafAt(y, side, s = 1) {
+    const l = toon(lobe(.62 * s, .2 * s, {tip: 1, bias: 1, cup: .35, thick: .25, bend: .12}), side < 0 ? '#51CF66' : '#69DB7C', '#2B8A3E', {ink: 2.4, spec: .4});
+    l.position.set(0, y, .02);
+    l.rotation.set(.35, 0, side * 1.05);
+    return l;
+  }
+  function buildPlant(f) {
+    clearPlant();
+    plant = new T.Group();
+    const n = f.work.length;
+    if (n) {
+      const order = ordered(f), maxW = Math.max(...order.map(it => it.w), 1e-9);
+      const R = .62 + .38 * f.busy / 100;
+      const spin = n > 1 ? (hash(f.date) - .5) * 16 : 0, step = n === 2 ? 80 : 360 / n;
+      plant.add(stemTo(HEAD_Y), leafAt(.45, -1), leafAt(.72, 1, .9));
+      head = new T.Group();
+      head.position.set(0, HEAD_Y, 0);
+      head.rotation.x = -.12;
+      const cr = R * .2 + .04;
+      order.forEach((it, k) => {
+        const L = R * (.86 + .14 * it.w / maxW);
+        const W = Math.min(L * .44, (2 * Math.PI * R * .55 / n) * .62);
+        const a = n === 2 ? (k ? 40 : -40) : spin + k * step;
+        const c = it.c || deptColor(it.dept);
+        const pivot = new T.Group();
+        pivot.rotation.z = -a * Math.PI / 180;
+        const p = toon(lobe(L, W, {cup: .22, thick: .2, bend: -.06}), c[0], c[1], {spec: .85});
+        p.position.set(0, cr * .2, (k % 2) * .012);
+        p.rotation.x = .38;
+        pivot.add(p);
+        head.add(pivot);
+        const i = f.work.indexOf(it);
+        petals.push({pivot, g: p, i, k, L, W, t: short(it.dept || ''), a, step, lb: null});
+      });
+      hub = toon(SPHERE, '#FFD43B', '#F59F00', {spec: .9});
+      hub.userData.r = cr; hub.scale.set(cr, cr, cr * .7); hub.position.z = .12;
+      head.add(hub);
+      plant.add(head);
+    } else if (f.busy) {
+      // 이어지는 일정만 있는 날: 봉오리
+      const lead = f.fronts.reduce((a, it) => (!a || it.w > a.w ? it : a), null);
+      const c = lead ? deptColor(lead.dept) : colorOf(f.stage);
+      plant.add(stemTo(1.35), leafAt(.45, -1, .9));
+      head = new T.Group(); head.position.set(0, 1.3, 0);
+      const bud = toon(lobe(.72, .26, {tip: .7, thick: .85, bias: .8}), c[0], c[1], {spec: .85});
+      head.add(bud);
+      for (const s of [-1, 1]) { const sep = toon(lobe(.3, .1, {tip: 1, bias: 1, thick: .4}), '#51CF66', '#2B8A3E', {ink: 2.2}); sep.rotation.set(.2, 0, s * .5); sep.position.z = .05; head.add(sep); }
+      plant.add(head);
+    } else {
+      // 할 일이 없는 날: 새싹
+      plant.add(stemTo(1.05, .03));
+      const l = leafAt(1.02, -1, 1.35), r = leafAt(1.0, 1, 1.25);
+      l.rotation.z = -1.25; r.rotation.z = 1.2;
+      plant.add(l, r);
+      head = new T.Group(); head.position.set(0, 1.1, 0); plant.add(head);
+    }
+    plant.position.set(0, .2, 0);
+    scene.add(plant);
+  }
+
+  // 부서 줄임말: 꽃잎 위에 늘 똑바로 선 글자(HTML). 누르면 그 꽃잎을 누른 것과 같다.
+  function buildLabels(box) {
+    box.textContent = '';
+    for (const p of petals) {
+      if (!p.t) continue;
+      const el = document.createElement('span');
+      el.className = 'lb lb3';
+      el.dataset.ev = p.i;
+      el.textContent = p.t;
+      box.appendChild(el);
+      p.lb = el;
+    }
+  }
+
+  // 기울기: 폰 자이로 → 없으면 마우스 → 없으면 천천히 흔들림
+  const tilt = {x: 0, y: 0, gx: 0, gy: 0, src: null, base: null};
+  function onOrient(e) {
+    if (e.beta == null || e.gamma == null) return;
+    const ang = (screen.orientation && screen.orientation.angle) || 0;
+    let b = e.beta, g = e.gamma;
+    if (ang === 90) [b, g] = [-g, b]; else if (ang === 270 || ang === -90) [b, g] = [g, -b];
+    if (!tilt.base) tilt.base = {b, g};
+    tilt.base.b += (b - tilt.base.b) * .004;
+    tilt.base.g += (g - tilt.base.g) * .004;
+    tilt.gx = Math.max(-1, Math.min(1, (g - tilt.base.g) / 18));
+    tilt.gy = Math.max(-1, Math.min(1, (b - tilt.base.b) / 18));
+    tilt.src = 'gyro';
+    kick();
+  }
+  const D = window.DeviceOrientationEvent;
+  if (D && typeof D.requestPermission === 'function') {
+    // iOS 는 한 번 눌러야 기울기를 물어볼 수 있다
+    const ask = () => { removeEventListener('click', ask, true); D.requestPermission().then(r => { if (r === 'granted') addEventListener('deviceorientation', onOrient); }).catch(() => {}); };
+    addEventListener('click', ask, true);
+  } else addEventListener('deviceorientation', onOrient);
+  addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || tilt.src === 'gyro' || !canvas.isConnected) return;
+    const r = canvas.getBoundingClientRect();
+    if (e.clientY < r.top - 80 || e.clientY > r.bottom + 80) { tilt.src = null; return; }
+    tilt.gx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - .5) * 2));
+    tilt.gy = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - .5) * 2));
+    tilt.src = 'mouse';
+    kick();
+  }, {passive: true});
+
+  // 카메라: 꽃 머리 조금 아래를 보고, 기울기만큼 둘레를 돈다
+  const TARGET = new T.Vector3(0, 1.72, 0), DIST = 7.2, PITCH = .12;
+  const v = new T.Vector3(), box = new T.Box3();
+  function aim() {
+    const yaw = tilt.x * .17, pitch = PITCH + tilt.y * .07;
+    camera.position.set(TARGET.x + Math.sin(yaw) * Math.cos(pitch) * DIST, TARGET.y + Math.sin(pitch) * DIST, TARGET.z + Math.cos(yaw) * Math.cos(pitch) * DIST);
+    camera.lookAt(TARGET);
+    camera.updateMatrixWorld();
+    light.value.copy(LIGHT).transformDirection(camera.matrixWorldInverse);
+  }
+  const toScreen = p => { v.copy(p).project(camera); return [(v.x + 1) / 2 * K3.w, (1 - v.y) / 2 * K3.h]; };
+
+  let raf = 0, visible = true, last = 0;
+  const still = () => reduced();
+  function kick() { if (!raf && K3.host && visible && !document.hidden) raf = requestAnimationFrame(frame); }
+  function frame(now) {
+    raf = 0;
+    if (!K3.host || !canvas.isConnected) return;
+    // 가만히 흔들릴 때는 초당 30장이면 충분하다 (배터리)
+    if (!tilt.src && !bloom && now - last < 30) { raf = requestAnimationFrame(frame); return; }
+    last = now;
+    const t = now / 1000;
+    const frozen = !!K3.host.closest('.flw.open');
+    let busy = false;
+    if (!frozen && !still()) {
+      const tx = tilt.src ? tilt.gx : Math.sin(t / 3.1) * .35, ty = tilt.src ? tilt.gy : Math.sin(t / 4.3) * .25;
+      tilt.x += (tx - tilt.x) * .08; tilt.y += (ty - tilt.y) * .08;
+      if (plant) plant.rotation.z = Math.sin(t * .9) * .02;
+      clouds.forEach((c, i) => { c.position.x = c.userData.x + Math.sin(t / (18 + i * 7) + i) * .5; });
+      busy = true;
+    }
+    // 피어나기: 꽃잎이 차례로 톡톡
+    if (bloom) {
+      const e = now - bloom;
+      let done = true;
+      const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2; };
+      for (const p of petals) {
+        const x = Math.max(0, Math.min(1, (e - 120 - p.k * 70) / 650));
+        p.pivot.scale.setScalar(Math.max(1e-3, back(x)));
+        if (p.lb) p.lb.style.opacity = String(Math.max(0, Math.min(1, (e - 480 - p.k * 70) / 300)));
+        if (x < 1) done = false;
+      }
+      if (hub) { const x = Math.max(0, Math.min(1, (e - 160 - petals.length * 70) / 450)), s = Math.max(1e-3, back(x)) * hub.userData.r; hub.scale.set(s, s, s * .7); if (x < 1) done = false; }
+      if (done) bloom = null; else busy = true;
+    }
+    aim();
+    renderer.render(scene, camera);
+    // 글자 자리: 꽃잎 가운데쯤을 화면에 비춘다
+    for (const p of petals) {
+      if (!p.lb) continue;
+      v.set(0, p.L * .6, p.W * .2 + .02);
+      p.g.localToWorld(v);
+      const [x, y] = toScreen(v);
+      p.lb.style.transform = `translate(${n1(x)}px,${n1(y)}px) translate(-50%,-50%)`;
+    }
+    K3.host.style.setProperty('--px', `${n1(-tilt.x * 10)}px`);
+    K3.host.style.setProperty('--py', `${n1(tilt.y * 6)}px`);
+    if (busy) raf = requestAnimationFrame(frame);
+  }
+  new IntersectionObserver(es => { visible = es[es.length - 1].isIntersecting; if (visible) kick(); }).observe(canvas);
+  document.addEventListener('visibilitychange', kick);
+
+  function size() {
+    if (!K3.host) return;
+    const r = K3.host.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    K3.w = r.width; K3.h = r.height;
+    renderer.setSize(r.width, r.height, false);
+    res.value.set(r.width * renderer.getPixelRatio(), r.height * renderer.getPixelRatio());
+    camera.aspect = r.width / r.height;
+    camera.updateProjectionMatrix();
+    // 글자 크기: 그림 꽃과 같은 식(꽃잎 폭과 옆 꽃잎까지 거리)을 화면 크기로 옮긴다
+    const px = r.height / (2 * DIST * Math.tan(camera.fov * Math.PI / 360));
+    for (const p of petals) {
+      if (!p.lb) continue;
+      const rr = p.L * .6, gap = petals.length > 1 ? 2 * rr * Math.sin(p.step * Math.PI / 360) : Infinity;
+      const room = Math.min(p.W * 1.5, gap * .82) - .06;
+      const em = [...p.t].reduce((s, ch) => s + (/[0-9A-Za-z]/.test(ch) ? .62 : 1), 0);
+      p.lb.style.fontSize = `${n1(Math.max(.09, Math.min(.26, room / em)) * px)}px`;
+    }
+    kick();
+  }
+  addEventListener('resize', size);
+
+  // 하루 카드가 새로 그려질 때마다 캔버스를 옮겨 붙이고 그날 꽃을 세운다
+  K3.mount = () => {
+    const sc = $('#main .scene'), w = sc && sc.querySelector('.flw');
+    if (!w) { K3.host = null; return; }
+    const k = focusDay();
+    const f = ready() ? day(k) : {date: k, work: [], memos: [], fronts: [], busy: 0, stage: '쉼', known: true};
+    // 계절·시간대 색은 장면의 CSS 변수에서 읽는다
+    const cs = getComputedStyle(sc), cv = n => cs.getPropertyValue(n).trim();
+    paint(hillA, cv('--hill1'), shadeOf(cv('--hill1'), .22)); paint(hillB, cv('--hill1'), shadeOf(cv('--hill1'), .22));
+    for (const g of grounds) paint(g, cv('--hill2'), shadeOf(cv('--hill2'), .25));
+    for (const t of trees) paint(t.userData.crown, cv('--tree'), shadeOf(cv('--tree'), .28));
+    for (const c of clouds) for (const p of c.children) paint(p, cv('--cloud'), cv('--cloud-sh'));
+    for (const t of tufts) for (const b of t.children) paint(b, cv('--hill2'), shadeOf(cv('--hill2'), .35));
+    const winter = sc.dataset.season === 'winter';
+    for (const d of daisies) d.visible = !winter;
+    const h = hash(k);
+    clouds[0].userData.x = -2.6 + h * 1.6; clouds[0].position.set(clouds[0].userData.x, 3.35, -10);
+    clouds[1].userData.x = .8 + h * 1.4; clouds[1].position.set(clouds[1].userData.x, 2.45, -12); clouds[1].scale.setScalar(.75);
+    buildPlant(f);
+    let lbs = w.querySelector('.lbs');
+    if (!lbs) { lbs = document.createElement('div'); lbs.className = 'lbs'; w.appendChild(lbs); }
+    w.prepend(canvas);
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', f.work.length ? `${f.stage}, 꽃잎 ${f.work.length}장` : f.stage);
+    buildLabels(lbs);
+    K3.host = sc;
+    sc.classList.add('is3d');
+    bloom = S.bloomAnim && !still() ? performance.now() : null;
+    if (bloom) { for (const p of petals) { p.pivot.scale.setScalar(1e-3); if (p.lb) p.lb.style.opacity = '0'; } if (hub) hub.scale.setScalar(1e-3); }
+    K3.dim(null);
+    size();
+    kick();
+  };
+  // 꽃잎 하나만 밝히기 (null 이면 모두)
+  K3.dim = i => { for (const p of petals) fade(p.g, i == null || String(p.i) === String(i) ? 1 : .25); kick(); };
+  // 누른 자리의 꽃잎 번호
+  const ray = new T.Raycaster(), ndc = new T.Vector2();
+  K3.pick = (cx, cy) => {
+    const r = canvas.getBoundingClientRect();
+    ndc.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(petals.map(p => p.g.userData.m), false)[0];
+    return hit ? petals.find(p => p.g.userData.m === hit.object).i : null;
+  };
+  // 꽃잎이 화면에 차지하는 네모와 꽃 가운데 높이 (말풍선 자리 잡기용)
+  K3.rect = i => {
+    const p = petals.find(q => String(q.i) === String(i)), r = canvas.getBoundingClientRect();
+    box.copy(p.g.userData.m.geometry.boundingBox).applyMatrix4(p.g.userData.m.matrixWorld);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let c = 0; c < 8; c++) {
+      v.set(c & 1 ? box.max.x : box.min.x, c & 2 ? box.max.y : box.min.y, c & 4 ? box.max.z : box.min.z);
+      const [x, y] = toScreen(v);
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    }
+    return {left: r.left + x0, top: r.top + y0, width: x1 - x0, height: y1 - y0};
+  };
+  K3.midY = () => { v.setFromMatrixPosition(hub.matrixWorld); return canvas.getBoundingClientRect().top + toScreen(v)[1]; };
+  K3.kick = kick;
+  K3.on = true;
+  K3.mount();
 }
 
 /* ── 조작 ───────────────────────────────────────────── */
@@ -1710,6 +2125,9 @@ document.addEventListener('click', e => {
   if (EMBED && e.target.closest('.logo a')) { e.preventDefault(); parent.postMessage({kkot: 'close'}, '*'); return; }
   const pt = e.target.closest('.flw .pt');
   if (pt) { openBubble(pt); return; }
+  const lb = e.target.closest('.flw .lb3');
+  const hit = lb ? lb.dataset.ev : e.target.classList && e.target.classList.contains('k3') ? K3.pick(e.clientX, e.clientY) : null;
+  if (hit != null) { const w = e.target.closest('.flw'); showBubble(w, hit, K3.rect(hit), K3.midY()); return; }
   if (!e.target.closest('.bubble')) closeBubble();
   const row = e.target.closest('#main .ev[data-ev]');
   if (row) { const hero = $('#hero .flw'); if (hero) mark(hero, row.dataset.ev); return; }
@@ -1882,6 +2300,8 @@ primeFromCache();
 rebuild();
 render();
 load();
+// 입체 장면은 첫 화면을 그린 뒤에 받는다
+(window.requestIdleCallback || setTimeout)(load3d);
 </script>
 </body>
 </html>
