@@ -343,6 +343,7 @@ button.chip:active{transform:translateY(2px);box-shadow:inset 0 -3px 0 var(--sha
 mark{background:var(--yellow);color:#2A211D;border-radius:3px;padding:0 1px}
 .opt{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border-radius:16px;border:2.5px solid var(--line);background:var(--surface);box-shadow:inset 0 3px 0 var(--shade)}
 .opt button{height:40px;border:0;border-radius:12px;background:none;font-weight:800;color:var(--ink-2)}
+.opt button:disabled{opacity:.35}
 .opt button[aria-pressed="true"]{background:var(--glint),var(--yellow);box-shadow:inset 0 -3px 0 var(--yel-sh);color:#2A211D}
 .srcs{list-style:none;margin:0;padding:0}
 .srcs li{display:flex;gap:10px;align-items:baseline;padding:12px 16px;font-size:14px;border-top:2px solid var(--hair)}
@@ -472,10 +473,11 @@ const forParam = new URLSearchParams(location.search).get('for');
 const S = {
   mode: forParam === 'student' || forParam === 'teacher' ? forParam : (prefs.mode === 'student' ? 'student' : 'teacher'),
   dept: typeof prefs.dept === 'string' ? prefs.dept : '',
+  flat: prefs.flat === true,   // 입체 대신 그림 장면
   src: {}, loading: false, lastLoad: 0, today: todayKey(),
   month: null, yearView: false, sheet: null, q: '', word: null, bloomed: '', focus: null, slide: '',
 };
-const savePrefs = () => store.set(PREFS, {mode: S.mode, dept: S.dept});
+const savePrefs = () => store.set(PREFS, {mode: S.mode, dept: S.dept, flat: S.flat});
 if (forParam) savePrefs();
 let M = emptyModel();
 
@@ -953,7 +955,9 @@ const mound = (y, w) => `<path d="M${-w} ${y}C${-w * .6} ${y - 22} ${w * .6} ${y
 function petalG(L, W, c, detail, attrs, sw = SW) {
   return `<g class="pt" ${attrs}><path d="${petalPath(L, W)}" fill="${c[0]}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>`
     + `<path d="${petalPath(L * .5, W * .64)}" fill="${c[1]}"/>`
-    + (detail ? line(`M${n1(W * .26)} ${n1(-L * .9)}Q${n1(W * .56)} ${n1(-L * .84)} ${n1(W * .64)} ${n1(-L * .7)}`, SW * .8, 'rgba(255,255,255,.9)') : '')
+    + (detail ? line(`M${n1(W * .26)} ${n1(-L * .9)}Q${n1(W * .56)} ${n1(-L * .84)} ${n1(W * .64)} ${n1(-L * .7)}`, SW * .8, 'rgba(255,255,255,.9)')
+      // 작은 꽃: 입체 꽃처럼 끝 가까이 둥근 반짝
+      : sw > SW ? `<ellipse cx="${n1(W * .34)}" cy="${n1(-L * .74)}" rx="${n1(W * .26)}" ry="${n1(L * .12)}" transform="rotate(-18 ${n1(W * .34)} ${n1(-L * .74)})" fill="#fff" opacity=".85"/>` : '')
     + `</g>`;
 }
 function centerG(r, c, detail, n, sw = SW) {
@@ -1035,7 +1039,7 @@ function flowerSVG(f, o = {}) {
       labels += `<g class="lb" data-ev="${i}" style="--k:${k}"><text x="${n1(sin * r)}" y="${n1(-cos * r)}" font-size="${fs}">${esc(t)}</text></g>`;
     }
   });
-  g += labels + centerG(cr, ['#FFD43B', '#F59F00'], o.detail, n, sw);
+  g += labels + centerG(cr, ['#FFFFFF', '#D3DCE8'], o.detail, n, sw);
   if (f.busy >= PEAK && o.detail) {
     g += sparkG(R * 1.02, -R * .8, 17, 0) + sparkG(-R * 1.06, -R * .38, 12, 700) + sparkG(R * .92, R * .62, 10, 1400);
   }
@@ -1358,7 +1362,7 @@ function render() {
     + (f ? peaksHTML() + gardenHTML() : '') + footHTML();
   S.slide = '';
   paintTop();
-  if (K3.on) K3.mount();
+  if (K3.on && !S.flat) K3.mount();
 }
 
 // 첫 화면의 날을 하루씩 옮긴다 (n = +1 다음 날, -1 전날)
@@ -1573,6 +1577,9 @@ function moreSheet() {
     + `<button data-action="mode" data-v="student" aria-pressed="${S.mode === 'student'}">학생용</button></div>`
     + `<p class="hint">${S.mode === 'student' ? '학생용은 ‘(학생용)연중행사계획’ 시트로 꽃을 피워요.' : '교사용은 연중행사계획에 기도·감독·공지를 더해 보여 줘요.'} 학생에게는 학생용 주소를 보내 주세요.</p>`
     + `<div class="btns"><button class="btn" data-action="copy" data-url="${esc(studentUrl)}">학생용 주소 복사</button></div>`;
+  h += sec('장면', '', `<div class="opt" role="group" aria-label="장면"><button data-action="view3d" data-v="on" aria-pressed="${!S.flat}"${K3.fail ? ' disabled' : ''}>입체로 보기</button>`
+    + `<button data-action="view3d" data-v="off" aria-pressed="${S.flat}">그림으로 보기</button></div>`
+    + `<p class="hint">${K3.fail ? '이 기기에선 입체를 쓸 수 없어 그림으로 보여 줘요.' : '입체는 폰을 기울이면 꽃이 따라 움직여요. 느린 폰이거나 배터리를 아낄 땐 그림으로 보세요.'}</p>`);
 
   const ex = (stage, busy, n, sub) => {
     const work = Array.from({length: n}, (_, i) => ({w: 1, periods: null, i, c: DEPT_COLORS[(i * 5 + n) % DEPT_COLORS.length]}));
@@ -1752,10 +1759,10 @@ void main(){
 const INK_FS = `uniform vec3 uInk; uniform float uFade; void main(){ gl_FragColor = vec4(mix(uInk, vec3(0.93, 0.96, 1.0), uFade * 0.8), 1.0); }`;
 
 function load3d() {
-  if (K3.tried) return;
+  if (K3.tried || S.flat) return;
   K3.tried = true;
-  try { const c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) return; } catch { return; }
-  import('./three.module.min.js').then(init3d).catch(() => {});
+  try { const c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) { K3.fail = true; return; } } catch { K3.fail = true; return; }
+  import('./three.module.min.js').then(init3d).catch(() => { K3.tried = false; });
 }
 
 function init3d(T) {
@@ -1864,10 +1871,13 @@ function init3d(T) {
   // 꽃(또는 봉오리·새싹). 날이 바뀔 때마다 새로 세운다.
   let plant = null, petals = [], hub = null, bloom = null, head = null, sparks = [];
   const HEAD_Y = 1.62;
-  function clearPlant() {
+  // 날이 바뀌면 지금 꽃은 땅으로 쏙 들어가고(leaving), 새 꽃이 솟아올라 핀다(rise)
+  const PLANT_Y = .2;
+  let leaving = [], rise = null;
+  const disposeG = g => { g.traverse(o => { if (o.isMesh) { o.material.dispose(); if (o.geometry !== SPHERE && o.geometry !== BEAD) o.geometry.dispose(); } }); scene.remove(g); };
+  function clearPlant(sink) {
     if (!plant) return;
-    plant.traverse(o => { if (o.isMesh) { o.material.dispose(); if (o.geometry !== SPHERE && o.geometry !== BEAD) o.geometry.dispose(); } });
-    scene.remove(plant);
+    if (sink) leaving.push({g: plant, t0: performance.now(), y0: plant.position.y}); else disposeG(plant);
     plant = null; petals = []; hub = null; head = null; sparks = [];
   }
   function stemTo(y, bend = .08) {
@@ -1880,8 +1890,8 @@ function init3d(T) {
     l.rotation.set(.35, 0, side * 1.05);
     return l;
   }
-  function buildPlant(f) {
-    clearPlant();
+  function buildPlant(f, sink) {
+    clearPlant(sink);
     plant = new T.Group();
     const n = f.work.length;
     if (n) {
@@ -1906,9 +1916,9 @@ function init3d(T) {
         pivot.add(p);
         head.add(pivot);
         const i = f.work.indexOf(it);
-        petals.push({pivot, g: p, i, k, L, W, t: short(it.dept || ''), a, step, lb: null});
+        petals.push({pivot, g: p, i, k, L, W, t: short(it.dept || ''), a, step, lb: null, z0: p.position.z, pop: 0});
       });
-      hub = toon(SPHERE, '#FFD43B', '#F59F00', {spec: .9});
+      hub = toon(SPHERE, '#FFFFFF', '#D3DCE8');
       hub.userData.r = cr; hub.scale.set(cr, cr, cr * .7); hub.position.z = .12;
       head.add(hub);
       // 가장 만개한 날엔 반짝이 셋 (그림 꽃과 같은 자리)
@@ -1932,7 +1942,7 @@ function init3d(T) {
       plant.add(l, r);
       head = new T.Group(); head.position.set(0, 1.1, 0); plant.add(head);
     }
-    plant.position.set(0, .2, 0);
+    plant.position.set(0, PLANT_Y, 0);
     scene.add(plant);
   }
 
@@ -1994,7 +2004,7 @@ function init3d(T) {
   const TARGET = new T.Vector3(0, 1.72, 0), DIST = 7.2, PITCH = .12;
   const v = new T.Vector3(), box = new T.Box3();
   function aim() {
-    const yaw = tilt.x * .17, pitch = PITCH + tilt.y * .07;
+    const yaw = tilt.x * .3, pitch = PITCH + tilt.y * .13;
     camera.position.set(TARGET.x + Math.sin(yaw) * Math.cos(pitch) * DIST, TARGET.y + Math.sin(pitch) * DIST, TARGET.z + Math.cos(yaw) * Math.cos(pitch) * DIST);
     camera.lookAt(TARGET);
     camera.updateMatrixWorld();
@@ -2002,37 +2012,75 @@ function init3d(T) {
   }
   const toScreen = p => { v.copy(p).project(camera); return [(v.x + 1) / 2 * K3.w, (1 - v.y) / 2 * K3.h]; };
 
-  let raf = 0, visible = true, last = 0;
+  let raf = 0, visible = true, last = 0, sway = 0, popping = false, sel = null, selT = 0;
+  // 꽃잎 출렁임: 기울기가 바뀐 만큼 스프링을 밀고, 스프링이 꽃머리·꽃잎·줄기를 흔든다
+  const wob = {x: 0, vx: 0, y: 0, vy: 0};
   const still = () => reduced();
+  const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2; };
+  const clamp01 = x => Math.max(0, Math.min(1, x));
   function kick() { if (!raf && K3.host && visible && !document.hidden) raf = requestAnimationFrame(frame); }
   function frame(now) {
     raf = 0;
     if (!K3.host || !canvas.isConnected) return;
+    const moving = bloom || rise || leaving.length || popping || Math.abs(wob.vx) + Math.abs(wob.vy) > 1e-4;
     // 가만히 흔들릴 때는 초당 30장이면 충분하다 (배터리)
-    if (!tilt.src && !bloom && now - last < 30) { raf = requestAnimationFrame(frame); return; }
+    if (!tilt.src && !moving && now - last < 30) { raf = requestAnimationFrame(frame); return; }
+    const dt = last ? Math.min(3, (now - last) / 16.7) : 1;
     last = now;
     const t = now / 1000;
     const frozen = !!K3.host.closest('.flw.open');
     let busy = false;
     if (!frozen && !still()) {
       const tx = tilt.src ? tilt.gx : Math.sin(t / 3.1) * .35, ty = tilt.src ? tilt.gy : Math.sin(t / 4.3) * .25;
-      tilt.x += (tx - tilt.x) * .08; tilt.y += (ty - tilt.y) * .08;
-      if (plant) plant.rotation.z = Math.sin(t * .9) * .02;
+      const ox = tilt.x, oy = tilt.y;
+      tilt.x += (tx - tilt.x) * Math.min(1, .09 * dt); tilt.y += (ty - tilt.y) * Math.min(1, .09 * dt);
+      wob.vx += (tilt.x - ox) * 1.8; wob.vy += (tilt.y - oy) * 1.8;
+      sway = Math.sin(t * .9) * .02;
       clouds.forEach((c, i) => { c.position.x = c.userData.x + Math.sin(t / (18 + i * 7) + i) * .5; });
       busy = true;
     }
+    wob.vx += (-wob.x * .09 - wob.vx * .11) * dt; wob.x += wob.vx * dt;
+    wob.vy += (-wob.y * .09 - wob.vy * .11) * dt; wob.y += wob.vy * dt;
+    if (Math.abs(wob.x) + Math.abs(wob.vx) + Math.abs(wob.y) + Math.abs(wob.vy) > 1e-3) busy = true;
+    if (plant) {
+      plant.rotation.z = sway - wob.x * .3;
+      if (head && petals.length) { head.rotation.y = tilt.x * .22 + wob.x * .6; head.rotation.x = -.12 - wob.y * .4; }
+    }
+    // 꽃잎: 출렁임 + 누른 꽃잎은 앞으로 들리며 살랑
+    popping = false;
+    for (const p of petals) {
+      const on = sel != null && String(p.i) === String(sel);
+      p.pop += ((on ? 1 : 0) - p.pop) * Math.min(1, .22 * dt);
+      if (Math.abs((on ? 1 : 0) - p.pop) > .01) popping = true;
+      const ar = p.a * Math.PI / 180;
+      const e = on && !still() ? now - selT : Infinity;
+      if (e < 900) popping = true;
+      p.g.rotation.x = .38 + (wob.x * Math.sin(ar) + wob.y * Math.cos(ar)) * 1.3 - p.pop * .14;
+      p.g.rotation.y = e < 900 ? Math.sin(e / 55) * .18 * (1 - e / 900) : 0;
+      p.g.position.z = p.z0 + p.pop * .18;
+      p.g.scale.setScalar(1 + p.pop * .1);
+    }
+    if (popping) busy = true;
+    // 날 바꿈: 헌 꽃은 가라앉고 새 꽃은 솟는다
+    leaving = leaving.filter(l => { const x = clamp01((now - l.t0) / 280); l.g.position.y = l.y0 - 2.6 * x * x; if (x < 1) return true; disposeG(l.g); return false; });
+    if (rise && plant) {
+      const x = clamp01((now - rise) / 560);
+      plant.position.y = PLANT_Y - 2.4 * (1 - back(x));
+      if (x >= 1) rise = null;
+    }
+    if (leaving.length || rise) busy = true;
     // 피어나기: 꽃잎이 차례로 톡톡
     if (bloom) {
       const e = now - bloom;
       let done = true;
-      const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2; };
       for (const p of petals) {
-        const x = Math.max(0, Math.min(1, (e - 120 - p.k * 70) / 650));
+        const x = clamp01((e - 120 - p.k * 70) / 650);
         p.pivot.scale.setScalar(Math.max(1e-3, back(x)));
-        if (p.lb) p.lb.style.opacity = String(Math.max(0, Math.min(1, (e - 480 - p.k * 70) / 300)));
+        if (p.lb) p.lb.style.opacity = String(clamp01((e - 480 - p.k * 70) / 300));
         if (x < 1) done = false;
       }
-      if (hub) { const x = Math.max(0, Math.min(1, (e - 160 - petals.length * 70) / 450)), s = Math.max(1e-3, back(x)) * hub.userData.r; hub.scale.set(s, s, s * .7); if (x < 1) done = false; }
+      for (const sp of sparks) sp.el.style.opacity = String(clamp01((e - 600 - petals.length * 70) / 300));
+      if (hub) { const x = clamp01((e - 160 - petals.length * 70) / 450), s = Math.max(1e-3, back(x)) * hub.userData.r; hub.scale.set(s, s, s * .7); if (x < 1) done = false; }
       if (done) bloom = null; else busy = true;
     }
     aim();
@@ -2050,8 +2098,8 @@ function init3d(T) {
       const [x, y] = toScreen(v);
       sp.el.style.left = `${n1(x)}px`; sp.el.style.top = `${n1(y)}px`;
     }
-    K3.host.style.setProperty('--px', `${n1(-tilt.x * 10)}px`);
-    K3.host.style.setProperty('--py', `${n1(tilt.y * 6)}px`);
+    K3.host.style.setProperty('--px', `${n1(-tilt.x * 16)}px`);
+    K3.host.style.setProperty('--py', `${n1(tilt.y * 9)}px`);
     if (busy) raf = requestAnimationFrame(frame);
   }
   new IntersectionObserver(es => { visible = es[es.length - 1].isIntersecting; if (visible) kick(); }).observe(canvas);
@@ -2098,7 +2146,9 @@ function init3d(T) {
     const h = hash(k);
     clouds[0].userData.x = -2.6 + h * 1.6; clouds[0].position.set(clouds[0].userData.x, 3.35, -10);
     clouds[1].userData.x = .8 + h * 1.4; clouds[1].position.set(clouds[1].userData.x, 2.45, -12); clouds[1].scale.setScalar(.75);
-    buildPlant(f);
+    const changed = K3.date !== k && !still();
+    K3.date = k;
+    buildPlant(f, changed);
     let lbs = w.querySelector('.lbs');
     if (!lbs) { lbs = document.createElement('div'); lbs.className = 'lbs'; w.appendChild(lbs); }
     w.prepend(canvas);
@@ -2107,14 +2157,23 @@ function init3d(T) {
     buildLabels(lbs);
     K3.host = sc;
     sc.classList.add('is3d');
-    bloom = S.bloomAnim && !still() ? performance.now() : null;
-    if (bloom) { for (const p of petals) { p.pivot.scale.setScalar(1e-3); if (p.lb) p.lb.style.opacity = '0'; } if (hub) hub.scale.setScalar(1e-3); }
+    const now = performance.now();
+    rise = changed ? now : null;
+    if (rise) plant.position.y = PLANT_Y - 2.4;
+    bloom = (S.bloomAnim || changed) && !still() ? now + (changed ? 260 : 0) : null;
+    if (bloom) {
+      for (const p of petals) { p.pivot.scale.setScalar(1e-3); if (p.lb) p.lb.style.opacity = '0'; }
+      for (const sp of sparks) sp.el.style.opacity = '0';
+      if (hub) hub.scale.setScalar(1e-3);
+    }
     K3.dim(null);
     size();
     kick();
   };
   // 꽃잎 하나만 밝히기 (null 이면 모두)
-  K3.dim = i => { for (const p of petals) fade(p.g, i == null || String(p.i) === String(i) ? 0 : .72); kick(); };
+  K3.dim = i => { for (const p of petals) fade(p.g, i == null || String(p.i) === String(i) ? 0 : .72); sel = i; selT = performance.now(); kick(); };
+  // 그림으로 보기로 바꾸면 캔버스를 떼고 멈춘다
+  K3.unmount = () => { cancelAnimationFrame(raf); raf = 0; canvas.remove(); if (K3.host) K3.host.classList.remove('is3d'); K3.host = null; K3.date = null; };
   // 누른 자리의 꽃잎 번호
   const ray = new T.Raycaster(), ndc = new T.Vector2();
   K3.pick = (cx, cy) => {
@@ -2181,6 +2240,16 @@ document.addEventListener('click', e => {
     case 'next': S.month = shiftMonth(S.month, 1); renderGarden(); break;
     case 'view-month': S.yearView = false; renderGarden(); break;
     case 'view-year': S.yearView = true; renderGarden(); break;
+    case 'view3d': {
+      const flat = a.dataset.v === 'off';
+      if (flat === S.flat) break;
+      S.flat = flat;
+      savePrefs();
+      if (flat && K3.on) K3.unmount();
+      render(); paintSheet();
+      if (!flat && !K3.on) load3d();
+      break;
+    }
     case 'mode': {
       const v = a.dataset.v;
       if (v === S.mode) break;
