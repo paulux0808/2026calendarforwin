@@ -122,6 +122,9 @@ a{color:var(--link)}
 .lbs{position:absolute;inset:0;pointer-events:none}
 .lb3{position:absolute;left:0;top:0;font-family:var(--display);line-height:1;color:#2A211D;white-space:nowrap;pointer-events:auto;cursor:pointer;will-change:transform;text-shadow:2px 0 #fff,-2px 0 #fff,0 2px #fff,0 -2px #fff,1.5px 1.5px #fff,-1.5px 1.5px #fff,1.5px -1.5px #fff,-1.5px -1.5px #fff}
 .lb3.dim{opacity:.25!important}
+.spk3{position:absolute;margin:0;transform:translate(-50%,-50%)}
+.spk3 svg{display:block;width:100%;height:100%;animation:twinkle3 2.4s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes twinkle3{50%{transform:scale(.55) rotate(20deg)}}
 .scene .flw .fl{position:absolute;left:50%;bottom:-6px;width:min(46vw,184px);height:auto;transform:translateX(-50%);transform-origin:50% 100%;animation:sway 7s ease-in-out infinite}
 .scene .flw.open .fl{animation-play-state:paused}
 @keyframes sway{0%,100%{transform:translateX(-50%) rotate(-1.1deg)}50%{transform:translateX(-50%) rotate(1.1deg)}}
@@ -1723,16 +1726,18 @@ function showBubble(w, i, pr, midY) {
 // three.js 는 첫 화면을 그린 뒤에 받는다. 받지 못하거나 WebGL 이 없으면 그림(SVG) 장면이 그대로 남는다.
 const K3 = {on: false};
 
-const TOON_VS = `varying vec3 vN; varying vec3 vV;
-void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`;
-const TOON_FS = `uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uLight; uniform float uSpec; uniform float uOpacity;
-varying vec3 vN; varying vec3 vV;
+// 꽃잎은 끝 가까이 오른쪽에 흰 줄을 칠해 두고(uGlint, 그림 꽃과 같은 자리), 둥근 것은 빛을 따라 반짝이 움직인다(uSpec).
+const TOON_VS = `attribute vec3 aUV; varying vec3 vN; varying vec3 vV; varying vec3 vUV;
+void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vUV = aUV; gl_Position = projectionMatrix * mv; }`;
+const TOON_FS = `uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uLight; uniform float uSpec; uniform float uGlint; uniform float uFade;
+varying vec3 vN; varying vec3 vV; varying vec3 vUV;
 void main(){
   vec3 n = normalize(vN); if (!gl_FrontFacing) n = -n;
   float d = dot(n, uLight);
   vec3 c = d > 0.1 ? uLit : uShade;
   if (uSpec > 0.0) { float s = dot(n, normalize(uLight + vV)); if (s > 0.985) c = mix(c, vec3(1.0), uSpec); }
-  gl_FragColor = vec4(c, uOpacity);
+  if (uGlint > 0.0) { vec2 q = vec2((vUV.x - 0.8) / 0.075, (atan(vUV.z, vUV.y) - 0.95) / 0.32); if (dot(q, q) < 1.0) c = mix(c, vec3(1.0), uGlint); }
+  gl_FragColor = vec4(mix(c, vec3(0.93, 0.96, 1.0), uFade), 1.0);
 }`;
 // 먹선: 뒷면을 법선 방향으로 화면에서 늘 같은 굵기(uW px)만큼 부풀린다
 const INK_VS = `uniform float uW; uniform vec2 uRes;
@@ -1744,7 +1749,7 @@ void main(){
   if (l > 1e-5) clip.xy += p / l * uW * 2.0 / uRes * clip.w;
   gl_Position = clip;
 }`;
-const INK_FS = `uniform vec3 uInk; uniform float uOpacity; void main(){ gl_FragColor = vec4(uInk, uOpacity); }`;
+const INK_FS = `uniform vec3 uInk; uniform float uFade; void main(){ gl_FragColor = vec4(mix(uInk, vec3(0.93, 0.96, 1.0), uFade * 0.8), 1.0); }`;
 
 function load3d() {
   if (K3.tried) return;
@@ -1770,20 +1775,21 @@ function init3d(T) {
 
   function toon(geo, lit, shade, o = {}) {
     const m = new T.Mesh(geo, new T.ShaderMaterial({vertexShader: TOON_VS, fragmentShader: TOON_FS,
-      uniforms: {uLit: {value: col(lit)}, uShade: {value: col(shade)}, uLight: light, uSpec: {value: o.spec || 0}, uOpacity: {value: 1}}}));
+      uniforms: {uLit: {value: col(lit)}, uShade: {value: col(shade)}, uLight: light, uSpec: {value: o.spec || 0}, uGlint: {value: o.glint || 0}, uFade: {value: 0}}}));
     const ink = new T.Mesh(geo, new T.ShaderMaterial({vertexShader: INK_VS, fragmentShader: INK_FS, side: T.BackSide,
-      uniforms: {uW: {value: (o.ink || 2.6) * renderer.getPixelRatio()}, uRes: res, uInk: {value: col(INK)}, uOpacity: {value: 1}}}));
+      uniforms: {uW: {value: (o.ink || 2.6) * renderer.getPixelRatio()}, uRes: res, uInk: {value: col(INK)}, uFade: {value: 0}}}));
     const g = new T.Group();
     g.add(ink, m);
     g.userData = {m, ink};
     return g;
   }
   const paint = (g, lit, shade) => { g.userData.m.material.uniforms.uLit.value.set(lit); g.userData.m.material.uniforms.uShade.value.set(shade); };
-  const fade = (g, a) => { for (const x of [g.userData.m, g.userData.ink]) { x.material.uniforms.uOpacity.value = a; x.material.transparent = a < 1; x.material.depthWrite = a >= 1; } };
+  // 흐리게: 투명하게 하면 먹선 껍질이 비쳐 탁해지므로 옅은 하늘색 쪽으로 바랜다
+  const fade = (g, k) => { g.userData.m.material.uniforms.uFade.value = k; g.userData.ink.material.uniforms.uFade.value = k; };
 
   // 꽃잎·잎·봉오리: 길이 L, 반폭 W 인 납작한 덩어리. 가로로 오목(cup)하게, 끝은 tip 이 작을수록 둥글다.
   function lobe(L, W, o = {}) {
-    const nu = 24, nv = 18, pos = [], idx = [];
+    const nu = 30, nv = 24, pos = [], idx = [], uv = [];
     for (let i = 0; i <= nu; i++) {
       const u = i / nu;
       const w = W * Math.pow(Math.sin(Math.PI * Math.pow(u, o.bias || .72)), o.tip || .55);
@@ -1791,6 +1797,7 @@ function init3d(T) {
       for (let j = 0; j < nv; j++) {
         const v = j / nv * Math.PI * 2, x = w * Math.cos(v);
         pos.push(x, u * L, t * Math.sin(v) + (o.cup || 0) * (x / W) * (x / W) * W - (o.bend || 0) * u * u * L);
+        uv.push(u, Math.cos(v), Math.sin(v));
       }
     }
     for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
@@ -1799,6 +1806,7 @@ function init3d(T) {
     }
     const g = new T.BufferGeometry();
     g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+    g.setAttribute('aUV', new T.Float32BufferAttribute(uv, 3));
     g.setIndex(idx);
     g.computeVertexNormals();
     g.computeBoundingBox();
@@ -1816,7 +1824,7 @@ function init3d(T) {
   const MOUNDS = [[0, -1.62, .6, 9, 1.9, 3.4], [-3.3, -1.1, -.4, 3.4, 1.45, 2.2], [3.5, -1.2, -.7, 3.2, 1.4, 2.1]];
   const grounds = MOUNDS.map(([x, y, z, sx, sy, sz]) => { const g = toon(SPHERE, '#51CF66', '#3FA553', {ink: 2.6}); g.scale.set(sx, sy, sz); g.position.set(x, y, z); land.add(g); return g; });
   const surf = (x, z) => Math.max(...MOUNDS.map(([cx, cy, cz, sx, sy, sz]) => { const q = 1 - ((x - cx) / sx) ** 2 - ((z - cz) / sz) ** 2; return q > 0 ? cy + sy * Math.sqrt(q) : -9; }));
-  const trees = [[-4.1, -.62, -6.6, .9], [4.9, -.95, -8.2, .75]].map(([x, y, z, s]) => {
+  const trees = [[-3.6, -.62, -6.6, .9], [4.3, -.95, -8.2, .75]].map(([x, y, z, s]) => {
     const t = new T.Group();
     const trunk = toon(new T.CylinderGeometry(.08, .11, .7, 10, 1, true), '#C08457', '#8B5A2B', {ink: 2.2});
     trunk.position.y = .35;
@@ -1854,13 +1862,13 @@ function init3d(T) {
   scene.add(land);
 
   // 꽃(또는 봉오리·새싹). 날이 바뀔 때마다 새로 세운다.
-  let plant = null, petals = [], hub = null, bloom = null, head = null;
+  let plant = null, petals = [], hub = null, bloom = null, head = null, sparks = [];
   const HEAD_Y = 1.62;
   function clearPlant() {
     if (!plant) return;
     plant.traverse(o => { if (o.isMesh) { o.material.dispose(); if (o.geometry !== SPHERE && o.geometry !== BEAD) o.geometry.dispose(); } });
     scene.remove(plant);
-    plant = null; petals = []; hub = null; head = null;
+    plant = null; petals = []; hub = null; head = null; sparks = [];
   }
   function stemTo(y, bend = .08) {
     const curve = new T.CatmullRomCurve3([new T.Vector3(0, -.5, 0), new T.Vector3(bend, y * .35, .02), new T.Vector3(-bend * .8, y * .7, 0), new T.Vector3(0, y, -.04)]);
@@ -1892,7 +1900,7 @@ function init3d(T) {
         const c = it.c || deptColor(it.dept);
         const pivot = new T.Group();
         pivot.rotation.z = -a * Math.PI / 180;
-        const p = toon(lobe(L, W, {cup: .22, thick: .2, bend: -.06}), c[0], c[1], {spec: .85});
+        const p = toon(lobe(L, W, {cup: .22, thick: .2, bend: -.06}), c[0], c[1], {glint: .9});
         p.position.set(0, cr * .2, (k % 2) * .012);
         p.rotation.x = .38;
         pivot.add(p);
@@ -1903,6 +1911,8 @@ function init3d(T) {
       hub = toon(SPHERE, '#FFD43B', '#F59F00', {spec: .9});
       hub.userData.r = cr; hub.scale.set(cr, cr, cr * .7); hub.position.z = .12;
       head.add(hub);
+      // 가장 만개한 날엔 반짝이 셋 (그림 꽃과 같은 자리)
+      if (f.busy >= PEAK) sparks = [[R * 1.02, R * .8, 17, 0], [-R * 1.06, R * .38, 12, 700], [R * .92, -R * .62, 10, 1400]].map(([x, y, sz, d]) => ({at: new T.Vector3(x, y, .15), sz, d, el: null}));
       plant.add(head);
     } else if (f.busy) {
       // 이어지는 일정만 있는 날: 봉오리
@@ -1910,7 +1920,7 @@ function init3d(T) {
       const c = lead ? deptColor(lead.dept) : colorOf(f.stage);
       plant.add(stemTo(1.35), leafAt(.45, -1, .9));
       head = new T.Group(); head.position.set(0, 1.3, 0);
-      const bud = toon(lobe(.72, .26, {tip: .7, thick: .85, bias: .8}), c[0], c[1], {spec: .85});
+      const bud = toon(lobe(.72, .26, {tip: .7, thick: .85, bias: .8}), c[0], c[1], {glint: .9});
       head.add(bud);
       for (const s of [-1, 1]) { const sep = toon(lobe(.3, .1, {tip: 1, bias: 1, thick: .4}), '#51CF66', '#2B8A3E', {ink: 2.2}); sep.rotation.set(.2, 0, s * .5); sep.position.z = .05; head.add(sep); }
       plant.add(head);
@@ -1929,6 +1939,15 @@ function init3d(T) {
   // 부서 줄임말: 꽃잎 위에 늘 똑바로 선 글자(HTML). 누르면 그 꽃잎을 누른 것과 같다.
   function buildLabels(box) {
     box.textContent = '';
+    for (const sp of sparks) {
+      const el = document.createElement('i');
+      el.className = 'spk3';
+      el.style.setProperty('--d', `${sp.d}ms`);
+      el.style.width = el.style.height = `${sp.sz * 1.9}px`;
+      el.innerHTML = `<svg viewBox="-20 -20 40 40"><path d="M0 -16Q0 0 16 0Q0 0 0 16Q0 0 -16 0Q0 0 0 -16Z" fill="#FFE066" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></svg>`;
+      box.appendChild(el);
+      sp.el = el;
+    }
     for (const p of petals) {
       if (!p.t) continue;
       const el = document.createElement('span');
@@ -2026,11 +2045,18 @@ function init3d(T) {
       const [x, y] = toScreen(v);
       p.lb.style.transform = `translate(${n1(x)}px,${n1(y)}px) translate(-50%,-50%)`;
     }
+    for (const sp of sparks) {
+      v.copy(sp.at); head.localToWorld(v);
+      const [x, y] = toScreen(v);
+      sp.el.style.left = `${n1(x)}px`; sp.el.style.top = `${n1(y)}px`;
+    }
     K3.host.style.setProperty('--px', `${n1(-tilt.x * 10)}px`);
     K3.host.style.setProperty('--py', `${n1(tilt.y * 6)}px`);
     if (busy) raf = requestAnimationFrame(frame);
   }
   new IntersectionObserver(es => { visible = es[es.length - 1].isIntersecting; if (visible) kick(); }).observe(canvas);
+  // 겹친 창이 숨어 있다 열리거나 화면 폭이 바뀌면 캔버스 크기를 다시 잰다
+  new ResizeObserver(() => size()).observe(canvas);
   document.addEventListener('visibilitychange', kick);
 
   function size() {
@@ -2053,7 +2079,6 @@ function init3d(T) {
     }
     kick();
   }
-  addEventListener('resize', size);
 
   // 하루 카드가 새로 그려질 때마다 캔버스를 옮겨 붙이고 그날 꽃을 세운다
   K3.mount = () => {
@@ -2089,7 +2114,7 @@ function init3d(T) {
     kick();
   };
   // 꽃잎 하나만 밝히기 (null 이면 모두)
-  K3.dim = i => { for (const p of petals) fade(p.g, i == null || String(p.i) === String(i) ? 1 : .25); kick(); };
+  K3.dim = i => { for (const p of petals) fade(p.g, i == null || String(p.i) === String(i) ? 0 : .72); kick(); };
   // 누른 자리의 꽃잎 번호
   const ray = new T.Raycaster(), ndc = new T.Vector2();
   K3.pick = (cx, cy) => {
