@@ -145,12 +145,6 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
 .row{display:flex;align-items:center;gap:8px;padding:0 12px;min-height:44px}
 .row-2{min-height:40px;border-top:1px solid var(--line);flex-wrap:wrap;padding-top:5px;padding-bottom:5px}
 .wm{font-size:var(--f-lg);font-weight:800;letter-spacing:-.03em;margin-right:4px}
-a.wm{color:inherit;text-decoration:none;cursor:pointer}
-#kkot{position:fixed;inset:0;z-index:1000;width:100%;height:100%;border:0;background:#E6F4FF}
-@media (prefers-color-scheme: dark){#kkot{background:#152331}}
-#kkot[hidden]{display:none}
-html.kkot-on,html.kkot-on body{overflow:hidden}
-@media print{#kkot{display:none!important}}
 .tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{
@@ -450,7 +444,7 @@ kbd{
 
 <header class="top">
   <div class="row row-1">
-    <a class="wm" href="mobile/" title="꽃달력으로 보기">학사일정</a>
+    <span class="wm">학사일정</span>
     <nav class="tabs" id="tabs" aria-label="화면"></nav>
     <div class="find" id="find">
       <input class="fld" id="q" type="search" autocomplete="off" aria-label="검색" placeholder="검색">
@@ -525,10 +519,10 @@ kbd{
 /* ============ 설정 ============ */
 const CONFIG = Object.freeze({
   POST_URL: "https://script.google.com/macros/s/AKfycbzk1DN0iDS7EdZvKq-iomzgxmiCzOwCUZwWZkN4fjvkzOZPdF1d3P9d1xt6Ii8VNnmmPQ/exec",
-  SHEET_ID: "10blDNZ4zjrFU5lwCvgtoD3npwIwcCMQTeqwPgpQ_Ffg",
+  SHEET_ID: "1qg5vX4KlrI3hwn1XLiLIupkO74zxleqV6Imk1y5YQIE",
   SHEETS: [
     { key:"schedule",   gid:"0",          name:"연중행사계획" },
-    { key:"student",    gid:"1112677469", name:"학생일정" },
+    { key:"student",    gid:"1112677469", name:"(학생용)연중행사계획" },
     { key:"supervisor", gid:"1459415616", name:"자습감독" },
     { key:"prayer",     gid:"1697887995", name:"기도순서" },
     { key:"notice",     gid:"1487091944", name:"공지사항" },
@@ -807,9 +801,11 @@ function reindex(){
     }
 }
 
-/* 마지막으로 받은 내용을 남겨 둔다. 연결이 없어도 화면이 비지 않게. */
+/* 마지막으로 받은 내용을 남겨 둔다. 연결이 없어도 화면이 비지 않게.
+   어느 시트에서 받았는지(sheet)도 적어, 시트를 바꾸면 옛 시트의 사본은 쓰지 않는다. */
 function saveCache(){
   if(write(CACHE, {
+    sheet:CONFIG.SHEET_ID,
     at:Date.now(),
     schedule:M.schedule.map(e => [e.k, e.dept, e.text]),
     student:M.student.map(e => [e.k, e.text]),
@@ -821,7 +817,7 @@ function saveCache(){
 }
 function loadCache(){
   const c = read(CACHE, null);
-  if(!c || !Array.isArray(c.schedule)) return false;
+  if(!c || c.sheet !== CONFIG.SHEET_ID || !Array.isArray(c.schedule)) return false;
   try{
     M.schedule = c.schedule.map(([k, dept, text], i) => ({ id:`s c${i}`, k, d:toDate(k), dept, text, src:"schedule" })).filter(e => e.d);
     M.student = c.student.map(([k, text], i) => ({ id:`u c${i}`, k, d:toDate(k), text, dept:"", src:"student" })).filter(e => e.d);
@@ -1858,51 +1854,6 @@ loading = true;
 jumpToday = ["calendar", "plan", "student"].includes(S.view);
 draw();
 reload();
-</script>
-<script>
-/* 제목 '학사일정'을 누르면 꽃달력이 이 화면 위로 열리고, 꽃달력의 제목을 누르면 다시 여기로 돌아온다.
-   주소 끝의 #kkot 이 열린 상태이고, #kkot/2026-10-05 처럼 날짜를 붙이면 그날로 연다. 휴대폰의 뒤로 가기로도 돌아온다. */
-(() => {
-  const link = document.querySelector('a.wm');
-  if (!link) return;
-  let frame = null, pushed = false;
-  const open = () => location.hash.startsWith('#kkot');
-  const dateOf = () => (location.hash.match(/^#kkot\/(\d{4}-\d{2}-\d{2})/) || [])[1] || '';
-  const show = () => {
-    const d = dateOf();
-    if (!frame) {
-      frame = document.createElement('iframe');
-      frame.id = 'kkot';
-      frame.title = '꽃달력';
-      frame.src = 'mobile/' + (d ? '#' + d : '');
-      document.body.appendChild(frame);
-    } else {
-      try {
-        const w = frame.contentWindow;
-        if ((w.location.hash || '').slice(1) !== d) w.location.replace(w.location.pathname + (d ? '#' + d : '#'));
-      } catch (e) {}
-    }
-    frame.hidden = false;
-    document.documentElement.classList.add('kkot-on');
-    frame.focus();
-  };
-  const hide = () => {
-    if (frame) frame.hidden = true;
-    document.documentElement.classList.remove('kkot-on');
-  };
-  link.addEventListener('click', e => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;  // 새 탭으로 열기는 그대로 둔다
-    e.preventDefault();
-    if (!open()) { pushed = true; location.hash = 'kkot'; }
-  });
-  addEventListener('hashchange', () => (open() ? show() : hide()));
-  addEventListener('message', e => {
-    if (!frame || e.source !== frame.contentWindow || !e.data || e.data.kkot !== 'close') return;
-    if (open() && pushed) { pushed = false; history.back(); }
-    else { history.replaceState(history.state, '', location.pathname + location.search); hide(); }
-  });
-  if (open()) show();
-})();
 </script>
 </body>
 </html>
