@@ -35,6 +35,23 @@ test.describe('달력 월 보기', () => {
     await expect(page.locator('.fold')).toHaveCount(0);
   });
 
+  // 앱 결함 후보 — drawCalendar(): 주말 접기에서 토·일 일정은 '같은 달 안의 금요일' 칸에만 모인다.
+  // 달이 토·일로 시작하면(2026-03 일 · 2026-08 토 · 2026-11 일) 그 달 첫 주말에는 금요일 칸이 없어 일정이 어디에도 안 나온다.
+  // README: "주말 접기 … 일정이 사라지지 않게". 재현: 주말 끔 → 2026-11 → 11/1(일) "종교개혁 주일 예배" 없음.
+  test.fixme('주말 접기: 어느 달에서도 일정이 사라지지 않는다', async ({ launch }) => {
+    const { page } = await launch();
+    await page.locator('#tools [data-c="cal.weekend"]').click();
+    const lost = [];
+    for (const mk of ['2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02']) {
+      await monthInput(page).fill(mk);
+      await expect(page.locator('.cal')).toBeVisible();
+      const shown = await page.locator('.cal .ev').count();      // 넘쳐서 감춘 것도 DOM 에는 있다
+      const want = fx.meta.eventsInMonth(mk).length;
+      if (shown !== want) lost.push(`${mk}: 자료 ${want}건 / 화면 ${shown}건`);
+    }
+    expect(lost, '토·일로 시작하는 달의 첫 주말 일정이 빠진다').toEqual([]);
+  });
+
   test('일정이 칸을 넘치면 +N 단추가 남고, 누르면 그날이 열린다', async ({ launch }) => {
     const { page } = await launch();                       // 데스크톱 1440×900
     const date = '2026-10-14';                              // 10건 — 가장 많은 날

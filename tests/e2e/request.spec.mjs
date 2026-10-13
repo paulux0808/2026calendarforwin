@@ -73,7 +73,7 @@ test.describe('수정 요청', () => {
     await expect(page.locator('#rmsg')).toHaveClass(/\bno\b/);
     await expect(page.locator('#rc')).toHaveValue('다시 보낼 내용');
     await expect(page.locator('#rf button[type="submit"]')).toBeEnabled();
-    expect(mock.posts).toHaveLength(1);
+    await expect.poll(() => mock.posts.length).toBe(1);
   });
 
   test('보내는 동안 폼은 잠기고 "보내는 중" 으로 바뀐다', async ({ launch }) => {
@@ -85,7 +85,7 @@ test.describe('수정 요청', () => {
     await expect(btn).toHaveText('보내는 중');
     await expect(btn).toBeDisabled();
     await expect(page.locator('#rc')).toBeDisabled();
-    expect(mock.posts).toHaveLength(1);
+    await expect.poll(() => mock.posts.length).toBe(1);
   });
 
   test('쓰던 글은 화면을 바꿔도, 새로고침해도 남는다 (초안)', async ({ launch }) => {

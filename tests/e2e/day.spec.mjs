@@ -71,7 +71,8 @@ test.describe('하루 상세', () => {
     await next.click();
     d = await readDay(page);
     expect(d.title).toBe('2026년 11월 1일 (일)');
-    expect(d.empty).toEqual(['교직원 일정', '학생 일정']);
+    expect(d.sections['교직원 일정'].map(e => e.text)).toEqual(fx.meta.day('2026-11-01').staff.map(e => e.text));
+    expect(d.empty).toEqual(['학생 일정']);
   });
 
   test('닫기 · Esc · 바깥(배경) 누르기로 닫힌다', async ({ launch }) => {

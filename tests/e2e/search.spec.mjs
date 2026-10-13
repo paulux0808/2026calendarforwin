@@ -37,7 +37,7 @@ test.describe('검색', () => {
       await expect(chip.locator('b')).toHaveText(String(n));
     }
     await expect(box.locator('.hm[aria-current="true"]')).toHaveAttribute('data-hm', '2026-10');
-    // 2027 의 달은 '27년' 표시를 붙이지 않는다 (이 자료에는 없음) / 같은 해라 연도 생략
+    // 같은 해의 달은 연도 없이 '4월' 로 적는다
     await expect(box.locator('.hm[data-hm="2026-04"]')).toContainText('4월');
   });
 
