@@ -1,0 +1,15 @@
+{
+  "name": "haksa-calendar-tests",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "학사일정 앱 화면 캡처 · 비교 · E2E 도구 (앱 코드는 건드리지 않는다)",
+  "scripts": {
+    "shoot": "node shoot.mjs",
+    "diff": "node diff.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
