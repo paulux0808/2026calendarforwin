@@ -232,6 +232,16 @@ td.c-n{font-size:var(--f-sm);padding-top:5px}
 .grp span{font-size:var(--f-xs);color:var(--ink-2);font-weight:600}
 .grp .ev{font-size:var(--f-md)}
 
+/* ---- 부서: 지난 일정 · 오늘 줄 ---- */
+.grp.past span{color:var(--ink-3)}
+.grp.past .ev{color:var(--ink-3);border-left-color:hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l) / .35)}
+.grp-now{
+  display:flex;align-items:baseline;gap:8px;padding:2px 9px;border-bottom:1px solid var(--line);
+  background:var(--key-bg);box-shadow:inset 3px 0 0 var(--key);
+  font-size:var(--f-xs);font-weight:700;color:var(--key);
+}
+.grp-now:last-child{border-bottom:0}
+
 /* ---- 누가기록 ---- */
 .seg{display:flex;gap:1px;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden}
 .seg button{height:28px;padding:0 10px;font-size:var(--f-sm);font-weight:600;color:var(--ink-3);background:var(--bg-2)}
@@ -274,6 +284,27 @@ tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-
 .mini-g button.now{outline:1.5px solid var(--key);outline-offset:-2px}
 .mini-g .n{font-size:9px;font-weight:700;color:var(--key);background:var(--key-bg);border-radius:2px;padding:0 2px;line-height:1.4}
 .mini-g .pad{visibility:hidden}
+
+/* ---- 검색 결과 달 ---- */
+/* .row 의 좁은 화면 규칙보다 뒤에 오지 않으므로 .row.row-hits 로 우선순위를 올린다 */
+.row.row-hits{min-height:36px;padding-top:5px;padding-bottom:5px;border-top:1px solid var(--line)}
+.hits-t{flex:none;font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
+.hits-t b{color:var(--ink)}
+.hits-n{font-size:var(--f-xs);color:var(--ink-3)}
+.hits-c{position:relative;flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
+.hm{
+  flex:none;height:26px;padding:0 8px;border:1px solid var(--line-2);border-radius:var(--r);
+  background:var(--bg);font-size:var(--f-xs);font-weight:600;color:var(--ink-2);white-space:nowrap;
+}
+.hm b{font-weight:700;margin-left:5px;color:var(--ink-3)}
+.hm:hover{background:var(--bg-2);color:var(--ink)}
+.hm[aria-current="true"]{background:var(--key);border-color:var(--key);color:#fff}
+.hm[aria-current="true"] b{color:inherit}
+:root[data-theme="dark"] .hm[aria-current="true"]{color:#12161C}
+@media (max-width:700px){
+  .hits-c{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .hits-c::-webkit-scrollbar{display:none}
+}
 
 /* ---- 자료 출처 ---- */
 .src{margin-top:12px;font-size:var(--f-sm);color:var(--ink-2)}
@@ -480,6 +511,7 @@ kbd{
     <button class="btn btn-q" id="setBtn" type="button">설정</button>
   </div>
   <div class="row row-2" id="tools"></div>
+  <div class="row row-hits" id="hits" role="group" aria-label="검색 결과 달" hidden></div>
 </header>
 
 <div class="strip strip-n" id="notice" hidden>
@@ -663,10 +695,16 @@ const S = {
 };
 let hadMonth = false;
 
+/* 달은 이 탭이 열려 있는 동안만 기억한다. 새로 열면 이번 달에서 시작 */
+const MONTH = "hs-month-v2";
+const readMonth = () => { try{ return sessionStorage.getItem(MONTH); }catch{ return null; } };
+const writeMonth = v => { try{ sessionStorage.setItem(MONTH, v); }catch{} };
+
 function loadPrefs(){
   const p = read(PREFS, {}) || {};
   if(Object.hasOwn(VIEWS, p.view)) S.view = p.view;
-  if(typeof p.month === "string" && /^\d{4}-\d{2}$/.test(p.month) && m1(p.month)){ S.month = p.month; hadMonth = true; }
+  const mo = readMonth();
+  if(typeof mo === "string" && /^\d{4}-\d{2}$/.test(mo) && m1(mo)){ S.month = mo; hadMonth = true; }
   for(const g of ["cal", "plan", "stu", "print"])
     for(const k of Object.keys(S[g])) if(typeof p[g]?.[k] === "boolean") S[g][k] = p[g][k];
   if(["light","dark","system"].includes(p.theme)) S.theme = p.theme;
@@ -676,10 +714,13 @@ function loadPrefs(){
   if([1,2,3].includes(p.grade)) S.grade = p.grade;
   if(typeof p.cat === "string") S.cat = p.cat;
 }
-const savePrefs = () => write(PREFS, {
-  view:S.view, month:S.month, theme:S.theme, fs:S.fs, dept:S.dept, hidden:S.hidden,
-  grade:S.grade, cat:S.cat, cal:S.cal, plan:S.plan, stu:S.stu, print:S.print
-});
+const savePrefs = () => {
+  writeMonth(S.month);
+  return write(PREFS, {
+    view:S.view, theme:S.theme, fs:S.fs, dept:S.dept, hidden:S.hidden,
+    grade:S.grade, cat:S.cat, cal:S.cal, plan:S.plan, stu:S.stu, print:S.print
+  });
+};
 function applyPrefs(){
   const dark = S.theme === "dark" || (S.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -984,6 +1025,54 @@ function notices(){
   return M.notices.filter(n => (!n.from || t >= n.from) && (!n.to || t <= n.to));
 }
 
+/* 지금 달만 걸러 보이는 검색을 달 건너 찾게 한다 — [달, 건수]를 시간순으로 */
+const hitsOn = () => VIEWS[S.view].month && loaded && terms().length > 0;
+function hitMonths(){
+  const stu = S.view === "student", by = new Map();
+  for(const e of stu ? M.student : M.schedule){
+    if(stu ? !hit(e.text) : off(e.dept) || !hit(e.dept, e.text)) continue;
+    const m = e.k.slice(0, 7);
+    by.set(m, (by.get(m) || 0) + 1);
+  }
+  return [...by].sort(([a], [b]) => a < b ? -1 : 1);
+}
+function hitJump(m){
+  S.month = m;
+  if(S.view === "calendar") S.cal.year = false;   /* 연간이면 그 달이 보이지 않는다 */
+  draw();
+  window.scrollTo({ top:0, behavior:"instant" });
+}
+function drawHits(){
+  const box = $("#hits");
+  box.hidden = !hitsOn();
+  if(box.hidden) return;
+
+  const list = hitMonths(), y = S.month.slice(0, 4);
+  if(!list.length){ box.innerHTML = '<span class="hits-n">일치하는 일정 없음</span>'; return; }
+  const foc = document.activeElement?.dataset?.hm, left = $(".hits-c", box)?.scrollLeft || 0;
+  box.innerHTML = `<span class="hits-t">검색 <b>${list.reduce((s, [, n]) => s + n, 0)}건</b></span>
+    <div class="hits-c">${list.map(([m, n]) => {
+      const lbl = `${m.slice(0, 4) === y ? "" : m.slice(2, 4) + "년 "}${+m.slice(5)}월`;
+      return `<button type="button" class="hm" data-hm="${m}" aria-label="${lbl} ${n}건"${m === S.month ? ' aria-current="true"' : ""}>${lbl}<b>${n}</b></button>`;
+    }).join("")}</div>`;
+
+  /* 다시 그려도 키보드 초점과 가로 위치가 그대로이게 */
+  if(foc) $(`[data-hm="${foc}"]`, box)?.focus({ preventScroll:true });
+  const c = $(".hits-c", box), cur = $('[aria-current="true"]', c);
+  c.scrollLeft = cur && c.scrollWidth > c.clientWidth ? cur.offsetLeft - (c.clientWidth - cur.offsetWidth) / 2 : left;
+}
+/* 엔터는 다음 일치 달로 (끝에서 처음으로). 한글 조합을 확정하는 엔터는 건드리지 않는다 —
+   Safari 는 compositionend 뒤에 keyCode 229 로 보낸다. */
+$("#q").addEventListener("keydown", ev => {
+  if(ev.key !== "Enter" || ev.isComposing || ev.keyCode === 229 || ev.target.dataset.ime) return;
+  clearTimeout(qt);
+  S.q = ev.target.value;
+  const ms = hitsOn() ? hitMonths().map(([m]) => m) : [];
+  const next = ms.find(m => m > S.month) || ms[0];
+  if(next && next !== S.month) hitJump(next);
+  else draw({ keep:true });
+});
+
 /* ============ 그리기 ============ */
 let jumpToday = false;
 
@@ -1016,7 +1105,7 @@ function drawTools(){
   if(v === "plan") out.push(`<div class="opts">${opt("부서명", "plan", "dept")}${opt("경건회", "plan", "prayer")}${opt("자습감독", "plan", "super")}${opt("주말 빼기", "plan", "noWeekend")}${opt("빈 날 숨김", "plan", "hideEmpty")}${opt("한 줄", "plan", "flat")}</div>`);
   if(v === "student") out.push(`<div class="opts">${opt("주말 빼기", "stu", "noWeekend")}${opt("빈 날 숨김", "stu", "hideEmpty")}${opt("한 줄", "stu", "flat")}</div>`);
   if(v === "dept") out.push(`<label class="lbl">부서
-    <select class="fld" id="ds">${DEPT_NAMES.map(d => `<option${S.dept === d ? " selected" : ""}>${esc(d)}</option>`).join("")}</select></label>`);
+    <select class="fld" id="ds">${DEPT_NAMES.map(d => `<option value="${esc(d)}"${S.dept === d ? " selected" : ""}>${esc(d)} ${deptN(d)}</option>`).join("")}</select></label>`);
   if(v === "nuga"){
     out.push(`<div class="seg" role="group" aria-label="학년">${[1,2,3].map(n =>
       `<button type="button" data-g="${n}" aria-pressed="${S.grade === n}">${n}학년</button>`).join("")}</div>`);
@@ -1198,19 +1287,30 @@ function drawTable(v){
 }
 
 /* ---- 부서 ---- */
+const deptN = d => M.schedule.reduce((s, e) => s + (e.dept === d), 0);
+
 function drawDept(){
   const rows = M.schedule.filter(e => e.dept === S.dept && hit(e.dept, e.text));
   if(!rows.length) return { n:0, html:nothing("일정 없음") };
-  let html = "", cur = "";
+  const now = today(), tm = now.slice(0, 7), cnt = new Map();
+  for(const { k } of rows) cnt.set(k.slice(0, 7), (cnt.get(k.slice(0, 7)) || 0) + 1);
+  let html = "", cur = "", put = false;
+  /* 오늘 줄은 한 번만. 오늘 달에 지난 일정만 남았으면 그 달 끝에 둔다 */
+  const mark = () => { put = true; return `<div class="grp-now now" aria-current="date">오늘 · ${dayLabel(now)}</div>`; };
   for(const r of rows){
     const m = r.k.slice(0, 7);
     if(m !== cur){
-      if(cur) html += "</div>";
-      html += `<h2 class="cap">${m.slice(0, 4)}년 ${+m.slice(5)}월</h2><div class="frame">`;
+      if(cur){
+        if(!put && cur === tm) html += mark();
+        html += "</div>";
+      }
+      html += `<h2 class="cap">${m.slice(0, 4)}년 ${+m.slice(5)}월 · ${cnt.get(m)}건</h2><div class="frame">`;
       cur = m;
     }
-    html += `<div class="grp"><span>${r.d.getMonth() + 1}월 ${r.d.getDate()}일 (${W[r.d.getDay()]})</span>${evHTML(r, false)}</div>`;
+    if(!put && r.k >= now) html += mark();
+    html += `<div class="grp${r.k < now ? " past" : ""}"><span>${r.d.getMonth() + 1}월 ${r.d.getDate()}일 (${W[r.d.getDay()]})</span>${evHTML(r, false)}</div>`;
   }
+  if(!put) html += mark();
   return { n:rows.length, html:html + "</div>" };
 }
 
@@ -1285,6 +1385,7 @@ function draw({ keep = false } = {}){
   drawTools();
   drawNotice();
   drawSource();
+  drawHits();
 
   const find = $("#find");
   find.hidden = S.view === "request";
@@ -1378,7 +1479,7 @@ function go(v){
   if(!Object.hasOwn(VIEWS, v) || v === S.view) return;
   saveDraft();
   S.view = v; S.q = ""; $("#q").value = "";
-  jumpToday = ["calendar", "plan", "student"].includes(v) && !S.cal.year;
+  jumpToday = v === "dept" || (["calendar", "plan", "student"].includes(v) && !S.cal.year);
   draw();
   window.scrollTo({ top:0, behavior:"instant" });
 }
@@ -1784,6 +1885,7 @@ document.addEventListener("click", ev => {
   }
   if(t.dataset.g){ S.grade = +t.dataset.g; S.cat = "전체"; draw({ keep:true }); return; }
   if(t.dataset.cat){ S.cat = t.dataset.cat; draw({ keep:true }); return; }
+  if(t.dataset.hm){ hitJump(t.dataset.hm); return; }
   if(t.dataset.th){ S.theme = t.dataset.th; applyPrefs(); savePrefs(); openSettings(); return; }
   if(t.dataset.fs){ S.fs = +t.dataset.fs; applyPrefs(); savePrefs(); openSettings(); return; }
 
@@ -1911,7 +2013,7 @@ loadPrefs();
 applyPrefs();
 loadCache();
 loading = true;
-jumpToday = ["calendar", "plan", "student"].includes(S.view);
+jumpToday = ["calendar", "plan", "student", "dept"].includes(S.view);
 draw();
 reload();
 </script>
