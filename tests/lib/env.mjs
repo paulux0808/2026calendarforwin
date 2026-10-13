@@ -82,6 +82,13 @@ export async function settle(page) {
   });
 }
 
+/** 마우스를 치우고 초점을 풀어, 호버·초점 고리 때문에 캡처가 흔들리지 않게 한다 */
+export async function neutralize(page) {
+  await page.mouse.move(0, 0);
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await settle(page);
+}
+
 export const readLocal = (page, key) => page.evaluate(k => localStorage.getItem(k), key);
 export const readSession = (page, key) => page.evaluate(k => sessionStorage.getItem(k), key);
 export const readJSON = async (page, key, store = 'local') => {
