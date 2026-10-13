@@ -181,8 +181,11 @@ main{padding:12px}
 .cal{display:grid;height:var(--calendar-height,calc(100dvh - 140px));grid-template-columns:repeat(var(--c),minmax(0,1fr));grid-template-rows:auto repeat(var(--weeks,6),minmax(0,1fr));gap:1px;background:var(--cell-line);border:1px solid var(--cell-line);border-radius:var(--r);overflow:hidden}
 .cal-h{padding:5px;text-align:center;background:var(--bg-2);font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
 .cal-h.s6{color:var(--sat)} .cal-h.s0{color:var(--sun)}
-.d{background:var(--bg);padding:4px 5px 6px;min-height:0;min-width:0;overflow:auto;display:flex;flex-direction:column;gap:3px}
+.d{background:var(--bg);padding:4px 5px 6px;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:3px;cursor:pointer}
 .d > *{flex-shrink:0}
+/* 칸 안 스크롤은 눈에 띄지 않는다. 넘치는 일정은 감추고 +N 으로 남긴다 (clampCells) */
+.more{align-self:flex-start;padding:0 4px;margin-left:-1px;border-radius:2px;font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
+.more:hover{background:var(--bg-3);color:var(--ink)}
 .d-x{background:var(--bg-2)}
 .d.wk.s6,.cal-h.s6{background:var(--sat-bg)}
 .d.wk.s0,.cal-h.s0{background:var(--sun-bg)}
@@ -215,6 +218,8 @@ td.c-d{padding-top:3px}
 td.c-w{font-size:var(--f-xs);color:var(--ink-2);padding-top:6px}
 tr.s0 td.c-w,tr.s0 .dnum{color:var(--sun)}
 tr.s6 td.c-w,tr.s6 .dnum{color:var(--sat)}
+.d.now .dnum,tr.now .dnum{background:var(--key);color:#fff}
+:root[data-theme="dark"] .d.now .dnum,:root[data-theme="dark"] tr.now .dnum{color:#12161C}
 td.c-n{font-size:var(--f-sm);padding-top:5px}
 .cell{display:flex;flex-direction:column;gap:2px;padding:1px 0}
 .flat .cell{display:block}
@@ -251,7 +256,8 @@ tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-
 .years{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:9px}
 .mini{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);overflow:hidden}
 .mini-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:4px 8px;background:var(--bg-2);border-bottom:1px solid var(--line)}
-.mini-h b{font-size:var(--f-md);font-weight:700}
+.mini-h button{font-size:var(--f-md);font-weight:700;padding:0 4px;margin-left:-4px;border-radius:2px}
+.mini-h button:hover{background:var(--bg-3);color:var(--key)}
 .mini-h span{font-size:var(--f-xs);color:var(--ink-3)}
 .mini-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(6,minmax(30px,1fr));padding:3px}
 .mini-g .w{font-size:var(--f-xs);text-align:center;color:var(--ink-3);padding:2px 0}
@@ -400,9 +406,30 @@ kbd{
   main{padding:10px}
   .step{flex:1}
   .step .fld{flex:1;width:auto;font-size:16px}
-  .d{padding:3px 2px;gap:2px}
-  .dnum{margin:0;padding:0 2px}
-  .d .ev{font-size:var(--f-xs);padding-left:3px;border-left-width:2px}
+  /* 폰 달력: 일곱 칸에 글을 접어 넣으면 한 일정이 대여섯 줄이 된다. 한 줄로 자르고 칸 전체를 누르게 한다. */
+  .d{padding:2px 1px 3px;gap:1px}
+  .dnum{margin:0 0 1px;padding:0 3px;font-size:var(--f-sm)}
+  .d ul{gap:1px}
+  .d .ev{
+    font-size:calc(10.5px * var(--fs));line-height:1.35;padding:0 1px 0 3px;border-left-width:2px;border-radius:1px;
+    white-space:nowrap;overflow:hidden;text-overflow:clip;
+    background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--soft-s)) var(--soft-l));
+  }
+  .d ul .ev .tag{display:none}
+  .fold{padding-top:2px;gap:1px}
+  .fold-h{display:none}
+  .fold .ev .tag{margin-right:2px;padding:0 2px}
+  .more{padding:0 2px;margin:0}
+  /* 하루 상세·설정은 아래에서 올라오는 판으로 */
+  #ddlg,#sdlg,#idlg{
+    width:100%;max-width:100%;margin:auto 0 0;max-height:88dvh;
+    border-width:1px 0 0;border-radius:12px 12px 0 0;padding-bottom:env(safe-area-inset-bottom);
+  }
+  #ddlg[open],#sdlg[open],#idlg[open]{animation:sheet-up .18s ease-out}
+  @keyframes sheet-up{from{transform:translateY(32px);opacity:.5}}
+  dialog .btn{height:38px}
+  dialog .btn-n{width:38px}
+  dialog .btn-s{height:32px}
   table,tbody{display:block;width:100%}
   thead{display:none}
   tbody tr{display:grid;grid-template-columns:36px minmax(0,1fr);gap:2px 9px;padding:7px 9px;border-bottom:1px solid var(--cell-line)}
@@ -1033,7 +1060,7 @@ function drawYear(){
     }).join("");
     n += count;
     return `<section class="mini">
-      <div class="mini-h"><b>${i + 1}월</b><span>${count ? count + "건" : ""}</span></div>
+      <div class="mini-h"><button type="button" data-ym="${mk}">${i + 1}월</button><span>${count ? count + "건" : ""}</span></div>
       <div class="mini-g">${heads.map((w, j) =>
         `<span class="w ${j === 6 ? "s6" : j === 0 ? "s0" : ""}">${w}</span>`).join("")}
         ${'<span class="pad"></span>'.repeat(lead)}${cells}${'<span class="pad"></span>'.repeat(42 - lead - days.length)}</div>
@@ -1050,6 +1077,31 @@ function fitCalendar(){
   const bottom = parseFloat(getComputedStyle($("#main")).paddingBottom) || 0;
   const top = cal.getBoundingClientRect().top + window.scrollY;
   cal.style.setProperty("--calendar-height", Math.max(240, window.innerHeight - top - bottom) + "px");
+  clampCells(cal);
+}
+/* 칸 높이는 격자가 정한다. 넘치는 일정을 뒤에서부터 감추고 +N 단추로 하루 상세를 연다.
+   주말을 접었을 때는 금요일 칸 아래의 토·일 일정부터 감춰진다. */
+function clampCells(cal){
+  for(const c of $$(".d[data-k]", cal)){
+    c.querySelector(".more")?.remove();
+    const items = $$(".ev", c).map(e => e.closest("li") || e);
+    const fold = c.querySelector(".fold");
+    items.forEach(x => { x.hidden = false; });
+    if(fold) fold.hidden = false;
+    if(c.scrollHeight <= c.clientHeight + 1) continue;
+
+    const more = document.createElement("button");
+    more.type = "button"; more.className = "more"; more.dataset.d = c.dataset.k;
+    c.appendChild(more);
+    let n = 0;
+    for(let i = items.length - 1; i >= 0 && (n === 0 || c.scrollHeight > c.clientHeight + 1); i--){
+      items[i].hidden = true;
+      n++;
+      more.textContent = `+${n}`;
+      if(fold && !fold.querySelector(".ev:not([hidden])")) fold.hidden = true;
+    }
+    more.setAttribute("aria-label", `${n}건 더 보기`);
+  }
 }
 function drawCalendar(){
   const wk = S.cal.weekend;
@@ -1071,7 +1123,7 @@ function drawCalendar(){
       n += list.length;
 
       /* 주말을 접어도 토·일 일정이 사라지지 않게 금요일 칸에 모은다 */
-      let fold = "";
+      let fold = "", extra = 0;
       if(!wk && w === 5){
         const side = [1, 2].map(i => {
           const s = new Date(d);
@@ -1081,6 +1133,7 @@ function drawCalendar(){
           n += rows.length;
           return rows.length ? { s, rows } : null;
         }).filter(Boolean);
+        extra = side.reduce((t, x) => t + x.rows.length, 0);
         if(side.length) fold = `<div class="fold"><span class="fold-h">주말</span>${side.map(({ s, rows }) =>
           rows.map(e => `<button type="button" class="ev" data-e="${e.id}" style="${tone(e.dept)}">
             <span class="tag">${W[s.getDay()]} ${s.getDate()}</span>${hl(e.text)}</button>`).join("")).join("")}</div>`;
@@ -1090,7 +1143,8 @@ function drawCalendar(){
       if(k === now) cls.push("now");
       if(w === 0) cls.push("s0", "wk");
       if(w === 6) cls.push("s6", "wk");
-      return `<section class="${cls.join(" ")}" aria-label="${k}">${dnum(d)}
+      const total = list.length + extra;
+      return `<section class="${cls.join(" ")}" data-k="${k}" aria-label="${d.getMonth() + 1}월 ${d.getDate()}일 ${W[w]}요일, 일정 ${total}건">${dnum(d)}
         <ul>${list.map(e => `<li>${evHTML(e)}</li>`).join("")}</ul>
         ${list.length || fold ? "" : '<span class="d-none">—</span>'}${fold}</section>`;
     }).join("");
@@ -1694,7 +1748,12 @@ async function send(ev){
 /* ============ 조작 ============ */
 document.addEventListener("click", ev => {
   const t = ev.target.closest("button");
-  if(!t) return;
+  if(!t){
+    /* 달력 칸은 빈 곳을 눌러도 그날이 열린다. 폰에서는 칸 전체가 누르는 자리다. */
+    const c = ev.target.closest(".cal .d[data-k]");
+    if(c) openDay(c.dataset.k);
+    return;
+  }
 
   if(t.dataset.v){ go(t.dataset.v); return; }
   if(t.dataset.e){
@@ -1703,6 +1762,7 @@ document.addEventListener("click", ev => {
     return;
   }
   if(t.dataset.d){ openDay(t.dataset.d); return; }
+  if(t.dataset.ym){ S.month = t.dataset.ym; S.cal.year = false; draw(); window.scrollTo({ top:0, behavior:"instant" }); return; }
   if(t.dataset.ask){ const e = IX.byId.get(t.dataset.ask); askAbout(e ? e.k : DAY.k, e); return; }
   if(t.dataset.dept){
     $("#ddlg").close();
