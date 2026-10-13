@@ -78,6 +78,18 @@ const LEADERS = ['2-3 박서연', '1-5 이하은', '3-2 김지우', '2-1 최수�
 const VERSES = ['시편 23:1-6', '잠언 3:5-6', '이사야 41:10', '요한복음 3:16', '로마서 8:28', '빌립보서 4:6-7', '마태복음 5:14-16', '고린도전서 13:4-7'];
 const HYMNS = [305, 288, 363, 429, 546, 370, 217, 341];
 
+// "5~7교시" → 3, "2,4" → 2, "6" → 1, "오후" → 읽을 수 없음 (앱의 periods() 와 같은 규칙, 이 fixture 에 나오는 모양만)
+function periodHours(per) {
+  const label = String(per).replace(/교시/g, '').trim();
+  const set = new Set();
+  for (const part of label.split(',')) {
+    const m = part.match(/^(\d+)(?:~(\d+))?$/);
+    if (!m) return { hours: 0, ok: false };
+    for (let i = +m[1]; i <= +(m[2] ?? m[1]); i++) set.add(i);
+  }
+  return { hours: set.size, ok: set.size > 0 };
+}
+
 // 줄 앞 표시("=", "~")를 떼어 낸다
 function parseLine(raw) {
   let mark = '';
@@ -103,13 +115,15 @@ function parseLine(raw) {
  * @param {number} [o.seed=7]      채움 일정(PRNG) 씨앗
  * @param {boolean} [o.filler=true] 평일에 채움 일정을 깐다 (끄면 핵심 일정만)
  * @param {Array}  [o.extraNotices] 공지 추가 [{from,to,text}] (문자열 YYYY-MM-DD)
- * @param {boolean} [o.junk=true]  '확인할 행'용 깨진 행을 넣는다
+ * @param {boolean} [o.junk=true]  '확인할 행'용 깨진 행(머리 줄 · 날짜 못 읽는 행 …)을 넣는다
+ * @param {boolean} [o.clean=false] 모르는 부서 태그 · 못 읽는 교시까지 빼서, 확인할 행이 하나도 안 나오게 한다 (junk 도 꺼진다)
  */
 export function buildFixture(o = {}) {
   const year = o.year ?? 2026;
   const rand = rng(o.seed ?? 7);
   const withFiller = o.filler !== false;
-  const withJunk = o.junk !== false;
+  const clean = !!o.clean;
+  const withJunk = o.junk !== false && !clean;
   const flags = { schedule: 0, student: 0, supervisor: 0, prayer: 0, notice: 0, nuga: 0 };
 
   const holiday = new Set(HOLIDAYS);
@@ -121,7 +135,7 @@ export function buildFixture(o = {}) {
   if (withJunk) schedRows.push([str('날짜'), str('요일'), str('주요 행사')]); // 머리 줄 (HEADER 로 걸러져 flag 없음)
   for (const { y, m, d, w } of academicDays(year)) {
     const mmdd = `${pad(m)}-${pad(d)}`;
-    let lines = (CORE[mmdd] || []).slice();
+    let lines = (CORE[mmdd] || []).filter(l => !clean || parseLine(l).known || !parseLine(l).tagged);
     if (withFiller && !lines.length && w !== 0 && w !== 6 && !holiday.has(mmdd)) {
       const dense = m === 10 ? 0.9 : vacation(m, d) ? 0.08 : 0.38;
       if (rand() < dense) {
@@ -235,11 +249,11 @@ export function buildFixture(o = {}) {
   const nuga = [];
   const nuRows = [];
   const marks = ['1', '○', 'O'];
-  NUGA.forEach(([cat, mmdd, per, gr, text, note], i) => {
+  NUGA.filter(r => !clean || periodHours(r[2]).ok).forEach(([cat, mmdd, per, gr, text, note], i) => {
     const { y, m, d } = dayOf(year, mmdd);
     nuRows.push([num(i + 1), str(cat), dateCell(y, m, d), str(per),
       ...[0, 1, 2].map(g => (gr.includes(String(g + 1)) ? str(marks[(i + g) % 3]) : null)), str(text), str(note)]);
-    nuga.push({ date: ymd(y, m, d), cat: cat.replace(/\(.*$/, ''), per, grades: [0, 1, 2].map(g => gr.includes(String(g + 1))), text, note });
+    nuga.push({ date: ymd(y, m, d), cat: cat.replace(/\(.*$/, ''), per, ...periodHours(per), grades: [0, 1, 2].map(g => gr.includes(String(g + 1))), text, note });
   });
   if (withJunk) {
     nuRows.splice(10, 0, [null, str('영역'), str('일자'), str('교시'), str('1학년'), str('2학년'), str('3학년'), str('활동내용'), str('비고')]); // 반복된 머리 줄
@@ -248,7 +262,7 @@ export function buildFixture(o = {}) {
     nuRows.push([null, null, dateCell(y1.y, y1.m, y1.d), str('6'), str('1'), str('1'), null, str('영역이 비어 있는 행'), null]);
     flags.nuga += 2;
   }
-  flags.nuga += NUGA.filter(r => !/^[\d~,\s]+(교시)?$/.test(r[2])).length; // 교시를 읽을 수 없는 행
+  if (!clean) flags.nuga += NUGA.filter(r => !periodHours(r[2]).ok).length; // 교시를 읽을 수 없는 행
   const nugaTable = table(
     [colDef(0, '연번', 'number'), colDef(1, '영역', 'string'), colDef(2, '일자', 'date', 'yyyy. m. d'), colDef(3, '교시', 'string'),
       colDef(4, '1학년', 'string'), colDef(5, '2학년', 'string'), colDef(6, '3학년', 'string'), colDef(7, '활동내용', 'string'), colDef(8, '비고', 'string')],
@@ -295,6 +309,8 @@ export function buildFixture(o = {}) {
       }
       return [...by].sort(([a], [b]) => (a < b ? -1 : 1));
     },
+    /** 누가기록: 학년(1~3)에 해당하는 행 */
+    nugaFor: grade => nuga.filter(r => r.grades[grade - 1]),
     eventsInMonth: mk => sched.filter(e => e.date.startsWith(mk)),
     weekendEvents: mk => sched.filter(e => e.date.startsWith(mk) && (e.weekday === '토' || e.weekday === '일')),
   };

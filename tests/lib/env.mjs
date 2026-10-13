@@ -45,11 +45,11 @@ export async function openApp(browser, o) {
   const mock = await installMocks(context, o.mock || {});
   if (o.setup) await o.setup(mock);
   const page = await context.newPage();
-  const errors = [];
+  const errors = [], consoleErrors = [];
   page.on('pageerror', e => errors.push(String(e?.stack || e)));
-  page.on('console', m => { if (m.type() === 'error') errors.push(`console.error: ${m.text()}`); });
+  page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   const app = {
-    context, page, mock, errors, device, mobile,
+    context, page, mock, errors, consoleErrors, device, mobile,
     async close() { await mock.dispose(); await context.close().catch(() => {}); },
   };
   if (o.goto !== false) {
