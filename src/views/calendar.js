@@ -1,18 +1,19 @@
 /* 달력 — 월 달력 칸 그리기, 칸 높이 맞추기와 +N 접기, 연간 미니 달력 */
-import { W, key, monthDays, p2, today } from "../core/dates.js";
+import { W, ayOf, key, m1, mKey, monthDays, today } from "../core/dates.js";
 import { hl } from "../search.js";
 import { onDay } from "../model.js";
 import { S, tone } from "../state.js";
 import { $, $$, dnum, evHTML } from "../ui/dom.js";
 
-/* ---- 연간: 열두 달을 한 화면에 ---- */
+/* ---- 연간: 한 학년도(3월 → 이듬해 2월)를 한 화면에. 시트 하나가 한 학년도다 ---- */
 export function drawYear(){
-  const y = +S.month.slice(0, 4), now = today();
+  const ay = ayOf(m1(S.month)), now = today();
   const heads = ["일","월","화","수","목","금","토"];
   let n = 0;
 
   const html = Array.from({ length:12 }, (_, i) => {
-    const mk = `${y}-${p2(i + 1)}`;
+    const mk = mKey(new Date(ay, 2 + i, 1)), mn = +mk.slice(5);
+    const title = mk.startsWith(ay + "-") ? `${mn}월` : `${mk.slice(0, 4)}년 ${mn}월`;
     const days = monthDays(mk, false);
     const lead = days[0].getDay();
     let count = 0;
@@ -21,12 +22,12 @@ export function drawYear(){
       count += list.length;
       const cls = [w === 0 ? "s0" : w === 6 ? "s6" : "", list.length ? "on" : "", k === now ? "now" : ""];
       return `<button type="button" data-d="${k}" class="${cls.join(" ").trim()}"
-        aria-label="${i + 1}월 ${d.getDate()}일 일정 ${list.length}건">${d.getDate()}${
+        aria-label="${mn}월 ${d.getDate()}일 일정 ${list.length}건">${d.getDate()}${
         list.length ? `<span class="n">${list.length}</span>` : ""}</button>`;
     }).join("");
     n += count;
     return `<section class="mini">
-      <div class="mini-h"><button type="button" data-ym="${mk}">${i + 1}월</button><span>${count ? count + "건" : ""}</span></div>
+      <div class="mini-h"><button type="button" data-ym="${mk}">${title}</button><span>${count ? count + "건" : ""}</span></div>
       <div class="mini-g">${heads.map((w, j) =>
         `<span class="w ${j === 6 ? "s6" : j === 0 ? "s0" : ""}">${w}</span>`).join("")}
         ${'<span class="pad"></span>'.repeat(lead)}${cells}${'<span class="pad"></span>'.repeat(42 - lead - days.length)}</div>
@@ -88,10 +89,13 @@ export function drawCalendar(){
       const list = onDay(k);
       n += list.length;
 
-      /* 주말을 접어도 토·일 일정이 사라지지 않게 금요일 칸에 모은다 */
+      /* 주말을 접어도 토·일 일정이 사라지지 않게 금요일 칸에 모은다.
+         달이 토·일로 시작하면 그 앞에 금요일이 없으니 첫 평일 칸에 모은다. */
       let fold = "", extra = 0;
-      if(!wk && w === 5){
-        const side = [1, 2].map(i => {
+      const offs = !wk && w === 5 ? [1, 2] : [];
+      if(!wk && d === days[0]) for(let i = d.getDate() - 1; i >= 1; i--) offs.unshift(-i);
+      if(offs.length){
+        const side = offs.map(i => {
           const s = new Date(d);
           s.setDate(d.getDate() + i);
           if(s.getMonth() !== d.getMonth()) return null;
@@ -115,7 +119,7 @@ export function drawCalendar(){
         ${list.length || fold ? "" : '<span class="d-none">—</span>'}${fold}</section>`;
     }).join("");
 
-    return `<div class="cal" style="--c:${cols};--weeks:${weeks}">
+    return `<div class="cal${wk ? " w7" : ""}" style="--c:${cols};--weeks:${weeks}">
         ${heads.map(h => `<div class="cal-h ${h === "토" ? "s6" : h === "일" ? "s0" : ""}">${h}</div>`).join("")}
         ${pad(colOf(days[0]) - 1)}${cells}${pad(cols - colOf(days.at(-1)))}</div>`;
   }).join("");

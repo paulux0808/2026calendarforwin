@@ -1,6 +1,6 @@
 /* 뼈대 — 한 번 그리기(draw)와 머리·탭·도구·공지·출처·검색 결과 달, 화면 이동 */
 import { TABS } from "../../config.js";
-import { shiftMonth, today } from "../core/dates.js";
+import { ayOf, m1, shiftMonth, today } from "../core/dates.js";
 import { esc } from "../core/text.js";
 import { sheetLink, tabsOf } from "../core/years.js";
 import { activeYear } from "../data.js";
@@ -53,8 +53,9 @@ export function drawTools(){
     const yr = v === "calendar" && S.cal.year;
     out.push(`<div class="step">
       <button class="btn btn-n" data-a="prev" type="button" aria-label="이전">‹</button>
-      <input class="fld" id="mi" aria-label="${yr ? "연도" : "조회 월"}" type="${yr ? "number" : "month"}"
-        ${yr ? 'min="1900" max="9999"' : 'min="1900-01" max="9999-12"'} value="${yr ? S.month.slice(0, 4) : S.month}">
+      <input class="fld" id="mi" aria-label="${yr ? "학년도" : "조회 월"}" type="${yr ? "number" : "month"}"
+        ${yr ? 'min="1900" max="9999"' : 'min="1900-01" max="9999-12"'} value="${yr ? ayOf(m1(S.month)) : S.month}">${
+        yr ? '<span class="lbl">학년도</span>' : ""}
       <button class="btn btn-n" data-a="next" type="button" aria-label="다음">›</button>
       <button class="btn" data-a="today" type="button">오늘</button></div>`);
   }
@@ -78,8 +79,8 @@ export function drawTools(){
       `<button type="button" data-h="${esc(d)}" aria-pressed="${!off(d)}" style="${tone(d)}">${esc(d)}</button>`).join("")}</div>`);
   }
   out.push('<span class="grow"></span>');
-  if(VIEWS[v].paper) out.push(`<button class="btn" data-a="open-print" type="button"${RT.loaded ? "" : " disabled"}>인쇄</button>`);
-  out.push('<button class="btn btn-q btn-s" data-a="reload" type="button">새로고침</button>');
+  if(VIEWS[v].paper) out.push(`<button class="btn hide-s" data-a="open-print" type="button"${RT.loaded ? "" : " disabled"}>인쇄</button>`);
+  out.push('<button class="btn btn-q btn-s hide-s" data-a="reload" type="button">새로고침</button>');
 
   $("#tools").innerHTML = out.join("");
   $("#tools").hidden = false;

@@ -240,15 +240,18 @@ kbd{
   .row{padding:0 10px;min-height:42px}
   .row-1{flex-wrap:wrap}
   .tabs{order:3;width:100%;flex:none;margin:0 -10px;padding:0 10px;border-top:1px solid var(--line)}
-  .tabs button{padding:9px 10px}
+  .tabs button{padding:9px 7px}
   .find input{width:100%}
   .find{flex:1;min-width:120px}
   .find input{font-size:16px}
 }
 @media (max-width:700px){
   main{padding:10px}
-  .step{flex:1}
-  .step .fld{flex:1;width:auto;font-size:16px}
+  /* 도구 줄은 한 줄로 두고 옆으로 민다. 줄이 늘면 달력이 그만큼 작아진다 */
+  .row-2{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .row-2::-webkit-scrollbar{display:none}
+  .row-2 > *{flex:none}
+  .step .fld{width:128px;font-size:16px}
   .dnum{margin:0 0 1px;padding:0 3px;font-size:var(--f-sm)}
   .hits-c{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .hits-c::-webkit-scrollbar{display:none}

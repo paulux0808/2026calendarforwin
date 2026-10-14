@@ -35,10 +35,8 @@ test.describe('달력 월 보기', () => {
     await expect(page.locator('.fold')).toHaveCount(0);
   });
 
-  // 앱 결함 후보 — drawCalendar(): 주말 접기에서 토·일 일정은 '같은 달 안의 금요일' 칸에만 모인다.
-  // 달이 토·일로 시작하면(2026-03 일 · 2026-08 토 · 2026-11 일) 그 달 첫 주말에는 금요일 칸이 없어 일정이 어디에도 안 나온다.
-  // README: "주말 접기 … 일정이 사라지지 않게". 재현: 주말 끔 → 2026-11 → 11/1(일) "종교개혁 주일 예배" 없음.
-  test.fixme('주말 접기: 어느 달에서도 일정이 사라지지 않는다', async ({ launch }) => {
+  // 달이 토·일로 시작하면(2026-03 일 · 2026-08 토 · 2026-11 일) 그 첫 주말은 첫 평일 칸에 모인다.
+  test('주말 접기: 어느 달에서도 일정이 사라지지 않는다', async ({ launch }) => {
     const { page } = await launch();
     await page.locator('#tools [data-c="cal.weekend"]').click();
     const lost = [];
@@ -166,20 +164,26 @@ test.describe('달력 연간 보기', () => {
     await expect(cellOf(page, '2026-05-14')).toContainText('교내 체육대회');
   });
 
-  test('연간에서 날짜를 누르면 하루 상세, ‹ › 는 한 해씩', async ({ launch }) => {
+  test('연간은 한 학년도(3월 → 이듬해 2월), 날짜를 누르면 하루 상세, ‹ › 는 한 학년도씩', async ({ launch }) => {
     const { page } = await launch();
     await page.locator('#tools [data-c="cal.year"]').click();
+    await expect(monthInput(page)).toHaveValue('2026');
+    const yms = await page.locator('.mini-h [data-ym]').evaluateAll(els => els.map(e => e.dataset.ym));
+    expect(yms).toEqual(['2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12','2027-01','2027-02']);
+    await expect(page.locator('.mini-h [data-ym="2027-01"]')).toHaveText('2027년 1월');
+    const jan = fx.meta.eventsInMonth('2027-01').length;
+    await expect(page.locator('.mini-h', { has: page.locator('[data-ym="2027-01"]') }).locator('span')).toHaveText(jan ? `${jan}건` : '');
+
     await page.locator('.mini-g button[data-d="2026-10-14"]').click();
     expect((await readDay(page)).title).toBe('2026년 10월 14일 (수)');
     await page.locator('#ddlg [data-a="close"]').click();
 
     await page.locator('#tools [data-a="next"]').click();
     await expect(monthInput(page)).toHaveValue('2027');
-    const jan = fx.meta.eventsInMonth('2027-01').length;
-    await expect(page.locator('.mini-h', { has: page.locator('[data-ym="2027-01"]') }).locator('span')).toHaveText(jan ? `${jan}건` : '');
+    await expect(page.locator('.mini-h span:not(:empty)')).toHaveCount(0);   // 2027학년도에는 자료가 없다
     await page.locator('#tools [data-a="prev"]').click();
     await page.locator('#tools [data-a="prev"]').click();
     await expect(monthInput(page)).toHaveValue('2025');
-    await expect(page.locator('.mini-h span:not(:empty)')).toHaveCount(0);   // 2025 에는 자료가 없다
+    await expect(page.locator('.mini-h span:not(:empty)')).toHaveCount(0);
   });
 });

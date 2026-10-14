@@ -1,6 +1,6 @@
 /* 조작 — 문서·창 전체의 이벤트를 한곳에서 연결한다 (클릭 · 입력 · 키 · 창 · 주기 갱신) */
 import { TIMING } from "../../config.js";
-import { m1 } from "../core/dates.js";
+import { ayOf, m1 } from "../core/dates.js";
 import { KEYS } from "../core/store.js";
 import { esc } from "../core/text.js";
 import { reload } from "../data.js";
@@ -108,9 +108,10 @@ function onChange(ev){
     return;
   }
   if(el.id === "mi"){
-    const v = el.type === "number" ? `${el.value}-01` : el.value;
+    /* 연간 보기의 숫자는 학년도다. 그 해 3월로 간다 */
+    const v = el.type === "number" ? `${el.value}-03` : el.value;
     if(/^\d{4}-\d{2}$/.test(v) && m1(v)){ S.month = v; draw(); }
-    else el.value = el.type === "number" ? S.month.slice(0, 4) : S.month;
+    else el.value = el.type === "number" ? ayOf(m1(S.month)) : S.month;
     return;
   }
   if(el.id === "ds"){ S.dept = el.value; draw(); return; }
