@@ -1,0 +1,21 @@
+/* 부서 — 월 제목 · 날짜별 줄 · 지난 일정 · 오늘 줄 */
+.cap{font-size:var(--f-md);font-weight:700;margin:16px 0 6px}
+.cap:first-child{margin-top:0}
+.grp{display:grid;grid-template-columns:106px minmax(0,1fr);gap:10px;padding:5px 9px;border-bottom:1px solid var(--line);align-items:baseline}
+.grp:last-child{border-bottom:0}
+.grp span{font-size:var(--f-xs);color:var(--ink-2);font-weight:600}
+.grp .ev{font-size:var(--f-md)}
+
+/* ---- 부서: 지난 일정 · 오늘 줄 ---- */
+.grp.past span{color:var(--ink-3)}
+.grp.past .ev{color:var(--ink-3);border-left-color:hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l) / .35)}
+.grp-now{
+  display:flex;align-items:baseline;gap:8px;padding:2px 9px;border-bottom:1px solid var(--line);
+  background:var(--key-bg);box-shadow:inset 3px 0 0 var(--key);
+  font-size:var(--f-xs);font-weight:700;color:var(--key);
+}
+.grp-now:last-child{border-bottom:0}
+
+@media (max-width:700px){
+  .grp{grid-template-columns:minmax(0,1fr);gap:2px}
+}

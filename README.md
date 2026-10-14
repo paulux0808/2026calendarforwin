@@ -1,6 +1,6 @@
 # 학사일정
 
-구글 스프레드시트를 읽어 보여 주는 단일 HTML 파일. 빌드도 서버도 없다.
+구글 스프레드시트를 읽어 보여 주는 정적 웹앱. 빌드도 서버도 없다 — 파일 그대로 GitHub Pages에 올린다.
 
 ## 데이터 경계
 
@@ -74,15 +74,108 @@ cp archive/index-v2-legacy.html index.html       # 최초 운영본
 
 ## 손볼 때
 
-`index.html` 한 파일. `<style>`은 토큰 → 조각 → 머리 → 화면별 → 인쇄 → 반응형 순,
-`<script>`는 설정 → 유틸 → 상태 → 데이터 → 검색 → 그리기 → 하루 상세 → 인쇄 → 설정 → 요청 → 조작 순.
+빌드가 없다. 고쳐서 push 하면 GitHub Pages가 파일 그대로 올린다(`.nojekyll`).
+ES 모듈이라 `file://`로는 열리지 않는다. 로컬에서는 서버로 연다 — `python3 -m http.server` 후 `http://localhost:8000`.
 
-부서를 늘리면 `DEPTS`(이름·색상·채도)만 고치면 된다.
+- 학교가 고치는 값(시트·탭·부서·색·시간)은 `config.js` 한 파일.
+- 화면 하나는 `src/views/<화면>.js`(그리기)와 `.css`(모양) 한 쌍. 여러 화면이 같이 쓰는 모양은 `styles/base.css`.
+- `src/core/`는 DOM도 앱 상태(`S`·`M`)도 모르는 함수라 node에서 시험한다. 날짜·시트 읽기를 고치면 여기에 시험을 더한다.
+- 모듈이 서로 바꾸는 값은 `state.js`의 `S`(사용자 설정)와 `RT`(실행 중 깃발) 두 객체에 모았다. import 한 `let`은 읽기 전용이라서다.
+- 모듈 import 가 서로 물려 있어도 된다. 다만 import 한 것을 불러 쓰는 코드는 `main.js` 말고는 파일 맨 위에서 돌리지 않는다.
 
-시트나 시트 소유 계정이 바뀌면 `CONFIG`의 세 곳을 본다.
+### 파일 지도
 
-- `SHEET_ID` — 새 시트 주소 `/d/` 뒤의 값. 시트는 `링크가 있는 모든 사용자 · 보기`로 공유해 둔다.
-- `SHEETS` — 탭 gid(주소 끝 `#gid=`). 시트를 사본으로 만들면 gid는 그대로다. 탭 이름(`name`)은 화면 표시용이다.
-- `POST_URL` — `수정 요청`을 받는 Apps Script 웹앱 주소. 웹앱은 어느 시트의 `요청사항` 탭에 쓸지가
-  스크립트 안에 정해져 있으니 새 시트에서 다시 만들어 배포하고(`배포 → 새 배포 → 웹 앱`, 실행 `나`,
-  액세스 `모든 사용자`) 새 주소를 넣는다. 옛 주소를 두면 요청이 옛 시트로 간다.
+```
+index.html          뼈대 마크업. 테마 부팅 스크립트는 깜빡임 방지로 인라인, CSS는 아래 순서로 <link>
+config.js           학교가 고치는 곳 — 학년도별 시트(YEARS), 탭(TABS), 시간(TIMING), 부서(DEPTS), 창체 색(CAT_TONE)
+.nojekyll           Pages가 파일을 그대로 내보내게 하는 빈 파일
+package.json        단위 시험 실행(npm test)뿐. 의존성 없음
+styles/base.css     토큰·다크·리셋·공통 조각(.btn .fld .opts .tag .ev)·머리·검색 결과 달·알림 줄·자료 출처·창·토스트
+src/
+  main.js           시작만 — 설정 → 저장본 → 이벤트 → 그리기 → 시트 받기
+  state.js          S(사용자 설정) · RT(실행 중 깃발) · 화면 목록 · 부서·영역 색 · 설정 저장·불러오기
+  model.js          받은 일정 M · 날짜 색인 IX · 시트별 상태 SRC · 사본 보관 · 하루 조회
+  search.js         검색어 쪼개기 · 일치 판정 · 일치 글자 표시 · 달별 일치 건수
+  data.js           학년도 시트 고르기 · gviz JSONP 요청 · 새로 받아 화면에 반영
+  core/             DOM도 앱 상태도 모르는 함수 — node에서 시험한다
+    dates.js        날짜 표기 읽기 · 달·학년도 셈
+    sheet.js        gviz 응답 검증 · 시트별 행 읽기(decode)
+    store.js        localStorage·sessionStorage 읽고 쓰기 · 저장 키
+    years.js        달에 맞는 학년도 항목 고르기 · 탭 구성 · 원자료 주소
+    text.js         HTML 이스케이프
+  ui/
+    dom.js          $ $$ · 알림 줄·토스트 · 화면들이 같이 쓰는 조각 HTML
+    shell.js        draw(한 번 그리기) · 머리·탭·도구·공지·출처·검색 결과 달 · 화면 이동
+    day.js          하루 상세 창
+    settings.js     설정 창 · 안내 창
+    events.js       문서·창의 모든 이벤트 연결
+  views/            화면마다 그리기(.js)와 모양(.css) 한 쌍
+    calendar.js     달력 칸 · 칸 높이 맞추기와 +N 접기 · 연간 미니 달력
+    calendar.css    달력 · 연간 미니 달력 모양
+    table.js        월중 계획 · 학생일정
+    table.css       월 표 모양 · 폰에서 표 → 카드 줄
+    dept.js         부서 (달별 · 오늘 줄)
+    dept.css        부서 모양
+    nuga.js         누가기록 (학년 · 영역 · 합계)
+    nuga.css        누가기록 모양 · 폰 카드
+    request.js      수정 요청 양식 · 임시 저장 · 보내기 · 일정에서 요청 본문 얹기
+    request.css     수정 요청 모양
+  print/
+    print.js        A4 종이 만들기 · 글자 크기 맞춤 · 미리보기 창 · 브라우저 인쇄 연결
+    print.css       미리보기 창 · 종이 · @media print
+tests/unit/         core·검색 단위 시험 (node, 의존성 없음)
+tests/              e2e(e2e/) · 화면 캡처(shoot.mjs) · 픽셀 비교(diff.mjs) — Playwright
+archive/            옛 판. 건드리지 않는다
+```
+
+CSS는 `base` → `calendar` → `table` → `dept` → `nuga` → `request` → `print` 순으로 읽힌다.
+규칙은 그 요소를 그리는 파일에 두고, 좁은 화면 규칙(`@media`)은 같은 파일 맨 끝에 둔다.
+같은 무게의 규칙이 부딪히면 파일 순서가 정한다 — `!important`로 이기지 말고 순서를 고친다.
+
+### 새 학년도 시트로 바꾸기
+
+한 해에 한 번, 이 순서로 한다. `config.js`의 한 줄 말고는 건드리지 않는다.
+
+1. 지난 시트의 **사본**을 만든다 (`파일 → 사본 만들기`). 탭 gid는 그대로다.
+2. 사본을 `링크가 있는 모든 사용자 · 보기`로 공유한다.
+3. **사본에서** Apps Script 웹앱을 새로 배포한다 (`배포 → 새 배포 → 웹 앱`, 실행 `나`, 액세스 `모든 사용자`).
+   웹앱은 어느 시트의 `요청사항` 탭에 쓸지가 스크립트 안에 정해져 있다. 옛 주소를 두면 요청이 옛 시트로 간다.
+4. `config.js`의 `YEARS`에 한 줄을 더한다.
+   ```js
+   { year:2027, sheetId:"<새 시트 주소 /d/ 뒤의 값>", postUrl:"<새 웹앱 주소>" },
+   ```
+   `year`는 학년도(3월~다음 해 2월)다. 탭 구성이 달라졌으면 그 줄에 `tabs:[…]`를 따로 준다.
+5. push 한다. 앱은 열 때의 달이 속한 학년도 줄을 읽는다. 그 학년도 줄이 없으면 그 앞 해 중 가장 늦은 줄,
+   그것도 없으면 가장 이른 줄을 읽는다. 사본(저장본)에는 시트 ID가 적혀 있어 옛 시트의 저장본은 쓰지 않는다.
+
+Pages는 파일을 10분쯤 캐시한다. 배포 직후 옛 파일과 새 파일이 섞이면 화면이 비는 대신
+`화면을 불러오지 못했습니다`와 `새로고침` 단추가 뜬다.
+
+### 그 밖에
+
+부서를 늘리면 `config.js`의 `DEPTS`(이름·색상·채도)만 고치면 된다.
+
+시트 소유 계정이 바뀌어 같은 시트의 주소가 달라지면 위 4번과 같다. 탭만 새로 만들었다면 `TABS`의 gid(주소 끝 `#gid=`)를 고친다.
+탭 이름(`name`)은 화면 표시용이다. 시트는 항상 `링크가 있는 모든 사용자 · 보기`로 공유해 둔다.
+
+### 시험
+
+단위 시험은 node 22에서 의존성 없이 돈다.
+
+```bash
+npm test                  # tests/unit/*.test.js — 날짜 읽기 · 교시 · 시트별 decode · 학년도 고르기 · 검색 강조
+```
+
+e2e와 화면 캡처는 `tests/`의 Playwright 도구다(쓰임은 `tests/README.md`). 처음 한 번 `cd tests && npm install`, 브라우저가 없으면 `npx playwright install chromium`.
+시트와 인터넷은 가짜 자료로 막고 시계를 2026-10-13 09:00(서울)에 고정해서, 돌릴 때마다 같은 화면이 나온다.
+
+```bash
+cd tests
+npx playwright test                       # e2e 전체 (앱은 저장소 루트를 서버로 띄워 연다)
+HS_ROOT=/다른/폴더 npx playwright test    # 다른 폴더의 앱을 시험
+node shoot.mjs --root .. --out /tmp/after # 모든 화면 × 데스크톱·모바일 × 밝게·어둡게 52장 (--only cal-month,plan)
+node diff.mjs /tmp/before /tmp/after      # 두 폴더를 픽셀로 비교. 다르면 종료 코드 1, 차이 그림은 tests/out/diff
+```
+
+CSS나 그리기를 고칠 때는 고치기 전에 `--out /tmp/before`로 한 번 찍어 두고, 고친 뒤 `/tmp/after`와 견준다.
+글자 가장자리 몇 픽셀은 돌릴 때마다 조금 다를 수 있다(0.02% 안쪽) — `diff.mjs --threshold 0.02`.

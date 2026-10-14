@@ -1,0 +1,18 @@
+/* 누가기록 — 영역 표시 · 합계 · 폰 카드 */
+.seg b{font-weight:700;margin-left:5px}
+.cm{
+  width:8px;height:8px;flex:none;border-radius:1px;margin-right:1px;
+  background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--label-s)) var(--label-l));
+}
+.seg button[aria-pressed="true"] .cm{background:currentColor}
+.num{text-align:right;width:64px;white-space:nowrap}
+tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-2)}
+.cards{display:none}
+.card{padding:8px 10px;border-bottom:1px solid var(--line)}
+.card:last-child{border-bottom:0}
+.card-h{display:flex;gap:8px;font-size:var(--f-xs);color:var(--ink-2);margin-bottom:2px}
+.card-f{display:flex;justify-content:space-between;gap:8px;font-size:var(--f-xs);color:var(--ink-3);margin-top:2px}
+
+@media (max-width:700px){
+  .cards{display:block}
+}

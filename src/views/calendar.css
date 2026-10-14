@@ -1,0 +1,61 @@
+/* 달력 — 칸 · 연간 미니 달력 */
+.cal{display:grid;height:var(--calendar-height,calc(100dvh - 140px));grid-template-columns:repeat(var(--c),minmax(0,1fr));grid-template-rows:auto repeat(var(--weeks,6),minmax(0,1fr));gap:1px;background:var(--cell-line);border:1px solid var(--cell-line);border-radius:var(--r);overflow:hidden}
+.cal-h{padding:5px;text-align:center;background:var(--bg-2);font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
+.cal-h.s6{color:var(--sat)} .cal-h.s0{color:var(--sun)}
+.d{background:var(--bg);padding:4px 5px 6px;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:3px;cursor:pointer}
+.d > *{flex-shrink:0}
+/* 칸 안 스크롤은 눈에 띄지 않는다. 넘치는 일정은 감추고 +N 으로 남긴다 (clampCells) */
+.more{align-self:flex-start;padding:0 4px;margin-left:-1px;border-radius:2px;font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
+.more:hover{background:var(--bg-3);color:var(--ink)}
+.d-x{background:var(--bg-2)}
+.d.wk.s6,.cal-h.s6{background:var(--sat-bg)}
+.d.wk.s0,.cal-h.s0{background:var(--sun-bg)}
+.d.now:not(.wk){background:var(--key-bg)}
+.d.now{box-shadow:inset 0 2px 0 var(--key)}
+.d.s0 .dnum{color:var(--sun)} .d.s6 .dnum{color:var(--sat)}
+.d.now .dnum{background:var(--key);color:#fff}
+:root[data-theme="dark"] .d.now .dnum{color:#12161C}
+.d ul{display:flex;flex-direction:column;gap:2px;min-width:0}
+.d .ev{font-size:var(--f-xs)}
+.fold{margin-top:auto;padding-top:4px;border-top:1px dashed var(--line-2);display:flex;flex-direction:column;gap:2px}
+.fold-h{font-size:var(--f-xs);font-weight:700;color:var(--ink-3)}
+.d-none{font-size:var(--f-xs);color:var(--ink-3);display:none}
+
+/* ---- 연간 미니 달력 ---- */
+.years{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:9px}
+.mini{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);overflow:hidden}
+.mini-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:4px 8px;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.mini-h button{font-size:var(--f-md);font-weight:700;padding:0 4px;margin-left:-4px;border-radius:2px}
+.mini-h button:hover{background:var(--bg-3);color:var(--key)}
+.mini-h span{font-size:var(--f-xs);color:var(--ink-3)}
+.mini-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(6,minmax(30px,1fr));padding:3px}
+.mini-g .w{font-size:var(--f-xs);text-align:center;color:var(--ink-3);padding:2px 0}
+.mini-g .w.s0{color:var(--sun)} .mini-g .w.s6{color:var(--sat)}
+.mini-g button{
+  min-height:30px;border-radius:3px;display:flex;align-items:center;justify-content:center;gap:2px;
+  font-size:var(--f-sm);color:var(--ink-2);
+}
+.mini-g button.s6{background:var(--sat-bg)}
+.mini-g button.s0{background:var(--sun-bg)}
+.mini-g button:hover{background:var(--bg-3)}
+.mini-g button.s0{color:var(--sun)} .mini-g button.s6{color:var(--sat)}
+.mini-g button.on{font-weight:700;color:var(--ink)}
+.mini-g button.now{outline:1.5px solid var(--key);outline-offset:-2px}
+.mini-g .n{font-size:9px;font-weight:700;color:var(--key);background:var(--key-bg);border-radius:2px;padding:0 2px;line-height:1.4}
+.mini-g .pad{visibility:hidden}
+
+@media (max-width:700px){
+  /* 폰 달력: 일곱 칸에 글을 접어 넣으면 한 일정이 대여섯 줄이 된다. 한 줄로 자르고 칸 전체를 누르게 한다. */
+  .d{padding:2px 1px 3px;gap:1px}
+  .d ul{gap:1px}
+  .d .ev{
+    font-size:calc(10.5px * var(--fs));line-height:1.35;padding:0 1px 0 3px;border-left-width:2px;border-radius:1px;
+    white-space:nowrap;overflow:hidden;text-overflow:clip;
+    background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--soft-s)) var(--soft-l));
+  }
+  .d ul .ev .tag{display:none}
+  .fold{padding-top:2px;gap:1px}
+  .fold-h{display:none}
+  .fold .ev .tag{margin-right:2px;padding:0 2px}
+  .more{padding:0 2px;margin:0}
+}

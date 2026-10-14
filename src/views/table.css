@@ -1,0 +1,42 @@
+/* 월 표 — 월중 계획 · 학생일정 (누가기록 표도 이 규칙 위에 얹는다) */
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{
+  padding:6px 8px;text-align:left;background:var(--bg-2);color:var(--ink-2);
+  font-size:var(--f-xs);font-weight:700;border-bottom:1px solid var(--line-2);
+  position:sticky;top:var(--top-h,0px);z-index:2;white-space:nowrap;
+}
+td{padding:4px 8px;vertical-align:top;border-bottom:1px solid var(--cell-line);overflow-wrap:anywhere}
+.frame > table > tbody > tr:last-child > td{border-bottom:0}
+tr.wk.s6{background:var(--sat-bg)}
+tr.wk.s0{background:var(--sun-bg)}
+tr.now:not(.wk){background:var(--key-bg)}
+tr.now{box-shadow:inset 3px 0 0 var(--key)}
+.c-d{width:44px}.c-w{width:36px}.c-n{width:96px}
+td.c-d{padding-top:3px}
+td.c-w{font-size:var(--f-xs);color:var(--ink-2);padding-top:6px}
+tr.s0 td.c-w,tr.s0 .dnum{color:var(--sun)}
+tr.s6 td.c-w,tr.s6 .dnum{color:var(--sat)}
+tr.now .dnum{background:var(--key);color:#fff}
+:root[data-theme="dark"] tr.now .dnum{color:#12161C}
+td.c-n{font-size:var(--f-sm);padding-top:5px}
+.cell{display:flex;flex-direction:column;gap:2px;padding:1px 0}
+.flat .cell{display:block}
+.flat .ev{display:inline;border-left:0;padding:0;margin-right:9px;border-bottom:2px solid hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l))}
+.dash{color:var(--ink-3);font-size:var(--f-xs)}
+
+@media (max-width:860px){
+  th{top:var(--top-h,0px)}
+}
+@media (max-width:700px){
+  table,tbody{display:block;width:100%}
+  thead{display:none}
+  tbody tr{display:grid;grid-template-columns:36px minmax(0,1fr);gap:2px 9px;padding:7px 9px;border-bottom:1px solid var(--cell-line)}
+  tbody tr:last-child{border-bottom:0}
+  td{display:block;border:0;padding:0;width:auto}
+  td.c-d{grid-row:1/6}
+  td.c-w{display:none}
+  td.c-b,td.c-n{grid-column:2}
+  td.c-n{font-size:var(--f-xs);color:var(--ink-2)}
+  td.c-n:empty{display:none}
+  td.c-n:not(:empty)::before{content:attr(data-l) " ";color:var(--ink-3);font-weight:700}
+}

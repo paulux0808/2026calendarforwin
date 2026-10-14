@@ -1,0 +1,16 @@
+/* 수정 요청 — 양식 */
+.form{max-width:660px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.f label{font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
+.f .fld{width:100%;height:auto;padding:7px 9px;min-height:34px}
+.f textarea.fld{min-height:190px;resize:vertical;line-height:1.55}
+.meta{display:flex;justify-content:space-between;font-size:var(--f-xs);color:var(--ink-3);margin-top:-7px}
+.send{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:4px}
+.send p{flex:1;font-size:var(--f-sm)}
+.send p.ok{color:var(--key);font-weight:600}
+.send p.no{color:var(--sun);font-weight:600}
+
+@media (max-width:700px){
+  .pair{grid-template-columns:1fr;gap:0}
+}
