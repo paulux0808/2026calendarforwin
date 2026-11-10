@@ -184,6 +184,7 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
 .tabs button{
   padding:6px 12px;border-radius:999px;font-size:var(--f-md);font-weight:600;color:var(--ink-2);white-space:nowrap;
 }
+.t-s{display:none}
 .tabs button:hover{background:var(--bg-2);color:var(--ink)}
 .tabs button[aria-current="page"]{background:var(--key-bg);color:var(--key);font-weight:700}
 .grow{flex:1}
@@ -483,7 +484,7 @@ kbd{
 @media (max-width:860px){
   .row{padding:0 12px;min-height:48px}
   .row-1{flex-wrap:wrap}
-  .tabs{order:3;width:100%;flex:none;margin:0 -12px;padding:0 12px 8px}
+  .tabs{order:3;width:100%;flex:none;padding-bottom:8px}
   .find{flex:1;min-width:120px}
   .find input{width:100%;font-size:16px}
   .strip{margin:10px 12px 0}
@@ -494,14 +495,16 @@ kbd{
 @media (max-width:700px){
   .step{flex:1}
   .mtitle{margin-right:auto}
-  /* 달력 칸이 좁다. 일정은 색 띠 한 줄씩만 보이고, 누르면 그날 상세에서 다 읽는다 */
-  .d{padding:3px 2px 2px;gap:2px;scrollbar-width:none}
-  .d::-webkit-scrollbar{display:none}
-  .dnum{min-width:22px;height:22px;font-size:var(--f-sm)}
-  .d .ev{padding:1px 2px 1px 3px;border-left-width:2px;border-radius:3px;font-size:10px;line-height:1.45;white-space:nowrap;overflow:hidden}
-  .d .ev .tag{display:none}
-  .d .ev-d{padding-left:3px}
-  .fold-h{display:none}
+  /* 탭 여섯 개를 옆으로 밀지 않고 한 줄에 다 보인다 */
+  .tabs{overflow:visible;gap:0}
+  .tabs button{flex:1;min-width:0;padding:7px 0;text-align:center}
+  .t-l{display:none}
+  .t-s{display:inline}
+  /* 달력 탭은 격자 대신 작은 달력 + 목록(drawAgenda) */
+  .mini-1{margin-bottom:10px;padding:8px 8px 6px}
+  .mini-1 .mini-g{grid-template-rows:auto;grid-auto-rows:40px}
+  .mini-1 .mini-g button{font-size:var(--f-md)}
+  .mini-1 .mini-g .n{top:3px;right:6px;font-size:9px}
   /* 아래 다섯 줄은 종이(.paper)에도 닿는다. 좁은 화면에서 인쇄가 달라지지 않게 그대로 둔다 */
   table,tbody{display:block;width:100%}
   thead{display:none}
@@ -669,13 +672,15 @@ const catTone = c => CAT_TONE[c] || "--dh:212;--ds:7%";
 
 const W = ["일","월","화","수","목","금","토"];
 const VIEWS = {
-  calendar:{ label:"달력",    month:true,  paper:true  },
-  plan:    { label:"월중 계획", month:true,  paper:true  },
-  student: { label:"학생일정",  month:true,  paper:true  },
-  dept:    { label:"부서",     month:false, paper:false },
-  nuga:    { label:"누가기록",  month:false, paper:false },
-  request: { label:"수정 요청", month:false, paper:false }
+  calendar:{ label:"달력",    short:"달력", month:true,  paper:true  },
+  plan:    { label:"월중 계획", short:"월중", month:true,  paper:true  },
+  student: { label:"학생일정",  short:"학생", month:true,  paper:true  },
+  dept:    { label:"부서",     short:"부서", month:false, paper:false },
+  nuga:    { label:"누가기록",  short:"기록", month:false, paper:false },
+  request: { label:"수정 요청", short:"요청", month:false, paper:false }
 };
+/* 좁은 화면 — CSS의 max-width:700px 와 같은 기준. 달력 탭이 격자 대신 목록을 그린다 */
+const NARROW = matchMedia("(max-width:700px)");
 const VK = Object.keys(VIEWS);
 const PREFS = "hs-prefs-v2", CACHE = "hs-cache-v2", DRAFT = "hs-draft-v2";
 
@@ -1161,10 +1166,10 @@ const chk = (label, g, k) => `<label class="chk"><input type="checkbox" data-c="
 const opt = (label, g, k) => `<button type="button" data-c="${g}.${k}" aria-pressed="${S[g][k]}">${esc(label)}</button>`;
 
 function drawTabs(){
-  /* 좁은 화면에서는 탭 줄을 옆으로 민다. 지금 탭이 가려져 있으면 보이는 데까지 끌어온다 */
-  if(paint($("#tabs"), VK.map(k =>
-    `<button type="button" data-v="${k}"${k === S.view ? ' aria-current="page"' : ""}>${VIEWS[k].label}</button>`).join("")))
-    $("#tabs [aria-current]")?.scrollIntoView({ block:"nearest", inline:"nearest" });
+  /* 좁은 화면에서는 짧은 이름(.t-s)으로 여섯 개가 한 줄에 다 보인다 */
+  paint($("#tabs"), VK.map(k =>
+    `<button type="button" data-v="${k}"${k === S.view ? ' aria-current="page"' : ""}><span class="t-l">${
+      VIEWS[k].label}</span><span class="t-s">${VIEWS[k].short}</span></button>`).join(""));
 }
 
 function drawTools(){
@@ -1178,7 +1183,7 @@ function drawTools(){
       <button class="btn btn-n" data-a="next" type="button" aria-label="${yr ? "다음 해" : "다음 달"}">›</button>
       <button class="btn" data-a="today" type="button">오늘</button>${monthOpen ? monthPop() : ""}</div>`);
   }
-  if(v === "calendar") out.push(`<div class="opts">${opt("주말", "cal", "weekend")}${opt("연간", "cal", "year")}</div>`);
+  if(v === "calendar") out.push(`<div class="opts">${NARROW.matches ? "" : opt("주말", "cal", "weekend")}${opt("연간", "cal", "year")}</div>`);
   if(v === "plan") out.push(`<div class="opts">${opt("부서명", "plan", "dept")}${opt("경건회", "plan", "prayer")}${opt("자습감독", "plan", "super")}${opt("주말 빼기", "plan", "noWeekend")}${opt("빈 날 숨김", "plan", "hideEmpty")}${opt("한 줄", "plan", "flat")}</div>`);
   if(v === "student") out.push(`<div class="opts">${opt("주말 빼기", "stu", "noWeekend")}${opt("빈 날 숨김", "stu", "hideEmpty")}${opt("한 줄", "stu", "flat")}</div>`);
   if(v === "dept") out.push(`<label class="lbl">부서
@@ -1245,34 +1250,57 @@ function monthHits(){
   }).join("")}</div>`;
 }
 
+/* ---- 미니 달력 한 달 — 날짜마다 건수. 연간 보기와 좁은 화면의 달력이 같이 쓴다 ---- */
+function miniMonth(mk, now, solo = false){
+  const days = monthDays(mk, false), lead = days[0].getDay(), mn = +mk.slice(5);
+  const pad = n => '<span class="pad"></span>'.repeat(n);
+  let count = 0;
+  const cells = days.map(d => {
+    const k = key(d), w = d.getDay(), hits = onDay(k).length + duties(k).length;
+    count += hits;
+    const cls = [w === 0 ? "s0" : w === 6 ? "s6" : "", hits ? "on" : "", k === now ? "now" : ""];
+    return `<button type="button" data-d="${k}" class="${cls.join(" ").trim()}"
+      aria-label="${mn}월 ${d.getDate()}일 일정 ${hits}건">${d.getDate()}${
+      hits ? `<span class="n">${hits}</span>` : ""}</button>`;
+  }).join("");
+  /* 열두 달을 나란히 둘 때는 여섯 줄로 높이를 맞추고, 한 달만 둘 때는 있는 주만 그린다 */
+  const tail = solo ? (7 - (lead + days.length) % 7) % 7 : 42 - lead - days.length;
+  return { count, html:`<section class="mini${solo ? " mini-1" : ""}">
+    ${solo ? "" : `<div class="mini-h"><b>${mn}월</b><span>${count ? count + "건" : ""}</span></div>`}
+    <div class="mini-g">${W.map((w, j) =>
+      `<span class="w ${j === 6 ? "s6" : j === 0 ? "s0" : ""}">${w}</span>`).join("")}
+      ${pad(lead)}${cells}${pad(tail)}</div>
+  </section>` };
+}
+
 /* ---- 연간: 열두 달을 한 화면에 ---- */
 function drawYear(){
-  const y = +S.month.slice(0, 4), now = today();
-  let n = 0;
-
-  const html = Array.from({ length:12 }, (_, i) => {
-    const mk = `${y}-${p2(i + 1)}`;
-    const days = monthDays(mk, false);
-    const lead = days[0].getDay();
-    let count = 0;
-    const cells = days.map(d => {
-      const k = key(d), w = d.getDay(), hits = onDay(k).length + duties(k).length;
-      count += hits;
-      const cls = [w === 0 ? "s0" : w === 6 ? "s6" : "", hits ? "on" : "", k === now ? "now" : ""];
-      return `<button type="button" data-d="${k}" class="${cls.join(" ").trim()}"
-        aria-label="${i + 1}월 ${d.getDate()}일 일정 ${hits}건">${d.getDate()}${
-        hits ? `<span class="n">${hits}</span>` : ""}</button>`;
-    }).join("");
-    n += count;
-    return `<section class="mini">
-      <div class="mini-h"><b>${i + 1}월</b><span>${count ? count + "건" : ""}</span></div>
-      <div class="mini-g">${W.map((w, j) =>
-        `<span class="w ${j === 6 ? "s6" : j === 0 ? "s0" : ""}">${w}</span>`).join("")}
-        ${'<span class="pad"></span>'.repeat(lead)}${cells}${'<span class="pad"></span>'.repeat(42 - lead - days.length)}</div>
-    </section>`;
-  }).join("");
-
+  const y = S.month.slice(0, 4), now = today();
+  let n = 0, html = "";
+  for(let i = 1; i <= 12; i++){
+    const m = miniMonth(`${y}-${p2(i)}`, now);
+    n += m.count; html += m.html;
+  }
   return { n, html:`<div class="years">${html}</div>` };
+}
+
+/* ---- 좁은 화면의 달력 ----
+   일곱 칸 격자는 휴대폰 폭에서 글자가 읽히지 않는다. 대신 작은 달력으로 어느 날이 바쁜지 보이고,
+   그 아래에 일정 있는 날만 목록으로 읽는다. 날짜를 누르면 그날 상세. */
+function drawAgenda(){
+  const now = today(), mini = miniMonth(S.month, now, true);
+  let n = 0, body = "";
+  for(const d of monthDays(S.month, false)){
+    const k = key(d), w = d.getDay(), rows = onDay(k), duty = duties(k);
+    if(!rows.length && !duty.length) continue;
+    n += rows.length + duty.length;
+    body += `<tr class="${(k === now ? "now" : "") + wend(w)}">
+      <td class="c-d">${dnum(d)}</td><td class="c-w">${W[w]}</td>
+      <td class="c-b"><div class="cell">${rows.map(e => evHTML(e)).join("")}${duty.map(x => dutyHTML(k, x)).join("")}</div></td></tr>`;
+  }
+  return { n, html:mini.html + (body
+    ? `<div class="frame"><table><tbody>${body}</tbody></table></div>`
+    : nothing(Q.terms.length ? "이 달에는 걸린 일정이 없습니다" : "이 달에는 일정이 없습니다")) };
 }
 
 /* ---- 달력 ---- */
@@ -1459,7 +1487,7 @@ function draw({ keep = false } = {}){
   }else{
     let r;
     if(!loaded) r = { n:0, html:nothing(loading ? "불러오는 중" : "불러온 자료 없음") };
-    else if(S.view === "calendar") r = S.cal.year ? drawYear() : drawCalendar();
+    else if(S.view === "calendar") r = S.cal.year ? drawYear() : NARROW.matches ? drawAgenda() : drawCalendar();
     else if(S.view === "plan" || S.view === "student") r = drawTable(S.view);
     else if(S.view === "dept") r = drawDept();
     else r = drawNuga();
@@ -1477,7 +1505,7 @@ function draw({ keep = false } = {}){
 
   if(jumpToday){
     jumpToday = false;
-    const el = $(".now");
+    const el = $("tr.now") || $(".now");   /* 목록의 오늘 줄이 있으면 그리로 */
     if(el) el.scrollIntoView({ block:"center", behavior:"instant" });
     else if(keep) window.scrollTo({ top, behavior:"instant" });
   }else if(keep) window.scrollTo({ top, behavior:"instant" });
@@ -2065,6 +2093,7 @@ addEventListener("resize", () => {
   }, 150);
 });
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(S.theme === "system") applyPrefs(); });
+NARROW.addEventListener("change", () => draw({ keep:true }));
 document.addEventListener("visibilitychange", () => {
   if(!document.hidden && Date.now() - lastLoad > CONFIG.POLL_MS && !sending) reload();
 });
