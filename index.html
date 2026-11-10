@@ -124,6 +124,11 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
   color:hsl(var(--dh) calc(var(--ds) + var(--label-s)) var(--label-l));
 }
 .opts button[data-h][aria-pressed="false"]{background:var(--bg-2);color:var(--ink-3)}
+/* 부서 칩 줄 — 자리가 모자라면 눌려 찌그러지지 않고 옆으로 민다 */
+.depts{max-width:100%;overflow-x:auto;scrollbar-width:none}
+.depts::-webkit-scrollbar{display:none}
+.depts button{flex:none;white-space:nowrap}
+.show-s{display:none}
 
 /* 부서 색 — 요소에 --dh(색상) --ds(채도)를 주고 여기서 조립한다.
    :root에서 만들면 --dh가 없어 색이 전부 죽는다. */
@@ -141,6 +146,7 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
 .ev:hover{background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--soft-s)) var(--soft-l))}
 .ev .tag{margin-right:4px}
 .ev-u{border-left-style:dotted}
+.ev-d{border-left-style:dashed}   /* 검색에 걸린 담당(경건회·자습감독) */
 
 /* ---- 머리 ---- */
 .top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
@@ -416,6 +422,8 @@ kbd{
   .src-row{grid-template-columns:1fr auto;gap:2px 8px}
   .src-row .st{grid-column:1/-1}
   .hide-s{display:none}
+  .show-s{display:inline-flex}
+  .depts{width:100%}
   .cards{display:block}
   .pair{grid-template-columns:1fr;gap:0}
   dialog{width:calc(100vw - 14px);max-height:90dvh}
@@ -445,7 +453,7 @@ kbd{
     <span class="wm">학사일정</span>
     <nav class="tabs" id="tabs" aria-label="화면"></nav>
     <div class="find" id="find">
-      <input class="fld" id="q" type="search" autocomplete="off" aria-label="검색" placeholder="검색">
+      <input class="fld" id="q" type="search" autocomplete="off" aria-label="일정·담당 검색" placeholder="일정·담당 검색">
       <span class="n" id="qn"></span>
     </div>
     <button class="btn btn-q" id="setBtn" type="button">설정</button>
@@ -983,6 +991,25 @@ const off = d => S.hidden.includes(d);
 const shown = e => e.src === "student" ? hit(e.text) : !off(e.dept) && hit(e.dept, e.text);
 const onDay = k => (IX.day.get(k) || []).filter(shown);
 
+/* 담당(경건회·자습감독)도 검색에 걸린다. 일정만 찾으면 "내 감독 날이 언제지"를 못 찾는다.
+   화면마다 볼 수 있는 담당이 다르다 — 달력은 둘 다, 월중 계획은 켜 둔 열만, 학생일정은 없다. */
+const dutyKinds = () => S.view === "calendar" ? [true, true]
+  : S.view === "plan" ? [S.plan.prayer, S.plan.super] : [false, false];
+const prayerHit = p => !!p?.name && hit("경건회", p.name);
+const superHit = n => !!n && hit("자습감독", n);
+function duties(k){
+  if(!Q.terms.length) return [];
+  const [dp, ds] = dutyKinds(), out = [];
+  const p = M.prayer.get(k), n = M.super.get(k);
+  if(dp && prayerHit(p)) out.push(["경건회", p.name]);
+  if(ds && superHit(n)) out.push(["자습감독", n]);
+  return out;
+}
+/* 달력 칸에 얹는 담당 한 줄. 누르면 그날 상세가 열린다 */
+const dutyHTML = (k, [label, name], tag = label) => `
+  <button type="button" class="ev ev-d" data-d="${k}" style="${tone("기타")}">
+    <span class="tag">${hl(tag)}</span>${tag === label ? "" : hl(label) + " "}${hl(name)}</button>`;
+
 /* 같은 행사가 두 시트에 다 적힌 경우 한 번만 보여 준다 */
 const norm = t => String(t || "").toLowerCase().replace(/[!！·•ㆍ]/g, "").replace(/[\s ]+/g, "").trim();
 function dayRows(k){
@@ -1009,6 +1036,7 @@ function notices(){
 
 /* ============ 그리기 ============ */
 let jumpToday = false;
+let deptOpen = false;   /* 좁은 화면에서 부서 칩 줄을 펼쳤는가 */
 
 const evHTML = (e, showDept = true, stu = false) => `
   <button type="button" class="ev${stu ? " ev-u" : ""}" data-e="${e.id}" style="${stu ? tone("기타") : tone(e.dept)}">
@@ -1052,9 +1080,14 @@ function drawTools(){
       `<button type="button" data-cat="${esc(c)}" aria-pressed="${S.cat === c}" style="${catTone(c)}">${
         c === "전체" ? "" : '<span class="cm" aria-hidden="true"></span>'}${esc(c)}<b>${hours.get(c) || 0}</b></button>`).join("")}</div>`);
   }
-  if((v === "calendar" || v === "plan") && IX.depts.length > 1)
-    out.push(`<div class="opts hide-s" role="group" aria-label="부서 표시">${IX.depts.map(d =>
+  if((v === "calendar" || v === "plan") && IX.depts.length > 1){
+    /* 좁은 화면에서는 칩 줄을 접어 두고 이 단추로 연다. 숨긴 부서가 있으면 몇 개인지 적는다 */
+    const cut = IX.depts.filter(off).length;
+    out.push(`<button class="btn show-s" data-a="depts" type="button" aria-expanded="${deptOpen}">부서${
+      cut ? ` <b>${cut}개 숨김</b>` : ""}</button>`);
+    out.push(`<div class="opts depts${deptOpen ? "" : " hide-s"}" role="group" aria-label="부서 표시">${IX.depts.map(d =>
       `<button type="button" data-h="${esc(d)}" aria-pressed="${!off(d)}" style="${tone(d)}">${esc(d)}</button>`).join("")}</div>`);
+  }
   out.push('<span class="grow"></span>');
   if(VIEWS[v].paper) out.push(`<button class="btn" data-a="open-print" type="button"${loaded ? "" : " disabled"}>인쇄</button>`);
   out.push('<button class="btn btn-q btn-s" data-a="reload" type="button">새로고침</button>');
@@ -1066,14 +1099,15 @@ function drawTools(){
 function monthHits(){
   if(!Q.terms.length) return "";
   const by = new Map();
-  for(const e of S.view === "student" ? M.student : M.schedule){
-    if(!shown(e)) continue;
-    const m = e.k.slice(0, 7);
-    by.set(m, (by.get(m) || 0) + 1);
-  }
+  const add = k => { const m = k.slice(0, 7); by.set(m, (by.get(m) || 0) + 1); };
+  for(const e of S.view === "student" ? M.student : M.schedule) if(shown(e)) add(e.k);
+  const [dp, ds] = dutyKinds();
+  if(dp) for(const [k, p] of M.prayer) if(prayerHit(p)) add(k);
+  if(ds) for(const [k, n] of M.super) if(superHit(n)) add(k);
   if(!by.size || (by.size === 1 && by.has(S.month))) return "";
   let year = "";
-  return `<div class="hits" role="group" aria-label="검색어가 있는 달"><span>검색어가 있는 달</span>${[...by].map(([m, n]) => {
+  return `<div class="hits" role="group" aria-label="검색어가 있는 달"><span>검색어가 있는 달</span>${
+    [...by].sort((a, b) => a[0] < b[0] ? -1 : 1).map(([m, n]) => {
     const y = m.slice(0, 4), label = `${y === year ? "" : y + "년 "}${+m.slice(5)}월`;
     year = y;
     return `<button type="button" class="btn btn-s" data-m="${m}" aria-pressed="${m === S.month}">${label} <b>${n}</b></button>`;
@@ -1091,12 +1125,12 @@ function drawYear(){
     const lead = days[0].getDay();
     let count = 0;
     const cells = days.map(d => {
-      const k = key(d), w = d.getDay(), list = onDay(k);
-      count += list.length;
-      const cls = [w === 0 ? "s0" : w === 6 ? "s6" : "", list.length ? "on" : "", k === now ? "now" : ""];
+      const k = key(d), w = d.getDay(), hits = onDay(k).length + duties(k).length;
+      count += hits;
+      const cls = [w === 0 ? "s0" : w === 6 ? "s6" : "", hits ? "on" : "", k === now ? "now" : ""];
       return `<button type="button" data-d="${k}" class="${cls.join(" ").trim()}"
-        aria-label="${i + 1}월 ${d.getDate()}일 일정 ${list.length}건">${d.getDate()}${
-        list.length ? `<span class="n">${list.length}</span>` : ""}</button>`;
+        aria-label="${i + 1}월 ${d.getDate()}일 일정 ${hits}건">${d.getDate()}${
+        hits ? `<span class="n">${hits}</span>` : ""}</button>`;
     }).join("");
     n += count;
     return `<section class="mini">
@@ -1131,8 +1165,8 @@ function drawCalendar(){
 
   const cells = days.map(d => {
     const k = key(d), w = d.getDay();
-    const list = onDay(k);
-    n += list.length;
+    const list = onDay(k), duty = duties(k);
+    n += list.length + duty.length;
 
     /* 주말을 접어도 토·일 일정이 사라지지 않게 금요일 칸에 모은다 */
     let fold = "";
@@ -1141,17 +1175,20 @@ function drawCalendar(){
         const s = new Date(d);
         s.setDate(d.getDate() + i);
         if(s.getMonth() !== d.getMonth()) return null;
-        const rows = onDay(key(s));
-        n += rows.length;
-        return rows.length ? { s, rows } : null;
+        const rows = onDay(key(s)), duty = duties(key(s));
+        n += rows.length + duty.length;
+        return rows.length || duty.length ? { s, rows, duty } : null;
       }).filter(Boolean);
-      if(side.length) fold = `<div class="fold"><span class="fold-h">주말</span>${side.map(({ s, rows }) =>
-        rows.map(e => `<button type="button" class="ev" data-e="${e.id}" style="${tone(e.dept)}">
-          <span class="tag">${W[s.getDay()]} ${s.getDate()}</span>${hl(e.text)}</button>`).join("")).join("")}</div>`;
+      if(side.length) fold = `<div class="fold"><span class="fold-h">주말</span>${side.map(({ s, rows, duty }) => {
+        const tag = `${W[s.getDay()]} ${s.getDate()}`;
+        return rows.map(e => `<button type="button" class="ev" data-e="${e.id}" style="${tone(e.dept)}">
+          <span class="tag">${tag}</span>${hl(e.text)}</button>`).join("")
+          + duty.map(x => dutyHTML(key(s), x, tag)).join("");
+      }).join("")}</div>`;
     }
 
     return `<section class="d${k === now ? " now" : ""}${wend(w)}" aria-label="${k}">${dnum(d)}
-      <ul>${list.map(e => `<li>${evHTML(e)}</li>`).join("")}</ul>${fold}</section>`;
+      <ul>${list.map(e => `<li>${evHTML(e)}</li>`).join("")}${duty.map(x => `<li>${dutyHTML(k, x)}</li>`).join("")}</ul>${fold}</section>`;
   }).join("");
 
   return { n, html:`<div class="cal" style="--c:${cols};--weeks:${weeks}">
@@ -1168,14 +1205,14 @@ function drawTable(v){
 
   for(const d of monthDays(S.month, o.noWeekend)){
     const k = key(d), w = d.getDay();
-    const rows = (src.get(k) || []).filter(shown);
-    if(o.hideEmpty && !rows.length) continue;
-    n += rows.length;
+    const rows = (src.get(k) || []).filter(shown), duty = duties(k).length;
+    if(o.hideEmpty && !rows.length && !duty) continue;
+    n += rows.length + duty;
     body += `<tr class="${(k === now ? "now" : "") + wend(w)}">
       <td class="c-d">${dnum(d)}</td><td class="c-w">${W[w]}</td>
       <td class="c-b"><div class="cell">${rows.map(e => evHTML(e, plan && o.dept, !plan)).join("") || '<span class="dash">—</span>'}</div></td>
-      ${plan && o.prayer ? `<td class="c-n" data-l="경건회">${esc(M.prayer.get(k)?.name || "")}</td>` : ""}
-      ${plan && o.super ? `<td class="c-n" data-l="자습감독">${esc(M.super.get(k) || "")}</td>` : ""}</tr>`;
+      ${plan && o.prayer ? `<td class="c-n" data-l="경건회">${hl(M.prayer.get(k)?.name || "")}</td>` : ""}
+      ${plan && o.super ? `<td class="c-n" data-l="자습감독">${hl(M.super.get(k) || "")}</td>` : ""}</tr>`;
   }
 
   return { n, html:`<div class="frame"><table class="${o.flat ? "flat" : ""}">
@@ -1268,7 +1305,7 @@ function drawRequest(){
 /* ---- 전체 ---- */
 function draw({ keep = false } = {}){
   const top = window.scrollY;
-  const act = document.activeElement, actId = act?.id, actC = act?.dataset?.c, actH = act?.dataset?.h;
+  const act = document.activeElement, actId = act?.id, actC = act?.dataset?.c, actH = act?.dataset?.h, actA = act?.dataset?.a;
 
   drawTabs();
   drawTools();
@@ -1301,6 +1338,7 @@ function draw({ keep = false } = {}){
   if(act && !act.isConnected){
     if(actC) $(`[data-c="${CSS.escape(actC)}"]`)?.focus({ preventScroll:true });
     else if(actH) $(`[data-h="${CSS.escape(actH)}"]`)?.focus({ preventScroll:true });
+    else if(actA === "depts") $('[data-a="depts"]')?.focus({ preventScroll:true });
     else if(actId && ["mi", "ds"].includes(actId)) $("#" + actId)?.focus({ preventScroll:true });
   }
 
@@ -1785,6 +1823,7 @@ document.addEventListener("click", ev => {
     case "today": goToday(); break;
     case "reload": reload(); break;
     case "alert-x": hideWarn(); break;
+    case "depts": deptOpen = !deptOpen; draw({ keep:true }); break;
     case "close": t.closest("dialog")?.close(); break;
     case "open-print": openPrint(); break;
     case "print": doPrint(); break;
