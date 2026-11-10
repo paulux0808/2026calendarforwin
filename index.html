@@ -773,7 +773,9 @@ let hadMonth = false;
 function loadPrefs(){
   const p = read(PREFS, {}) || {};
   if(Object.hasOwn(VIEWS, p.view)) S.view = p.view;
-  if(typeof p.month === "string" && /^\d{4}-\d{2}$/.test(p.month) && m1(p.month)){ S.month = p.month; hadMonth = true; }
+  /* 보던 달은 그날 안에서만 이어 간다. 날이 바뀐 뒤에 열면 이번 달부터 —
+     지난주에 보던 달이 그대로 떠서 지난달 일정을 이번 달로 착각하지 않게 */
+  if(p.day === today() && typeof p.month === "string" && /^\d{4}-\d{2}$/.test(p.month) && m1(p.month)){ S.month = p.month; hadMonth = true; }
   for(const g of ["cal", "plan", "stu", "print"])
     for(const k of Object.keys(S[g])) if(typeof p[g]?.[k] === "boolean") S[g][k] = p[g][k];
   if(["light","dark","system"].includes(p.theme)) S.theme = p.theme;
@@ -786,7 +788,7 @@ function loadPrefs(){
 let prefsSaved = "";
 function savePrefs(){
   const now = JSON.stringify({
-    view:S.view, month:S.month, theme:S.theme, fs:S.fs, dept:S.dept, hidden:S.hidden,
+    view:S.view, month:S.month, day:today(), theme:S.theme, fs:S.fs, dept:S.dept, hidden:S.hidden,
     grade:S.grade, cat:S.cat, cal:S.cal, plan:S.plan, stu:S.stu, print:S.print
   });
   if(now === prefsSaved) return;
@@ -1002,8 +1004,10 @@ function fetchSheet(sheet){
     const end = (err, raw) => {
       if(done) return;
       done = true;
-      clearTimeout(t); el.remove(); window[cb] = () => {};
-      setTimeout(() => { delete window[cb]; }, 60000);
+      clearTimeout(t); el.remove();
+      /* 받았으면 바로 치운다. 못 받았으면 빈 함수를 한동안 남겨, 늦게 도착한 응답이 없는 함수를 부르지 않게 한다 */
+      if(err){ window[cb] = () => {}; setTimeout(() => { delete window[cb]; }, 600000); }
+      else delete window[cb];
       err ? rej(err) : res(raw);
     };
     const t = setTimeout(() => end(new Error("응답 시간 초과")), CONFIG.LOAD_MS);
@@ -1322,18 +1326,27 @@ function drawCalendar(){
   const pad = c => '<div class="d-x" aria-hidden="true"></div>'.repeat(Math.max(0, c));
   let n = 0;
 
+  /* 주말을 접어도 토·일 일정이 사라지지 않게 가까운 평일 칸에 모은다.
+     보통은 그 주 금요일. 달이 토·일로 시작해 금요일이 지난달이면 다음 월요일로 보낸다
+     (금요일만 보면 그런 달의 첫 주말 일정이 어디에도 안 나온다). */
+  const folded = new Map();
+  if(!wk) for(const s of monthDays(S.month, false)){
+    const w = s.getDay();
+    if(w !== 0 && w !== 6) continue;
+    let t = new Date(s.getFullYear(), s.getMonth(), s.getDate() - (w === 6 ? 1 : 2));
+    if(t.getMonth() !== s.getMonth()) t = new Date(s.getFullYear(), s.getMonth(), s.getDate() + (w === 6 ? 2 : 1));
+    if(!folded.has(key(t))) folded.set(key(t), []);
+    folded.get(key(t)).push(s);
+  }
+
   const cells = days.map(d => {
     const k = key(d), w = d.getDay();
     const list = onDay(k), duty = duties(k);
     n += list.length + duty.length;
 
-    /* 주말을 접어도 토·일 일정이 사라지지 않게 금요일 칸에 모은다 */
     let fold = "";
-    if(!wk && w === 5){
-      const side = [1, 2].map(i => {
-        const s = new Date(d);
-        s.setDate(d.getDate() + i);
-        if(s.getMonth() !== d.getMonth()) return null;
+    if(folded.has(k)){
+      const side = folded.get(k).map(s => {
         const rows = onDay(key(s)), duty = duties(key(s));
         n += rows.length + duty.length;
         return rows.length || duty.length ? { s, rows, duty } : null;
@@ -1503,11 +1516,15 @@ function draw({ keep = false } = {}){
 
   measure();
 
-  if(jumpToday){
+  /* 오늘로 가기는 자료가 온 뒤에 쓴다. 불러오는 중인 빈 화면에서 써 버리면 정작 그려진 뒤에는 못 간다 */
+  if(jumpToday && loaded && S.view !== "request"){
     jumpToday = false;
     const el = $("tr.now") || $(".now");   /* 목록의 오늘 줄이 있으면 그리로 */
-    if(el) el.scrollIntoView({ block:"center", behavior:"instant" });
-    else if(keep) window.scrollTo({ top, behavior:"instant" });
+    if(el){
+      /* 이미 다 보이면 건드리지 않는다. 한 화면에 들어오는 달력 격자가 괜히 밀려 올라가지 않게 */
+      const r = el.getBoundingClientRect();
+      if(r.top < $(".top").offsetHeight || r.bottom > innerHeight) el.scrollIntoView({ block:"center", behavior:"instant" });
+    }else if(keep) window.scrollTo({ top, behavior:"instant" });
   }else if(keep) window.scrollTo({ top, behavior:"instant" });
 }
 /* 머리 높이(표 머리가 붙을 자리)와 달력 높이 */
@@ -1573,17 +1590,19 @@ function go(v){
   if(!Object.hasOwn(VIEWS, v) || v === S.view) return;
   saveDraft();
   S.view = v; clearQ(); monthOpen = false;
-  jumpToday = ["calendar", "plan", "student"].includes(v) && !S.cal.year;
-  draw();
+  jumpToday = v === "calendar" ? !S.cal.year : v === "plan" || v === "student";
+  /* 먼저 맨 위로 올리고 그린다. 그린 뒤에 올리면 오늘로 간 것을 도로 무른다 */
   window.scrollTo({ top:0, behavior:"instant" });
+  draw();
 }
 function step(n){
   const next = shiftMonth(S.month, n * (S.view === "calendar" && S.cal.year ? 12 : 1));
   if(+next.slice(0, 4) < 1900 || +next.slice(0, 4) > 9999) return;
   S.month = next;
+  monthOpen = false;
   draw();
 }
-function goToday(){ S.month = today().slice(0, 7); jumpToday = true; draw(); }
+function goToday(){ S.month = today().slice(0, 7); monthOpen = false; jumpToday = true; draw(); }
 
 /* ============ 하루 상세 ============ */
 const DAY = { k:"", id:"" };
@@ -1855,9 +1874,13 @@ function endPrint(){
 }
 addEventListener("afterprint", endPrint);
 addEventListener("beforeprint", () => {
-  if(printing || !loaded) return;
+  if(printing) return;
   const open = $("#pdlg").open;
-  if(!open && !VIEWS[S.view].paper) return;
+  if(!loaded || (!open && !VIEWS[S.view].paper)){
+    /* 종이를 만들지 않고 화면을 그대로 찍는다. 앞서 달력 미리보기가 가로로 바꿔 둔 용지를 세로로 되돌린다 */
+    $("#printPageStyle").textContent = "@page{size:A4 portrait;margin:7mm}";
+    return;
+  }
   if(!open) PR.view = S.view;
   $("#proot").appendChild($("#stage"));
   $("#stage").style.transform = "none";
@@ -1928,8 +1951,9 @@ async function send(ev){
     sendMsg = "보냈습니다. 반영은 담당자 확인 후."; sendTone = "ok";
     draft = { name:body.name, type:body.type, content:"" };
     write(DRAFT, draft);
-    $("#rc").value = "";
-    $("#rcount").textContent = "0자";
+    /* 보내는 사이 다른 화면으로 갔으면 폼이 없다. 여기서 터지면 아래 catch 가 "보내지 못했습니다"로 뒤집는다 */
+    const box = $("#rc");
+    if(box){ box.value = ""; $("#rcount").textContent = "0자"; }
   }catch{
     sendMsg = "보내지 못했습니다. 내용은 그대로 있습니다."; sendTone = "no";
   }finally{
@@ -2029,8 +2053,10 @@ const applyQ = () => { setQ($("#q").value); draw({ keep:true }); };
 document.addEventListener("input", ev => {
   const el = ev.target;
   if(el.id === "q"){
+    /* 한글은 마지막 글자가 조합 중인 채로 남는다. 조합이 끝나기만 기다리면 "정지우"를 쳐도 "정지"로 찾는다.
+       조합 중에도 찾되, 자모만 찍힌 순간에 화면이 깜빡이지 않게 조금 더 기다린다 */
     clearTimeout(qt);
-    if(!el.dataset.ime) qt = setTimeout(applyQ, 140);
+    qt = setTimeout(applyQ, el.dataset.ime ? 260 : 140);
     return;
   }
   if(el.closest("#rf")) saveDraft();
