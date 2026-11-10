@@ -22,23 +22,27 @@
 
 :root{
   color-scheme:light;
-  --bg:#FFFFFF;
-  --bg-2:#F5F6F8;      /* 표 머리 */
-  --sat-bg:#DCEAFF; --sun-bg:#FADDDD; /* 토·일 셀 */
-  --cell-line:#929EAD;
-  --bg-3:#EDEFF2;
+  --page:#F3F4F6;      /* 바탕 */
+  --bg:#FFFFFF;        /* 카드·머리 */
+  --bg-2:#F5F6F8;
+  --bg-3:#E9EBEF;
+  --raise:#FFFFFF;     /* 눌린 선택 단추 */
+  --sat-bg:#F4F8FF; --sun-bg:#FFF6F5; /* 토·일 — 옅게만 깐다 */
+  --hair:#E4E7EB;      /* 화면의 칸·줄 */
+  --cell-line:#929EAD; /* 화면에서는 안 쓴다. 좁은 화면 인쇄가 물려받는 값이라 그대로 둔다 */
   --ink:#17181C;
-  --ink-2:#5A6169;
+  --ink-2:#5A6169;     /* 종이의 표 머리 글자색이기도 하다. 바꾸면 인쇄가 바뀐다 */
   --ink-3:#8B929B;
-  --line:#E2E5E9;
-  --line-2:#CDD2D8;
-  --key:#1A4B8C;       /* 선택·오늘 */
-  --key-bg:#EAF0F8;
-  --sat:#2563A8;
-  --sun:#C1352B;
+  --line:#E4E7EB;
+  --line-2:#D0D5DB;
+  --key:#2558CF;       /* 선택·오늘 */
+  --key-bg:#EBF1FE;
+  --sat:#2563C9;
+  --sun:#D0382E;
   --warn-bg:#FFF7E8;
   --warn-line:#E0BE79;
   --warn-ink:#7A5410;
+  --pop:0 12px 32px rgba(16,24,40,.16), 0 2px 6px rgba(16,24,40,.08);
 
   --tint-s:0%;   --tint-l:91%;
   --soft-s:0%;   --soft-l:96%;
@@ -53,18 +57,21 @@
   --f-xl:calc(18px * var(--fs));
   --sans:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
          "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
-  --r:4px;
+  --r:8px;
+  --r-lg:12px;
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#16181C; --bg-2:#1E2126; --bg-3:#262A30;
-  --sat-bg:#233D60; --sun-bg:#542E35;
+  --page:#111316; --bg:#1A1C20; --bg-2:#212429; --bg-3:#2A2E34; --raise:#3A4048;
+  --sat-bg:#1B222D; --sun-bg:#2A1E20;
+  --hair:#2B2F35;
   --cell-line:#718096;
   --ink:#E6E8EB; --ink-2:#A3AAB3; --ink-3:#767D86;
-  --line:#2C3036; --line-2:#3B4149;
-  --key:#7FADE8; --key-bg:#1C2A3B;
-  --sat:#7FADE8; --sun:#E8776C;
+  --line:#2B2F35; --line-2:#3A4048;
+  --key:#8AB0FF; --key-bg:#1C2740;
+  --sat:#8AB0FF; --sun:#F08379;
   --warn-bg:#2A2317; --warn-line:#6B5730; --warn-ink:#D8B673;
+  --pop:0 12px 32px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
   --tint-s:-6%; --tint-l:24%;
   --soft-s:-10%; --soft-l:19%;
   --label-s:14%; --label-l:78%;
@@ -74,7 +81,7 @@
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
-  margin:0;background:var(--bg);color:var(--ink);
+  margin:0;background:var(--page);color:var(--ink);
   font-family:var(--sans);font-size:var(--f-md);line-height:1.45;
   font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
 }
@@ -91,125 +98,204 @@ mark{background:#FCE79A;color:#17181C;padding:0 1px}
 /* ---- 공통 조각 ---- */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  height:30px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r);
+  height:32px;padding:0 12px;border:1px solid var(--line-2);border-radius:var(--r);
   background:var(--bg);font-size:var(--f-sm);font-weight:600;white-space:nowrap;
 }
 .btn:hover:not(:disabled){background:var(--bg-2)}
 .btn-key{background:var(--key);border-color:var(--key);color:#fff}
 :root[data-theme="dark"] .btn-key{color:#12161C}
-.btn-key:hover:not(:disabled){background:var(--key);filter:brightness(1.1)}
+.btn-key:hover:not(:disabled){background:var(--key);filter:brightness(1.08)}
 .btn-q{border-color:transparent;background:transparent;color:var(--ink-2)}
-.btn-q:hover:not(:disabled){background:var(--bg-2);color:var(--ink)}
-.btn-n{width:30px;padding:0}
-.btn-s{height:26px;padding:0 8px;font-size:var(--f-xs)}
+.btn-q:hover:not(:disabled){background:var(--bg-3);color:var(--ink)}
+.btn-n{width:32px;padding:0;font-size:var(--f-lg)}
+.btn-s{height:26px;padding:0 9px;font-size:var(--f-xs);border-radius:7px}
 .fld{
-  height:30px;padding:0 8px;border:1px solid var(--line-2);border-radius:var(--r);
+  height:32px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r);
   background:var(--bg);font-size:var(--f-sm);
 }
 .fld:focus{outline:2px solid var(--key);outline-offset:-1px;border-color:var(--key)}
 
-/* 켜고 끄는 단추 묶음 — .opts(표시 항목)와 .seg(하나 고르기)는 생김새가 같다 */
-.opts,.seg{display:flex;gap:1px;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden}
-.opts button,.seg button{
-  height:28px;padding:0 9px;font-size:var(--f-sm);font-weight:600;
-  color:var(--ink-3);background:var(--bg-2);
+/* 켜고 끄는 항목(.opts) — 하나씩 따로 눌리는 것이라 낱낱의 알약으로 둔다 */
+.opts{display:flex;flex-wrap:wrap;gap:4px}
+.opts button{
+  height:28px;padding:0 11px;border:1px solid var(--line-2);border-radius:999px;
+  background:var(--bg);font-size:var(--f-sm);font-weight:600;color:var(--ink-2);white-space:nowrap;
 }
-.seg button{padding:0 10px}
-.opts button:hover,.seg button:hover{color:var(--ink)}
-.opts button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--key);color:#fff}
-/* 부서 칩([data-h])은 제 색 글자를 쓴다. 여기서 빼지 않으면 어두운 테마에서 어두운 바탕에 어두운 글자가 된다 */
-:root[data-theme="dark"] :is(.opts,.seg) button[aria-pressed="true"]:not([data-h]){color:#12161C}
+.opts button:hover{background:var(--bg-2);color:var(--ink)}
+.opts button[aria-pressed="true"]{background:var(--key-bg);border-color:transparent;color:var(--key)}
+/* 부서 칩 — 요소에 --dh(색상) --ds(채도)를 주고 여기서 조립한다.
+   :root에서 만들면 --dh가 없어 색이 전부 죽는다. */
 .opts button[data-h]{
+  border-color:transparent;
   background:hsl(var(--dh) calc(var(--ds) + var(--tint-s)) var(--tint-l));
   color:hsl(var(--dh) calc(var(--ds) + var(--label-s)) var(--label-l));
 }
-.opts button[data-h][aria-pressed="false"]{background:var(--bg-2);color:var(--ink-3)}
-/* 부서 칩 줄 — 자리가 모자라면 눌려 찌그러지지 않고 옆으로 민다 */
-.depts{max-width:100%;overflow-x:auto;scrollbar-width:none}
-.depts::-webkit-scrollbar{display:none}
-.depts button{flex:none;white-space:nowrap}
-.show-s{display:none}
+.opts button[data-h][aria-pressed="false"]{background:var(--bg-3);color:var(--ink-3);text-decoration:line-through}
+/* 부서 칩 줄 — 도구 줄 아래 한 줄을 통째로 쓴다 */
+.depts{order:9;flex-basis:100%;padding-top:2px}
+.depts button{height:26px;padding:0 10px}
+/* 펼치는 단추 */
+.btn-dd::after{
+  content:"";width:5px;height:5px;margin-left:2px;border:solid var(--ink-3);border-width:0 1.5px 1.5px 0;
+  transform:translateY(-2px) rotate(45deg);
+}
+.btn-dd[aria-expanded="true"]{background:var(--bg-2)}
+.btn-dd[aria-expanded="true"]::after{transform:translateY(1px) rotate(-135deg)}
+.btn-dd.on{border-color:transparent;background:var(--key-bg);color:var(--key)}
+.btn-dd b{font-weight:700}
 
-/* 부서 색 — 요소에 --dh(색상) --ds(채도)를 주고 여기서 조립한다.
-   :root에서 만들면 --dh가 없어 색이 전부 죽는다. */
+/* 하나 고르기(.seg) — 한 덩어리 안에서 고른 것만 떠오른다 */
+.seg{display:inline-flex;gap:2px;max-width:100%;padding:2px;border-radius:var(--r);background:var(--bg-3);overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{
+  display:inline-flex;align-items:center;flex:none;height:26px;padding:0 11px;border-radius:6px;
+  font-size:var(--f-sm);font-weight:600;color:var(--ink-2);white-space:nowrap;
+}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--raise);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.14)}
+.seg b{font-weight:700;margin-left:5px;color:var(--ink-3)}
+.cm{
+  width:8px;height:8px;flex:none;border-radius:50%;margin-right:5px;
+  background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l));
+}
+
+/* 부서 꼬리표 */
 .tag{
-  display:inline-block;flex:none;padding:0 4px;border-radius:2px;
+  display:inline-block;flex:none;padding:1px 6px;border-radius:5px;
   font-size:var(--f-xs);font-weight:700;white-space:nowrap;
   background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--tint-s)) var(--tint-l));
   color:hsl(var(--dh,212) calc(var(--ds,7%) + var(--label-s)) var(--label-l));
 }
+/* 일정 한 줄 — 표에서는 꼬리표 + 글, 달력 칸에서는 색 띠가 있는 조각(아래 .d .ev) */
 .ev{
-  display:block;width:100%;text-align:left;padding:1px 3px 1px 6px;
-  border-left:3px solid hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l));
-  font-size:var(--f-sm);line-height:1.4;overflow-wrap:anywhere;
+  display:block;width:100%;text-align:left;padding:2px 5px;border-radius:6px;
+  font-size:var(--f-sm);line-height:1.5;overflow-wrap:anywhere;
 }
-.ev:hover{background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--soft-s)) var(--soft-l))}
-.ev .tag{margin-right:4px}
-.ev-u{border-left-style:dotted}
-.ev-d{border-left-style:dashed}   /* 검색에 걸린 담당(경건회·자습감독) */
+.ev:hover{background:var(--bg-2)}
+.ev .tag{margin-right:6px}
 
 /* ---- 머리 ---- */
 .top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
-.row{display:flex;align-items:center;gap:8px;padding:0 12px;min-height:44px}
-.row-2{min-height:40px;border-top:1px solid var(--line);flex-wrap:wrap;padding-top:5px;padding-bottom:5px}
-.wm{font-size:var(--f-lg);font-weight:800;letter-spacing:-.03em;margin-right:4px}
-.tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;flex:1}
+.row{display:flex;align-items:center;gap:8px;padding:0 16px;min-height:52px}
+.row-2{min-height:48px;border-top:1px solid var(--line);flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+.wm{font-size:var(--f-lg);font-weight:800;letter-spacing:-.03em;margin-right:8px}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{
-  padding:12px 11px 11px;font-size:var(--f-md);font-weight:600;color:var(--ink-2);
-  border-bottom:2px solid transparent;white-space:nowrap;
+  padding:6px 12px;border-radius:999px;font-size:var(--f-md);font-weight:600;color:var(--ink-2);white-space:nowrap;
 }
-.tabs button:hover{color:var(--ink)}
-.tabs button[aria-current="page"]{color:var(--key);border-bottom-color:var(--key);font-weight:700}
+.tabs button:hover{background:var(--bg-2);color:var(--ink)}
+.tabs button[aria-current="page"]{background:var(--key-bg);color:var(--key);font-weight:700}
 .grow{flex:1}
 .find{position:relative;display:flex;align-items:center}
-.find input{width:clamp(130px,15vw,210px);padding-right:44px}
-.find .n{position:absolute;right:7px;font-size:var(--f-xs);color:var(--ink-3);font-weight:700;pointer-events:none}
-.step{display:flex;align-items:center;gap:3px}
-.step .fld{width:132px;font-weight:600}
-.lbl{font-size:var(--f-sm);color:var(--ink-2);display:flex;align-items:center;gap:5px}
+.find input{
+  width:clamp(150px,18vw,240px);padding:0 40px 0 32px;border-color:transparent;
+  background:var(--bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238B929B' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5 14 14'/%3E%3C/svg%3E") 10px 50%/14px no-repeat;
+}
+.find input:focus{background-color:var(--bg)}
+.find .n{position:absolute;right:9px;font-size:var(--f-xs);color:var(--ink-3);font-weight:700;pointer-events:none}
+.lbl{font-size:var(--f-sm);color:var(--ink-2);display:flex;align-items:center;gap:6px}
+
+/* 달 넘기기 — 제목이 곧 달 고르는 단추 */
+.step{position:relative;display:flex;align-items:center;gap:2px}
+.mtitle{
+  display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 9px 0 6px;border-radius:var(--r);
+  font-size:var(--f-xl);font-weight:800;letter-spacing:-.02em;white-space:nowrap;
+}
+.mtitle::after{
+  content:"";width:6px;height:6px;border:solid var(--ink-3);border-width:0 2px 2px 0;
+  transform:translateY(-2px) rotate(45deg);
+}
+.mtitle:hover,.mtitle[aria-expanded="true"]{background:var(--bg-2)}
+.step > .btn-n{border-color:transparent;border-radius:50%;color:var(--ink-2)}
+.step > .btn-n:hover:not(:disabled){background:var(--bg-3);color:var(--ink)}
+.step > [data-a="today"]{margin-left:6px}
+.mpop{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:30;width:252px;padding:10px;
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--pop);
+}
+.mpop-y{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mpop-y b{font-size:var(--f-lg);font-weight:800}
+.mpop-y .btn-n{border-color:transparent;border-radius:50%;color:var(--ink-2)}
+.mpop-m{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.mpop-m button{height:36px;border-radius:var(--r);font-size:var(--f-md);font-weight:500;color:var(--ink-3)}
+.mpop-m button.has{color:var(--ink);font-weight:600}   /* 일정이 있는 달 */
+.mpop-m button:hover{background:var(--bg-2)}
+.mpop-m button.now{box-shadow:inset 0 0 0 1.5px var(--key)}
+.mpop-m button[aria-pressed="true"]{background:var(--key);color:#fff;font-weight:700}
+:root[data-theme="dark"] .mpop-m button[aria-pressed="true"]{color:#12161C}
 
 /* ---- 알림 줄 ---- */
-.strip{display:flex;align-items:center;gap:9px;padding:7px 12px;font-size:var(--f-sm);border-bottom:1px solid var(--line)}
+.strip{
+  display:flex;align-items:center;gap:10px;margin:12px 16px 0;padding:8px 8px 8px 14px;
+  border-radius:var(--r-lg);font-size:var(--f-sm);
+}
 .strip p{flex:1;overflow-wrap:anywhere}
 .strip-n{background:var(--key-bg)}
 .strip-n b{color:var(--key);font-weight:700;flex:none}
 .strip-w{background:var(--warn-bg);color:var(--warn-ink)}
+.note{margin-bottom:10px;padding:9px 14px;border-radius:var(--r-lg);background:var(--warn-bg);color:var(--warn-ink);font-size:var(--f-sm)}
 
-main{padding:12px}
+main{padding:12px 16px 16px}
 /* 검색어가 걸린 달 */
-.hits{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px;font-size:var(--f-sm);color:var(--ink-2)}
-.hits > span{margin-right:4px}
-.hits .btn[aria-pressed="true"]{border-color:var(--key);background:var(--key-bg);color:var(--key)}
+.hits{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:10px;font-size:var(--f-sm);color:var(--ink-2)}
+.hits > span{margin-right:6px}
+.hits .btn{border-radius:999px;font-weight:500}
+.hits .btn[aria-pressed="true"]{border-color:transparent;background:var(--key-bg);color:var(--key);font-weight:700}
 .hits b{font-weight:700}
-.none{padding:44px 12px;text-align:center;color:var(--ink-3);font-size:var(--f-sm)}
-.frame{border:1px solid var(--cell-line);border-radius:var(--r)}
+.none{padding:56px 12px;text-align:center;color:var(--ink-3);font-size:var(--f-sm)}
+.frame{border:1px solid var(--hair);border-radius:var(--r-lg);background:var(--bg)}
 .frame > table{border-collapse:separate;border-spacing:0}
-.frame > table thead th:first-child{border-top-left-radius:3px}
-.frame > table thead th:last-child{border-top-right-radius:3px}
+.frame > table thead th:first-child{border-top-left-radius:11px}
+.frame > table thead th:last-child{border-top-right-radius:11px}
 
 /* ---- 달력 ---- */
-.cap{font-size:var(--f-md);font-weight:700;margin:16px 0 6px}
-.cap:first-child{margin-top:0}
-.cal{display:grid;height:var(--calendar-height,calc(100dvh - 140px));grid-template-columns:repeat(var(--c),minmax(0,1fr));grid-template-rows:auto repeat(var(--weeks,6),minmax(0,1fr));gap:1px;background:var(--cell-line);border:1px solid var(--cell-line);border-radius:var(--r);overflow:hidden}
-.cal-h{padding:5px;text-align:center;background:var(--bg-2);font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
+.cap{font-size:var(--f-lg);font-weight:800;letter-spacing:-.02em;margin:22px 2px 8px}
+.cap:first-child{margin-top:4px}
+.cal{
+  display:grid;height:var(--calendar-height,calc(100dvh - 140px));
+  grid-template-columns:repeat(var(--c),minmax(0,1fr));
+  grid-template-rows:auto repeat(var(--weeks,6),minmax(0,1fr));
+  gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:var(--r-lg);overflow:hidden;
+}
+.cal-h{padding:8px 0 7px;text-align:center;background:var(--bg);font-size:var(--f-xs);font-weight:600;color:var(--ink-3)}
 .cal-h.s6{color:var(--sat)} .cal-h.s0{color:var(--sun)}
-.d{background:var(--bg);padding:4px 5px 6px;min-height:0;min-width:0;overflow:auto;display:flex;flex-direction:column;gap:3px}
+.d{
+  background:var(--bg);padding:5px 6px 6px;min-height:0;min-width:0;overflow:auto;scrollbar-width:thin;
+  display:flex;flex-direction:column;gap:3px;
+}
 .d > *{flex-shrink:0}
 .d-x{background:var(--bg-2)}
-.d.wk.s6,.cal-h.s6{background:var(--sat-bg)}
-.d.wk.s0,.cal-h.s0{background:var(--sun-bg)}
-.d.now:not(.wk){background:var(--key-bg)}
-.d.now{box-shadow:inset 0 2px 0 var(--key)}
-.dnum{align-self:flex-start;padding:0 3px;margin-left:-3px;font-size:var(--f-md);font-weight:700;border-radius:2px}
+.d.wk.s6{background:var(--sat-bg)}
+.d.wk.s0{background:var(--sun-bg)}
+/* 날짜 숫자 — 오늘은 동그라미로 채운다 */
+.dnum{
+  display:inline-grid;place-items:center;align-self:flex-start;min-width:24px;height:24px;padding:0 4px;
+  border-radius:999px;font-size:var(--f-md);font-weight:600;
+}
 .dnum:hover{background:var(--bg-3)}
 .d.s0 .dnum{color:var(--sun)} .d.s6 .dnum{color:var(--sat)}
+.now .dnum,.now .dnum:hover{background:var(--key);color:#fff;font-weight:700}
+:root[data-theme="dark"] .now .dnum{color:#12161C}
 .d ul{display:flex;flex-direction:column;gap:2px;min-width:0}
-.d .ev{font-size:var(--f-xs)}
-.fold{margin-top:auto;padding-top:4px;border-top:1px dashed var(--line-2);display:flex;flex-direction:column;gap:2px}
-.fold-h{font-size:var(--f-xs);font-weight:700;color:var(--ink-3)}
+/* 달력 칸의 일정 — 부서 색 띠 + 옅은 바탕. 부서가 없어도 띠는 실선이다(점선 없음) */
+.d .ev{
+  padding:2px 5px 2px 6px;border-radius:4px;font-size:var(--f-xs);line-height:1.4;
+  border-left:3px solid hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l));
+  background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--soft-s)) var(--soft-l));
+}
+.d .ev:hover{background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--tint-s)) var(--tint-l))}
+.d .ev .tag{padding:0;margin-right:4px;background:none}
+/* 검색에 걸린 담당 — 일정이 아니므로 바탕 없이 테두리만 */
+.d .ev-d{border-left:0;padding-left:6px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line-2)}
+.d .ev-d:hover{background:var(--bg-2)}
+.d .ev-d .tag{color:var(--ink-2)}
+.fold{margin-top:auto;padding-top:5px;border-top:1px solid var(--hair);display:flex;flex-direction:column;gap:2px}
+.fold-h{font-size:10px;font-weight:700;color:var(--ink-3)}
 
-/* ---- 표 ---- */
+/* ---- 표 ----
+   table · th · td 세 줄은 종이(.paper)도 물려받는다. 값을 바꾸면 인쇄가 바뀌므로 그대로 두고,
+   화면 모양은 아래 .frame 규칙으로 덮는다. */
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 th{
   padding:6px 8px;text-align:left;background:var(--bg-2);color:var(--ink-2);
@@ -217,126 +303,130 @@ th{
   position:sticky;top:var(--top-h,0px);z-index:2;white-space:nowrap;
 }
 td{padding:4px 8px;vertical-align:top;border-bottom:1px solid var(--cell-line);overflow-wrap:anywhere}
+.frame th{padding:9px 12px;background:var(--bg);color:var(--ink-3);font-weight:600;border-bottom-color:var(--hair)}
+.frame td{padding:6px 12px;border-bottom-color:var(--hair)}
 .frame > table > tbody > tr:last-child > td{border-bottom:0}
-tr.wk.s6{background:var(--sat-bg)}
-tr.wk.s0{background:var(--sun-bg)}
-tr.now:not(.wk){background:var(--key-bg)}
-tr.now{box-shadow:inset 3px 0 0 var(--key)}
-.c-d{width:44px}.c-w{width:36px}.c-n{width:96px}
-td.c-d{padding-top:3px}
-td.c-w{font-size:var(--f-xs);color:var(--ink-2);padding-top:6px}
+.frame > table > tbody > tr:last-child > td:first-child{border-bottom-left-radius:11px}
+.frame > table > tbody > tr:last-child > td:last-child{border-bottom-right-radius:11px}
+tr.wk.s6 > td{background:var(--sat-bg)}
+tr.wk.s0 > td{background:var(--sun-bg)}
+tr.now > td{background:var(--key-bg)}
+.c-d{width:52px}.c-w{width:34px}.c-n{width:112px}
+.frame td.c-d{padding:4px 6px 4px 12px}
+td.c-w{font-size:var(--f-xs);color:var(--ink-3);padding-top:10px}
 tr.s0 td.c-w,tr.s0 .dnum{color:var(--sun)}
 tr.s6 td.c-w,tr.s6 .dnum{color:var(--sat)}
-td.c-n{font-size:var(--f-sm);padding-top:5px}
-.cell{display:flex;flex-direction:column;gap:2px;padding:1px 0}
-.flat .cell{display:block}
-.flat .ev{display:inline;border-left:0;padding:0;margin-right:9px;border-bottom:2px solid hsl(var(--dh,212) calc(var(--ds,7%) + var(--edge-s)) var(--edge-l))}
+tr.empty:not(.now) .dnum{font-weight:500;opacity:.55}   /* 일정 없는 날은 날짜만 흐리게 — 줄표를 찍지 않는다 */
+td.c-n{font-size:var(--f-sm);color:var(--ink-2);padding-top:9px}
+.cell{display:flex;flex-direction:column;gap:1px;margin:0 -5px}
+.flat .cell{flex-direction:row;flex-wrap:wrap;gap:1px 10px}
+.flat .ev{width:auto}
 .dash{color:var(--ink-3);font-size:var(--f-xs)}
 
 /* ---- 부서 ---- */
-.grp{display:grid;grid-template-columns:106px minmax(0,1fr);gap:10px;padding:5px 9px;border-bottom:1px solid var(--line);align-items:baseline}
+.grp{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px;padding:5px 12px;border-bottom:1px solid var(--hair);align-items:baseline}
 .grp:last-child{border-bottom:0}
-.grp span{font-size:var(--f-xs);color:var(--ink-2);font-weight:600}
-.grp .ev{font-size:var(--f-md)}
+.grp span{font-size:var(--f-sm);color:var(--ink-2)}
+.grp .ev{font-size:var(--f-md);margin:0 -5px}
 
 /* ---- 누가기록 ---- */
-.seg b{font-weight:700;margin-left:5px}
-.cm{
-  width:8px;height:8px;flex:none;border-radius:1px;margin-right:1px;
-  background:hsl(var(--dh,212) calc(var(--ds,7%) + var(--label-s)) var(--label-l));
-}
-.seg button[aria-pressed="true"] .cm{background:currentColor}
 .num{text-align:right;width:64px;white-space:nowrap}
 tfoot td{background:var(--bg-2);font-weight:700;border-top:1px solid var(--line-2)}
+.frame tfoot td{border-top-color:var(--hair);border-bottom:0}
+.frame tfoot td:first-child{border-bottom-left-radius:11px}
+.frame tfoot td:last-child{border-bottom-right-radius:11px}
 .cards{display:none}
-.card{padding:8px 10px;border-bottom:1px solid var(--line)}
+.card{padding:10px 14px;border-bottom:1px solid var(--hair)}
 .card:last-child{border-bottom:0}
-.card-h{display:flex;gap:8px;font-size:var(--f-xs);color:var(--ink-2);margin-bottom:2px}
-.card-f{display:flex;justify-content:space-between;gap:8px;font-size:var(--f-xs);color:var(--ink-3);margin-top:2px}
+.card-h{display:flex;align-items:center;gap:8px;font-size:var(--f-xs);color:var(--ink-2);margin-bottom:3px}
+.card-f{display:flex;justify-content:space-between;gap:8px;font-size:var(--f-xs);color:var(--ink-3);margin-top:3px}
 
 /* ---- 연간 미니 달력 ---- */
-.years{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:9px}
-.mini{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);overflow:hidden}
-.mini-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:4px 8px;background:var(--bg-2);border-bottom:1px solid var(--line)}
-.mini-h b{font-size:var(--f-md);font-weight:700}
+.years{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:12px}
+.mini{border:1px solid var(--hair);border-radius:var(--r-lg);background:var(--bg);padding:10px 10px 8px}
+.mini-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:0 6px 6px}
+.mini-h b{font-size:var(--f-lg);font-weight:800;letter-spacing:-.02em}
 .mini-h span{font-size:var(--f-xs);color:var(--ink-3)}
-.mini-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(6,minmax(30px,1fr));padding:3px}
-.mini-g .w{font-size:var(--f-xs);text-align:center;color:var(--ink-3);padding:2px 0}
+.mini-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(6,minmax(30px,1fr));gap:1px}
+.mini-g .w{font-size:10px;text-align:center;color:var(--ink-3);padding:2px 0 4px}
 .mini-g .w.s0{color:var(--sun)} .mini-g .w.s6{color:var(--sat)}
 .mini-g button{
-  min-height:30px;border-radius:3px;display:flex;align-items:center;justify-content:center;gap:2px;
-  font-size:var(--f-sm);color:var(--ink-2);
+  position:relative;min-height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:var(--f-sm);color:var(--ink-3);
 }
-.mini-g button.s6{background:var(--sat-bg);color:var(--sat)}
-.mini-g button.s0{background:var(--sun-bg);color:var(--sun)}
+.mini-g button.s6{color:var(--sat)}
+.mini-g button.s0{color:var(--sun)}
 .mini-g button:hover{background:var(--bg-3)}
-.mini-g button.on{font-weight:700;color:var(--ink)}
-.mini-g button.now{outline:1.5px solid var(--key);outline-offset:-2px}
-.mini-g .n{font-size:9px;font-weight:700;color:var(--key);background:var(--key-bg);border-radius:2px;padding:0 2px;line-height:1.4}
+/* 일정이 있는 날 — 옅게 칠하고 건수는 구석에 작게 */
+.mini-g button.on{background:var(--key-bg);color:var(--key);font-weight:700}
+.mini-g button.on:hover{filter:brightness(.97)}
+.mini-g button.now{box-shadow:inset 0 0 0 1.5px var(--key)}
+.mini-g .n{position:absolute;top:1px;right:3px;font-size:8px;font-weight:700;line-height:1.3;opacity:.75}
 .mini-g .pad{visibility:hidden}
 
 /* ---- 자료 출처 ---- */
-.src{margin-top:12px;font-size:var(--f-sm);color:var(--ink-2)}
-.src > summary{cursor:pointer;padding:4px 2px;color:var(--ink-2)}
+.src{margin-top:14px;font-size:var(--f-sm);color:var(--ink-2)}
+.src > summary{cursor:pointer;padding:4px 2px;color:var(--ink-3)}
 .src > summary::marker{color:var(--ink-3)}
-.src-body{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);margin-top:5px;overflow:hidden}
-.src-row{display:grid;grid-template-columns:8.5rem 1fr auto;gap:8px;align-items:baseline;padding:6px 10px;border-bottom:1px solid var(--line)}
+.src-body{border:1px solid var(--hair);border-radius:var(--r-lg);background:var(--bg);margin-top:6px;overflow:hidden}
+.src-row{display:grid;grid-template-columns:9rem 1fr auto;gap:8px;align-items:baseline;padding:8px 14px;border-bottom:1px solid var(--hair)}
 .src-row:last-child{border-bottom:0}
 .src-row b{font-weight:600;color:var(--ink)}
 .src-row .st{font-size:var(--f-xs)}
 .src-row .bad{color:var(--sun)}
-.src-row a{font-size:var(--f-xs);white-space:nowrap}
-.src-flags{border-top:1px solid var(--line-2);background:var(--warn-bg);color:var(--warn-ink);padding:7px 10px;font-size:var(--f-xs);line-height:1.6}
+.src-row a{font-size:var(--f-xs);white-space:nowrap;color:var(--key)}
+.src-flags{border-top:1px solid var(--hair);background:var(--warn-bg);color:var(--warn-ink);padding:9px 14px;font-size:var(--f-xs);line-height:1.6}
 .src-flags b{display:block;margin-bottom:2px}
 .src-flags ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:0 14px}
-.src-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding:7px 10px;font-size:var(--f-xs);color:var(--ink-3)}
+.src-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--hair);padding:8px 14px;font-size:var(--f-xs);color:var(--ink-3)}
 .src-foot span{flex:1;min-width:0}
 
 /* ---- 요청 ---- */
-.form{max-width:660px}
+.form{max-width:660px;padding:20px;border:1px solid var(--hair);border-radius:var(--r-lg);background:var(--bg)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.f{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
 .f label{font-size:var(--f-xs);font-weight:700;color:var(--ink-2)}
-.f .fld{width:100%;height:auto;padding:7px 9px;min-height:34px}
+.f .fld{width:100%;height:auto;padding:8px 10px;min-height:36px}
 .f textarea.fld{min-height:190px;resize:vertical;line-height:1.55}
 .meta{display:flex;justify-content:space-between;font-size:var(--f-xs);color:var(--ink-3);margin-top:-7px}
-.send{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:4px}
+.send{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:6px}
 .send p{flex:1;font-size:var(--f-sm)}
 .send p.ok{color:var(--key);font-weight:600}
 .send p.no{color:var(--sun);font-weight:600}
 
 /* ---- 창 ---- */
 dialog{
-  width:min(620px,calc(100vw - 20px));max-height:84dvh;padding:0;border:1px solid var(--line-2);
-  border-radius:6px;background:var(--bg);color:var(--ink);box-shadow:0 12px 40px rgba(10,14,20,.22);
+  width:min(620px,calc(100vw - 20px));max-height:84dvh;padding:0;border:1px solid var(--line);
+  border-radius:16px;background:var(--bg);color:var(--ink);box-shadow:var(--pop);
 }
-dialog::backdrop{background:rgba(12,16,22,.45)}
+dialog::backdrop{background:rgba(12,16,22,.4)}
 dialog[open]{display:flex;flex-direction:column}
-.dh{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
-.dh h2{font-size:var(--f-lg);font-weight:700;margin-right:auto}
-.db{padding:10px 12px;overflow:auto;min-height:0}
-.db h3{font-size:var(--f-xs);font-weight:700;color:var(--ink-2);margin:14px 0 5px}
+.dh{display:flex;align-items:center;gap:4px;padding:14px 12px 12px 18px;border-bottom:1px solid var(--line)}
+.dh h2{font-size:var(--f-xl);font-weight:800;letter-spacing:-.02em;margin-right:auto}
+.dh .btn-n{border-color:transparent;border-radius:50%;color:var(--ink-2)}
+.dh .btn-n:hover{background:var(--bg-3);color:var(--ink)}
+.db{padding:14px 18px;overflow:auto;min-height:0}
+.db h3{font-size:var(--f-xs);font-weight:700;color:var(--ink-3);margin:18px 0 6px}
 .db h3:first-child{margin-top:0}
-.df{padding:9px 12px;border-top:1px solid var(--line);display:flex;gap:6px;justify-content:flex-end}
+.df{padding:10px 12px;border-top:1px solid var(--line);display:flex;gap:6px;justify-content:flex-end}
 .df .grow{flex:1}
-.item{display:flex;gap:7px;align-items:baseline;padding:5px 6px;border-radius:2px}
-.item + .item{border-top:1px solid var(--line)}
+.item{display:flex;gap:8px;align-items:baseline;padding:7px 8px;margin:0 -8px;border-radius:var(--r)}
 .item.on{background:var(--key-bg)}
 .item p{flex:1;white-space:pre-wrap;min-width:0}
-.item .btn-s{align-self:center}
-.duty{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 10px;font-size:var(--f-sm)}
-.duty dt{color:var(--ink-2)}
-.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:5px 16px;font-size:var(--f-sm)}
+.item .btn-s{align-self:center;color:var(--ink-3)}
+.duty{display:grid;grid-template-columns:64px minmax(0,1fr);gap:5px 10px;font-size:var(--f-sm)}
+.duty dt{color:var(--ink-3)}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 16px;font-size:var(--f-sm)}
 .keys div{display:flex;gap:8px;align-items:center}
 kbd{
-  font:inherit;font-size:var(--f-xs);font-weight:700;min-width:20px;text-align:center;
-  border:1px solid var(--line-2);border-bottom-width:2px;border-radius:3px;padding:0 4px;background:var(--bg-2);
+  font:inherit;font-size:var(--f-xs);font-weight:700;min-width:22px;text-align:center;
+  border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--bg-2);
 }
 .set{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:var(--f-sm)}
 .set > span{width:64px;color:var(--ink-2);flex:none}
 .toast{
-  position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:90;
-  max-width:calc(100vw - 24px);padding:8px 13px;border-radius:var(--r);
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90;
+  max-width:calc(100vw - 24px);padding:9px 16px;border-radius:999px;box-shadow:var(--pop);
   background:var(--ink);color:var(--bg);font-size:var(--f-sm);font-weight:600;
 }
 
@@ -391,41 +481,62 @@ kbd{
 
 /* ---- 좁은 화면 ---- */
 @media (max-width:860px){
-  .row{padding:0 10px;min-height:42px}
+  .row{padding:0 12px;min-height:48px}
   .row-1{flex-wrap:wrap}
-  .tabs{order:3;width:100%;flex:none;margin:0 -10px;padding:0 10px;border-top:1px solid var(--line)}
-  .tabs button{padding:9px 10px}
+  .tabs{order:3;width:100%;flex:none;margin:0 -12px;padding:0 12px 8px}
   .find{flex:1;min-width:120px}
   .find input{width:100%;font-size:16px}
+  .strip{margin:10px 12px 0}
+  main{padding:10px 12px 14px}
   .plan{grid-template-columns:minmax(0,1fr)}
   .pset{order:-1}
 }
 @media (max-width:700px){
-  main{padding:10px}
   .step{flex:1}
-  .step .fld{flex:1;width:auto;font-size:16px}
-  .d{padding:3px 2px;gap:2px}
-  .dnum{margin:0;padding:0 2px}
-  .d .ev{font-size:var(--f-xs);padding-left:3px;border-left-width:2px}
+  .mtitle{margin-right:auto}
+  /* 달력 칸이 좁다. 일정은 색 띠 한 줄씩만 보이고, 누르면 그날 상세에서 다 읽는다 */
+  .d{padding:3px 2px 2px;gap:2px;scrollbar-width:none}
+  .d::-webkit-scrollbar{display:none}
+  .dnum{min-width:22px;height:22px;font-size:var(--f-sm)}
+  .d .ev{padding:1px 2px 1px 3px;border-left-width:2px;border-radius:3px;font-size:10px;line-height:1.45;white-space:nowrap;overflow:hidden}
+  .d .ev .tag{display:none}
+  .d .ev-d{padding-left:3px}
+  .fold-h{display:none}
+  /* 아래 다섯 줄은 종이(.paper)에도 닿는다. 좁은 화면에서 인쇄가 달라지지 않게 그대로 둔다 */
   table,tbody{display:block;width:100%}
   thead{display:none}
   tbody tr{display:grid;grid-template-columns:36px minmax(0,1fr);gap:2px 9px;padding:7px 9px;border-bottom:1px solid var(--cell-line)}
   tbody tr:last-child{border-bottom:0}
   td{display:block;border:0;padding:0;width:auto}
-  td.c-d{grid-row:1/6}
-  td.c-w{display:none}
-  td.c-b,td.c-n{grid-column:2}
-  td.c-n{font-size:var(--f-xs);color:var(--ink-2)}
+  /* 화면의 표는 날짜(숫자 + 요일)를 왼쪽에, 일정과 담당을 오른쪽에 쌓는다 */
+  .frame tbody tr{grid-template-columns:36px minmax(0,1fr);gap:0 10px;padding:8px 12px;border-bottom-color:var(--hair)}
+  .frame td,.frame td.c-d{padding:0;border:0;border-radius:0!important;background:none!important}
+  .frame tr.wk.s6{background:var(--sat-bg)}
+  .frame tr.wk.s0{background:var(--sun-bg)}
+  .frame tr.now{background:var(--key-bg)}
+  .frame tr:first-child{border-radius:11px 11px 0 0}
+  .frame tr:last-child{border-radius:0 0 11px 11px}
+  td.c-d{grid-column:1;grid-row:1;justify-self:center}
+  td.c-w{grid-column:1;grid-row:2;justify-self:center;padding:0!important;font-size:10px}
+  td.c-b{grid-column:2;grid-row:1/3;align-self:center}
+  td.c-n{grid-column:2;padding:0!important;font-size:var(--f-xs);color:var(--ink-2)}
   td.c-n:empty{display:none}
+  tr.empty td.c-b{display:none}   /* 일정 없는 날은 담당이 날짜 옆으로 올라붙는다 */
   td.c-n:not(:empty)::before{content:attr(data-l) " ";color:var(--ink-3);font-weight:700}
-  .grp{grid-template-columns:minmax(0,1fr);gap:2px}
+  .cell{margin:0 -5px}
+  .grp{grid-template-columns:minmax(0,1fr);gap:1px}
   .src-row{grid-template-columns:1fr auto;gap:2px 8px}
   .src-row .st{grid-column:1/-1}
   .hide-s{display:none}
-  .show-s{display:inline-flex}
-  .depts{width:100%}
+  /* 칩 줄은 한 줄로 두고 옆으로 민다. 머리가 화면을 다 먹지 않게 */
+  .opts{flex-wrap:nowrap;max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .opts::-webkit-scrollbar{display:none}
+  .opts button{flex:none}
+  .frame td{width:auto}
   .cards{display:block}
   .pair{grid-template-columns:1fr;gap:0}
+  .form{padding:14px}
+  .mpop{width:min(252px,calc(100vw - 24px))}
   dialog{width:calc(100vw - 14px);max-height:90dvh}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -485,7 +596,7 @@ kbd{
   <div class="df">
     <button class="btn grow" style="justify-content:flex-start;border:0" data-a="d-ask" type="button">이 날짜로 수정 요청</button>
     <button class="btn" data-a="d-copy" type="button">복사</button>
-    <button class="btn btn-key" data-a="close" type="button">닫기</button>
+    <button class="btn btn-key" data-a="close" type="button" autofocus>닫기</button>
   </div>
 </dialog>
 
@@ -507,13 +618,13 @@ kbd{
 <dialog id="sdlg" aria-labelledby="stitle">
   <div class="dh"><h2 id="stitle">설정</h2></div>
   <div class="db" id="sbody"></div>
-  <div class="df"><button class="btn btn-key" data-a="close" type="button">닫기</button></div>
+  <div class="df"><button class="btn btn-key" data-a="close" type="button" autofocus>닫기</button></div>
 </dialog>
 
 <dialog id="idlg" aria-labelledby="ititle">
   <div class="dh"><h2 id="ititle"></h2></div>
   <div class="db" id="ibody"></div>
-  <div class="df"><button class="btn btn-key" data-a="close" type="button">닫기</button></div>
+  <div class="df"><button class="btn btn-key" data-a="close" type="button" autofocus>닫기</button></div>
 </dialog>
 
 <div id="proot" aria-hidden="true"><div class="stage" id="stage"></div></div>
@@ -685,7 +796,7 @@ function applyPrefs(){
 
 /* ============ 데이터 ============ */
 const M = { schedule:[], student:[], prayer:new Map(), super:new Map(), notices:[], nuga:[] };
-const IX = { byId:new Map(), day:new Map(), stuDay:new Map(), depts:[] };
+const IX = { byId:new Map(), day:new Map(), stuDay:new Map(), depts:[], months:new Set() };
 /* 시트 key → M 안의 자리. 이름이 다른 둘만 적는다 */
 const SLOT = { notice:"notices", supervisor:"super" };
 /* 시트별로 마지막에 받은 표. 다시 받은 것이 이것과 같으면 풀지도, 저장하지도, 그리지도 않는다 */
@@ -836,6 +947,7 @@ function reindex(){
     }
   const used = new Set(M.schedule.map(e => e.dept));
   IX.depts = DEPT_NAMES.filter(d => used.has(d));
+  IX.months = new Set([...M.schedule, ...M.student].map(e => e.k.slice(0, 7)));
 }
 
 /* 마지막으로 받은 내용을 남겨 둔다. 연결이 없어도 화면이 비지 않게.
@@ -1036,10 +1148,11 @@ function notices(){
 
 /* ============ 그리기 ============ */
 let jumpToday = false;
-let deptOpen = false;   /* 좁은 화면에서 부서 칩 줄을 펼쳤는가 */
+let deptOpen = false;   /* 부서 칩 줄을 펼쳤는가 */
+let monthOpen = false, popYear = 0;   /* 달 고르기가 열렸는가, 거기서 보고 있는 해 */
 
 const evHTML = (e, showDept = true, stu = false) => `
-  <button type="button" class="ev${stu ? " ev-u" : ""}" data-e="${e.id}" style="${stu ? tone("기타") : tone(e.dept)}">
+  <button type="button" class="ev" data-e="${e.id}" style="${stu ? tone("기타") : tone(e.dept)}">
     ${showDept && e.dept ? `<span class="tag">${hl(e.dept)}</span>` : ""}${hl(e.text)}</button>`;
 
 const dnum = d => `<button type="button" class="dnum" data-d="${key(d)}">${d.getDate()}</button>`;
@@ -1048,8 +1161,10 @@ const chk = (label, g, k) => `<label class="chk"><input type="checkbox" data-c="
 const opt = (label, g, k) => `<button type="button" data-c="${g}.${k}" aria-pressed="${S[g][k]}">${esc(label)}</button>`;
 
 function drawTabs(){
-  paint($("#tabs"), VK.map(k =>
-    `<button type="button" data-v="${k}"${k === S.view ? ' aria-current="page"' : ""}>${VIEWS[k].label}</button>`).join(""));
+  /* 좁은 화면에서는 탭 줄을 옆으로 민다. 지금 탭이 가려져 있으면 보이는 데까지 끌어온다 */
+  if(paint($("#tabs"), VK.map(k =>
+    `<button type="button" data-v="${k}"${k === S.view ? ' aria-current="page"' : ""}>${VIEWS[k].label}</button>`).join("")))
+    $("#tabs [aria-current]")?.scrollIntoView({ block:"nearest", inline:"nearest" });
 }
 
 function drawTools(){
@@ -1057,11 +1172,11 @@ function drawTools(){
   if(VIEWS[v].month){
     const yr = v === "calendar" && S.cal.year;
     out.push(`<div class="step">
-      <button class="btn btn-n" data-a="prev" type="button" aria-label="이전">‹</button>
-      <input class="fld" id="mi" aria-label="${yr ? "연도" : "조회 월"}" type="${yr ? "number" : "month"}"
-        ${yr ? 'min="1900" max="9999"' : 'min="1900-01" max="9999-12"'} value="${yr ? S.month.slice(0, 4) : S.month}">
-      <button class="btn btn-n" data-a="next" type="button" aria-label="다음">›</button>
-      <button class="btn" data-a="today" type="button">오늘</button></div>`);
+      <button class="mtitle" data-a="month" type="button" aria-haspopup="dialog" aria-expanded="${monthOpen}">${
+        +S.month.slice(0, 4)}년${yr ? "" : ` ${+S.month.slice(5)}월`}</button>
+      <button class="btn btn-n" data-a="prev" type="button" aria-label="${yr ? "이전 해" : "이전 달"}">‹</button>
+      <button class="btn btn-n" data-a="next" type="button" aria-label="${yr ? "다음 해" : "다음 달"}">›</button>
+      <button class="btn" data-a="today" type="button">오늘</button>${monthOpen ? monthPop() : ""}</div>`);
   }
   if(v === "calendar") out.push(`<div class="opts">${opt("주말", "cal", "weekend")}${opt("연간", "cal", "year")}</div>`);
   if(v === "plan") out.push(`<div class="opts">${opt("부서명", "plan", "dept")}${opt("경건회", "plan", "prayer")}${opt("자습감독", "plan", "super")}${opt("주말 빼기", "plan", "noWeekend")}${opt("빈 날 숨김", "plan", "hideEmpty")}${opt("한 줄", "plan", "flat")}</div>`);
@@ -1081,11 +1196,12 @@ function drawTools(){
         c === "전체" ? "" : '<span class="cm" aria-hidden="true"></span>'}${esc(c)}<b>${hours.get(c) || 0}</b></button>`).join("")}</div>`);
   }
   if((v === "calendar" || v === "plan") && IX.depts.length > 1){
-    /* 좁은 화면에서는 칩 줄을 접어 두고 이 단추로 연다. 숨긴 부서가 있으면 몇 개인지 적는다 */
+    /* 칩 열아홉 개를 늘 펼쳐 두면 머리가 무겁다. 접어 두고 이 단추로 연다.
+       숨긴 부서가 있으면 몇 개인지 단추에 적어, 접혀 있어도 걸러 보는 중임을 알게 한다 */
     const cut = IX.depts.filter(off).length;
-    out.push(`<button class="btn show-s" data-a="depts" type="button" aria-expanded="${deptOpen}">부서${
+    out.push(`<button class="btn btn-dd${cut ? " on" : ""}" data-a="depts" type="button" aria-expanded="${deptOpen}">부서${
       cut ? ` <b>${cut}개 숨김</b>` : ""}</button>`);
-    out.push(`<div class="opts depts${deptOpen ? "" : " hide-s"}" role="group" aria-label="부서 표시">${IX.depts.map(d =>
+    if(deptOpen) out.push(`<div class="opts depts" role="group" aria-label="부서 표시">${IX.depts.map(d =>
       `<button type="button" data-h="${esc(d)}" aria-pressed="${!off(d)}" style="${tone(d)}">${esc(d)}</button>`).join("")}</div>`);
   }
   out.push('<span class="grow"></span>');
@@ -1093,6 +1209,21 @@ function drawTools(){
   out.push('<button class="btn btn-q btn-s" data-a="reload" type="button">새로고침</button>');
 
   paint($("#tools"), out.join(""));
+}
+
+/* 달 고르기 — 제목을 누르면 열린다. 브라우저의 month 입력칸은 지원이 제각각이라 쓰지 않는다.
+   일정이 있는 달은 글자가 진하다 */
+function monthPop(){
+  const now = today().slice(0, 7);
+  return `<div class="mpop" role="dialog" aria-label="달 고르기">
+    <div class="mpop-y">
+      <button class="btn btn-n" data-py="-1" type="button" aria-label="이전 해">‹</button><b>${popYear}년</b>
+      <button class="btn btn-n" data-py="1" type="button" aria-label="다음 해">›</button></div>
+    <div class="mpop-m">${Array.from({ length:12 }, (_, i) => {
+      const m = `${popYear}-${p2(i + 1)}`;
+      return `<button type="button" data-m="${m}" aria-pressed="${m === S.month}" class="${
+        (IX.months.has(m) ? "has" : "") + (m === now ? " now" : "")}">${i + 1}월</button>`;
+    }).join("")}</div></div>`;
 }
 
 /* 검색어가 다른 달에만 걸려 있으면 빈 달만 보게 된다. 달마다 몇 건인지 보여 주고 바로 건너가게 한다 */
@@ -1208,9 +1339,9 @@ function drawTable(v){
     const rows = (src.get(k) || []).filter(shown), duty = duties(k).length;
     if(o.hideEmpty && !rows.length && !duty) continue;
     n += rows.length + duty;
-    body += `<tr class="${(k === now ? "now" : "") + wend(w)}">
+    body += `<tr class="${(k === now ? "now" : "") + wend(w) + (rows.length ? "" : " empty")}">
       <td class="c-d">${dnum(d)}</td><td class="c-w">${W[w]}</td>
-      <td class="c-b"><div class="cell">${rows.map(e => evHTML(e, plan && o.dept, !plan)).join("") || '<span class="dash">—</span>'}</div></td>
+      <td class="c-b"><div class="cell">${rows.map(e => evHTML(e, plan && o.dept, !plan)).join("")}</div></td>
       ${plan && o.prayer ? `<td class="c-n" data-l="경건회">${hl(M.prayer.get(k)?.name || "")}</td>` : ""}
       ${plan && o.super ? `<td class="c-n" data-l="자습감독">${hl(M.super.get(k) || "")}</td>` : ""}</tr>`;
   }
@@ -1274,7 +1405,7 @@ function drawNuga(){
         <span>누계 ${run}</span></div></article>`;
   }).join("")}</div>`;
 
-  const note = unclear ? '<p class="strip strip-w" style="border:0;border-radius:var(--r);margin-bottom:8px">교시를 읽을 수 없는 기록은 합계에서 뺐습니다.</p>' : "";
+  const note = unclear ? '<p class="note">교시를 읽을 수 없는 기록은 합계에서 뺐습니다.</p>' : "";
   return { n:rows.length, html:note + table + cards };
 }
 
@@ -1305,7 +1436,12 @@ function drawRequest(){
 /* ---- 전체 ---- */
 function draw({ keep = false } = {}){
   const top = window.scrollY;
-  const act = document.activeElement, actId = act?.id, actC = act?.dataset?.c, actH = act?.dataset?.h, actA = act?.dataset?.a;
+  /* 도구 줄을 다시 그리면 누르던 단추가 떨어져 나간다. 같은 단추를 다시 찾을 길을 적어 둔다 */
+  const act = document.activeElement;
+  const again = !act?.closest?.("#tools") ? ""
+    : act.id ? "#" + CSS.escape(act.id)
+    : (([k, v]) => k ? `#tools [data-${k}="${CSS.escape(v)}"]` : "")(
+        ["c", "h", "a", "py", "m", "g", "cat"].map(k => [k, act.dataset[k]]).find(([, v]) => v != null) || []);
 
   drawTabs();
   drawTools();
@@ -1335,12 +1471,7 @@ function draw({ keep = false } = {}){
   savePrefs();
 
   /* 다시 그리느라 떨어져 나간 경우에만 초점을 되찾아 준다 */
-  if(act && !act.isConnected){
-    if(actC) $(`[data-c="${CSS.escape(actC)}"]`)?.focus({ preventScroll:true });
-    else if(actH) $(`[data-h="${CSS.escape(actH)}"]`)?.focus({ preventScroll:true });
-    else if(actA === "depts") $('[data-a="depts"]')?.focus({ preventScroll:true });
-    else if(actId && ["mi", "ds"].includes(actId)) $("#" + actId)?.focus({ preventScroll:true });
-  }
+  if(again && !act.isConnected) $(again)?.focus({ preventScroll:true });
 
   measure();
 
@@ -1413,7 +1544,7 @@ function toast(t){
 function go(v){
   if(!Object.hasOwn(VIEWS, v) || v === S.view) return;
   saveDraft();
-  S.view = v; clearQ();
+  S.view = v; clearQ(); monthOpen = false;
   jumpToday = ["calendar", "plan", "student"].includes(v) && !S.cal.year;
   draw();
   window.scrollTo({ top:0, behavior:"instant" });
@@ -1782,6 +1913,8 @@ async function send(ev){
 
 /* ============ 조작 ============ */
 document.addEventListener("click", ev => {
+  /* 달 고르기 바깥을 누르면 닫는다 */
+  if(monthOpen && !ev.target.closest('.mpop,[data-a="month"]')){ monthOpen = false; draw({ keep:true }); }
   const t = ev.target.closest("button");
   if(!t) return;
 
@@ -1800,7 +1933,12 @@ document.addEventListener("click", ev => {
     else go("dept");
     return;
   }
-  if(t.dataset.m){ S.month = t.dataset.m; draw(); return; }
+  if(t.dataset.m){ S.month = t.dataset.m; monthOpen = false; draw(); return; }
+  if(t.dataset.py){
+    popYear = Math.min(9999, Math.max(1900, popYear + +t.dataset.py));
+    draw({ keep:true });
+    return;
+  }
   if(t.dataset.h){
     const d = t.dataset.h;
     S.hidden = off(d) ? S.hidden.filter(x => x !== d) : [...S.hidden, d];
@@ -1824,6 +1962,7 @@ document.addEventListener("click", ev => {
     case "reload": reload(); break;
     case "alert-x": hideWarn(); break;
     case "depts": deptOpen = !deptOpen; draw({ keep:true }); break;
+    case "month": monthOpen = !monthOpen; popYear = +S.month.slice(0, 4); draw({ keep:true }); break;
     case "close": t.closest("dialog")?.close(); break;
     case "open-print": openPrint(); break;
     case "print": doPrint(); break;
@@ -1851,12 +1990,6 @@ document.addEventListener("change", ev => {
       savePrefs();
       if(g === "print"){ buildPaper(); scaleView(); } else draw({ keep:true });
     }
-    return;
-  }
-  if(el.id === "mi"){
-    const v = el.type === "number" ? `${el.value}-01` : el.value;
-    if(/^\d{4}-\d{2}$/.test(v) && m1(v)){ S.month = v; draw(); }
-    else el.value = el.type === "number" ? S.month.slice(0, 4) : S.month;
     return;
   }
   if(el.id === "ds"){ S.dept = el.value; draw(); return; }
@@ -1906,6 +2039,7 @@ document.addEventListener("keydown", ev => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(a?.tagName || "") || a?.isContentEditable;
   const dlgOpen = $$("dialog[open]").length > 0;
 
+  if(ev.key === "Escape" && monthOpen){ monthOpen = false; draw({ keep:true }); return; }
   if(ev.key === "Escape" && !dlgOpen && S.q){ clearQ(); draw({ keep:true }); return; }
   if(typing || dlgOpen) return;
 
